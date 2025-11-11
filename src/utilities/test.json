@@ -1,0 +1,294 @@
+{
+    "Friend": [
+        {
+            "title": "Friends",
+            "uuid": "9b95b3f2-47ac-4b19-8cdb-0bb15a807094",
+            "name": null,
+            "email": "ali.rjaved@gmail.com",
+            "email_verified_at": null,
+            "created_at": "2024-03-17T10:51:54.000000Z",
+            "updated_at": "2024-03-17T10:51:54.000000Z",
+            "forget_token": null,
+            "role": "user",
+            "salutation": "Mr",
+            "first_name": "John",
+            "middle_name": "Doe",
+            "last_name": "Smith",
+            "nick_name": "Johnny",
+            "salutation_in_email": "Mr. John Doe",
+            "gender": "Male",
+            "DOB": 0,
+            "group_id": "01hs5mcwdqxxhanep3qcmrhsyc",
+            "family_id": "01hs5md30k5e084cnabwzgy29h",
+            "no_of_members": 5,
+            "marital_status": "Single",
+            "address": "123 Main St",
+            "city": "Anytown",
+            "state": "Anystate",
+            "pin": "12345",
+            "country": "USA",
+            "company_name": "ABC Company",
+            "work_city": "Worktown",
+            "work_state": "Workstate",
+            "work_pin": "54321",
+            "work_country": "USA",
+            "correspondence_address": "456 Business Ave",
+            "meal_preference": "Vegetarian",
+            "beverage_preference": "Water",
+            "special_need": "None",
+            "identity_image": null,
+            "description": "Lorem ipsum dolor sit amet, consectetur adipiscing elit.",
+            "work_address": null,
+            "anniversery_date": null,
+            "created_at_unix": 1710672714,
+            "updated_at_unix": 1710672714,
+            "contact_numbers": [
+                {
+                    "id": "01hs60m6jkem6pf863he6csby1",
+                    "type": "Mobile",
+                    "contact_number": "03016106343",
+                    "created_at": "2024-03-17T10:51:54.000000Z",
+                    "updated_at": "2024-03-17T10:51:54.000000Z",
+                    "user_id": "9b95b3f2-47ac-4b19-8cdb-0bb15a807094"
+                }
+            ],
+            "emails": [
+                {
+                    "id": "01hs60m6jmaqn2m8fzj2c3ycvp",
+                    "type": "Personal",
+                    "contact_email": "ali.rjaved@gmail.com",
+                    "created_at": "2024-03-17T10:51:54.000000Z",
+                    "updated_at": "2024-03-17T10:51:54.000000Z",
+                    "user_id": "9b95b3f2-47ac-4b19-8cdb-0bb15a807094"
+                }
+            ],
+            "children": [
+                {
+                    "id": "01hs60m6jqpx8gyvn6h7zzzv6g",
+                    "name": "Abdul Rehman",
+                    "gender": "Male",
+                    "created_at": "2024-03-17T10:51:54.000000Z",
+                    "updated_at": "2024-03-17T10:51:54.000000Z",
+                    "user_id": "9b95b3f2-47ac-4b19-8cdb-0bb15a807094",
+                    "type": null,
+                    "created_at_unix": 1710672714,
+                    "updated_at_unix": 1710672714
+                }
+            ],
+            "group": {
+                "id": "01hs5mcwdqxxhanep3qcmrhsyc",
+                "name": "Friend",
+                "created_at": "2024-03-17T07:18:11.000000Z",
+                "updated_at": "2024-03-17T07:18:11.000000Z"
+            },
+            "family": {
+                "id": "01hs5md30k5e084cnabwzgy29h",
+                "name": "Friend",
+                "created_at": "2024-03-17T07:18:18.000000Z",
+                "updated_at": "2024-03-17T07:18:18.000000Z"
+            },
+            "rsvp" : {
+                    "total_invited": 12,
+                    "rsvp_pending": 4,
+                    "rsvp_yes": 6,
+                    "rsvp_no": 8,
+                    "rsvp_may_attend": 8,
+                    "invitation_call": "Done"
+                } 
+        },
+        {
+            "title": "Friends",
+            "uuid": "9b95b3f2-47ac-4b19-8cdb-0bb15a807094",
+            "name": null,
+            "email": "ali.rjaved@gmail.com",
+            "email_verified_at": null,
+            "created_at": "2024-03-17T10:51:54.000000Z",
+            "updated_at": "2024-03-17T10:51:54.000000Z",
+            "forget_token": null,
+            "role": "user",
+            "salutation": "Mr",
+            "first_name": "John",
+            "middle_name": "Doe",
+            "last_name": "Smith",
+            "nick_name": "Johnny",
+            "salutation_in_email": "Mr. John Doe",
+            "gender": "Male",
+            "DOB": 0,
+            "group_id": "01hs5mcwdqxxhanep3qcmrhsyc",
+            "family_id": "01hs5md30k5e084cnabwzgy29h",
+            "no_of_members": 5,
+            "marital_status": "Single",
+            "address": "123 Main St",
+            "city": "Anytown",
+            "state": "Anystate",
+            "pin": "12345",
+            "country": "USA",
+            "company_name": "ABC Company",
+            "work_city": "Worktown",
+            "work_state": "Workstate",
+            "work_pin": "54321",
+            "work_country": "USA",
+            "correspondence_address": "456 Business Ave",
+            "meal_preference": "Vegetarian",
+            "beverage_preference": "Water",
+            "special_need": "None",
+            "identity_image": null,
+            "description": "Lorem ipsum dolor sit amet, consectetur adipiscing elit.",
+            "work_address": null,
+            "anniversery_date": null,
+            "created_at_unix": 1710672714,
+            "updated_at_unix": 1710672714,
+            "contact_numbers": [
+                {
+                    "id": "01hs60m6jkem6pf863he6csby1",
+                    "type": "Mobile",
+                    "contact_number": "03016106343",
+                    "created_at": "2024-03-17T10:51:54.000000Z",
+                    "updated_at": "2024-03-17T10:51:54.000000Z",
+                    "user_id": "9b95b3f2-47ac-4b19-8cdb-0bb15a807094"
+                }
+            ],
+            "emails": [
+                {
+                    "id": "01hs60m6jmaqn2m8fzj2c3ycvp",
+                    "type": "Personal",
+                    "contact_email": "ali.rjaved@gmail.com",
+                    "created_at": "2024-03-17T10:51:54.000000Z",
+                    "updated_at": "2024-03-17T10:51:54.000000Z",
+                    "user_id": "9b95b3f2-47ac-4b19-8cdb-0bb15a807094"
+                }
+            ],
+            "children": [
+                {
+                    "id": "01hs60m6jqpx8gyvn6h7zzzv6g",
+                    "name": "Abdul Rehman",
+                    "gender": "Male",
+                    "created_at": "2024-03-17T10:51:54.000000Z",
+                    "updated_at": "2024-03-17T10:51:54.000000Z",
+                    "user_id": "9b95b3f2-47ac-4b19-8cdb-0bb15a807094",
+                    "type": null,
+                    "created_at_unix": 1710672714,
+                    "updated_at_unix": 1710672714
+                }
+            ],
+            "group": {
+                "id": "01hs5mcwdqxxhanep3qcmrhsyc",
+                "name": "Friend",
+                "created_at": "2024-03-17T07:18:11.000000Z",
+                "updated_at": "2024-03-17T07:18:11.000000Z"
+            },
+            "family": {
+                "id": "01hs5md30k5e084cnabwzgy29h",
+                "name": "Friend",
+                "created_at": "2024-03-17T07:18:18.000000Z",
+                "updated_at": "2024-03-17T07:18:18.000000Z"
+            },
+            "rsvp" : {
+                    "total_invited": 12,
+                    "rsvp_pending": 4,
+                    "rsvp_yes": 6,
+                    "rsvp_no": 8,
+                    "rsvp_may_attend": 8,
+                    "invitation_call": "Done"
+                } 
+        }
+    ],
+    "Family": [
+        {
+            "title": "Friends",
+            "uuid": "9b95b3f2-47ac-4b19-8cdb-0bb15a807094",
+            "name": null,
+            "email": "ali.rjaved@gmail.com",
+            "email_verified_at": null,
+            "created_at": "2024-03-17T10:51:54.000000Z",
+            "updated_at": "2024-03-17T10:51:54.000000Z",
+            "forget_token": null,
+            "role": "user",
+            "salutation": "Mr",
+            "first_name": "John",
+            "middle_name": "Doe",
+            "last_name": "Smith",
+            "nick_name": "Johnny",
+            "salutation_in_email": "Mr. John Doe",
+            "gender": "Male",
+            "DOB": 0,
+            "group_id": "01hs5mcwdqxxhanep3qcmrhsyc",
+            "family_id": "01hs5md30k5e084cnabwzgy29h",
+            "no_of_members": 5,
+            "marital_status": "Single",
+            "address": "123 Main St",
+            "city": "Anytown",
+            "state": "Anystate",
+            "pin": "12345",
+            "country": "USA",
+            "company_name": "ABC Company",
+            "work_city": "Worktown",
+            "work_state": "Workstate",
+            "work_pin": "54321",
+            "work_country": "USA",
+            "correspondence_address": "456 Business Ave",
+            "meal_preference": "Vegetarian",
+            "beverage_preference": "Water",
+            "special_need": "None",
+            "identity_image": null,
+            "description": "Lorem ipsum dolor sit amet, consectetur adipiscing elit.",
+            "work_address": null,
+            "anniversery_date": null,
+            "created_at_unix": 1710672714,
+            "updated_at_unix": 1710672714,
+            "contact_numbers": [
+                {
+                    "id": "01hs60m6jkem6pf863he6csby1",
+                    "type": "Mobile",
+                    "contact_number": "03016106343",
+                    "created_at": "2024-03-17T10:51:54.000000Z",
+                    "updated_at": "2024-03-17T10:51:54.000000Z",
+                    "user_id": "9b95b3f2-47ac-4b19-8cdb-0bb15a807094"
+                }
+            ],
+            "emails": [
+                {
+                    "id": "01hs60m6jmaqn2m8fzj2c3ycvp",
+                    "type": "Personal",
+                    "contact_email": "ali.rjaved@gmail.com",
+                    "created_at": "2024-03-17T10:51:54.000000Z",
+                    "updated_at": "2024-03-17T10:51:54.000000Z",
+                    "user_id": "9b95b3f2-47ac-4b19-8cdb-0bb15a807094"
+                }
+            ],
+            "children": [
+                {
+                    "id": "01hs60m6jqpx8gyvn6h7zzzv6g",
+                    "name": "Abdul Rehman",
+                    "gender": "Male",
+                    "created_at": "2024-03-17T10:51:54.000000Z",
+                    "updated_at": "2024-03-17T10:51:54.000000Z",
+                    "user_id": "9b95b3f2-47ac-4b19-8cdb-0bb15a807094",
+                    "type": null,
+                    "created_at_unix": 1710672714,
+                    "updated_at_unix": 1710672714
+                }
+            ],
+            "group": {
+                "id": "01hs5mcwdqxxhanep3qcmrhsyc",
+                "name": "Friend",
+                "created_at": "2024-03-17T07:18:11.000000Z",
+                "updated_at": "2024-03-17T07:18:11.000000Z"
+            },
+            "family": {
+                "id": "01hs5md30k5e084cnabwzgy29h",
+                "name": "Friend",
+                "created_at": "2024-03-17T07:18:18.000000Z",
+                "updated_at": "2024-03-17T07:18:18.000000Z"
+            },
+            "rsvp" : {
+                    "total_invited": 12,
+                    "rsvp_pending": 4,
+                    "rsvp_yes": 6,
+                    "rsvp_no": 8,
+                    "rsvp_may_attend": 8,
+                    "invitation_call": "Done"
+                } 
+        }
+    ]
+}
