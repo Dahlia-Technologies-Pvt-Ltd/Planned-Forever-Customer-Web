@@ -1,10 +1,11 @@
-import React from "react";
+import React, { useEffect, useState } from "react";
 import ProfileSelect from "./ProfileSelect";
 import { Bars3Icon } from "@heroicons/react/24/solid";
 import { useThemeContext } from "../context/GlobalContext";
 import { useLocation } from "react-router-dom";
 import { Images } from "../assets/Assets";
 import { useMediaQuery } from "react-responsive";
+import GoogleTranslateGlobalSelectorV1 from "./GlobalTranslatorComponents/GoogleTranslateGlobalSelectorV1";
 import LanguageSelector from "./LanguageSelector";
 import { useTranslation } from "react-i18next";
 
@@ -64,7 +65,10 @@ const Header = () => {
 
       {/* Language Selector */}
       <div className="flex items-center gap-x-6">
-        <LanguageSelector />
+        {/* Hidden Google dropdown (required for translation logic) */}
+        <GoogleTranslateGlobalSelectorV1 />
+
+        {/* <LanguageSelector /> */}
 
         <ProfileSelect />
       </div>
