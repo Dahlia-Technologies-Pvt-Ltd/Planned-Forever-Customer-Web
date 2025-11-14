@@ -30,9 +30,7 @@ const GoogleTranslateGlobalSelectorV1 = () => {
       }
 
       attempts++;
-      if (attempts >= maxAttempts) {
-        clearInterval(interval);
-      }
+      if (attempts >= maxAttempts) clearInterval(interval);
     }, 300);
 
     return () => clearInterval(interval);
