@@ -805,51 +805,113 @@ const AddContact = () => {
   };
 
   // Spouse Profile Image Handler
-  const handleSpouseProfileImage = (event) => {
-    // Prevent event bubbling and ensure we're only handling spouse uploads
-    event.stopPropagation();
+  // const handleSpouseProfileImage = (event) => {
+  //   // Prevent event bubbling and ensure we're only handling spouse uploads
+  //   event.stopPropagation();
 
-    if (!event.target.files || event.target.files.length === 0) return;
+  //   if (!event.target.files || event.target.files.length === 0) return;
 
-    const file = event.target.files[0];
-    console.log("Spouse profile image upload initiated");
+  //   const file = event.target.files[0];
+  //   console.log("Spouse profile image upload initiated");
 
-    const formData = new FormData();
-    formData.append("file", file);
+  //   const formData = new FormData();
+  //   formData.append("file", file);
 
-    setSpouseProfileLoading(true);
-    setSpouseProfileError("");
+  //   setSpouseProfileLoading(true);
+  //   setSpouseProfileError("");
 
-    ApiServices.contact
-      .contactProfileUpload(formData)
-      .then((res) => {
-        const { data, message } = res;
+  //   ApiServices.contact
+  //     .contactProfileUpload(formData)
+  //     .then((res) => {
+  //       const { data, message } = res;
 
-        if (res.code === 200) {
-          setSpouse({
-            salutation: spouse?.salutation || "",
-            name: spouse?.name || "",
-            middleName: spouse?.middleName || "",
-            lastName: spouse?.lastName || "",
-            gender: spouse?.gender || "",
-            countryCode: spouse?.countryCode || "",
-            contactNumber: spouse?.contactNumber || "",
-            profileImage: spouse?.profile_image || null,
-            profileFile: spouse?.profile_image || null,
-            meal_preference: spouse?.meal_preference?.flatMap((category) => category?.map((item) => item.value)) || [], // [primary, secondary, alcoholic]
-          });
-          setSpouseProfileLoading(false);
-          // Clear the input to allow re-selection of the same file
-          event.target.value = "";
-        }
-      })
-      .catch((err) => {
+  //       if (res.code === 200) {
+  //         setSpouse({
+  //           salutation: spouse?.salutation || "",
+  //           name: spouse?.name || "",
+  //           middleName: spouse?.middleName || "",
+  //           lastName: spouse?.lastName || "",
+  //           gender: spouse?.gender || "",
+  //           countryCode: spouse?.countryCode || "",
+  //           contactNumber: spouse?.contactNumber || "",
+  //           profileImage: spouse?.profile_image || null,
+  //           profileFile: spouse?.profile_image || null,
+  //           meal_preference: spouse?.meal_preference?.flatMap((category) => category?.map((item) => item.value)) || [], // [primary, secondary, alcoholic]
+  //         });
+  //         setSpouseProfileLoading(false);
+  //         // Clear the input to allow re-selection of the same file
+  //         event.target.value = "";
+  //       }
+  //     })
+  //     .catch((err) => {
+  //       setSpouseProfileLoading(false);
+  //       setSpouseProfileError(err?.response?.data?.message || "Upload failed");
+  //       // Clear the input
+  //       event.target.value = "";
+  //     });
+  // };
+
+  // ===============================
+// FULL WORKING SPOUSE IMAGE UPLOAD FUNCTION
+// ===============================
+const handleSpouseProfileImage = (event) => {
+  event.stopPropagation();
+
+  if (!event.target.files || event.target.files.length === 0) {
+    console.log("No spouse image selected");
+    return;
+  }
+
+  const file = event.target.files[0];
+  console.log("Spouse image selected:", file);
+
+  const formData = new FormData();
+  formData.append("file", file);
+
+  console.log("Uploading spouse profile image to server...");
+
+  setSpouseProfileLoading(true);
+  setSpouseProfileError("");
+
+  ApiServices.contact
+    .contactProfileUpload(formData)
+    .then((res) => {
+      console.log("Image upload response:", res);
+
+      if (res.code === 200) {
+        console.log("Spouse image uploaded successfully:", res.data);
+
+        // Update spouse state properly
+        setSpouse((prev) => {
+          const updatedSpouse = {
+            ...prev,
+            profileImage: file,     // for preview
+            profileFile: res.data,  // uploaded image URL/path from backend
+          };
+
+          console.log("Updated spouse object:", updatedSpouse);
+          return updatedSpouse;
+        });
+
         setSpouseProfileLoading(false);
-        setSpouseProfileError(err?.response?.data?.message || "Upload failed");
-        // Clear the input
+
+        // Reset input so user can select same image again
         event.target.value = "";
-      });
-  };
+      } else {
+        console.error("Image upload failed:", res.message);
+        setSpouseProfileError(res.message || "Upload failed");
+        setSpouseProfileLoading(false);
+        event.target.value = "";
+      }
+    })
+    .catch((err) => {
+      console.error("Error uploading spouse image:", err);
+      setSpouseProfileError(err?.response?.data?.message || "Upload failed");
+      setSpouseProfileLoading(false);
+      event.target.value = "";
+    });
+};
+
 
   // Child Profile Image Handler
   const handleChildProfileImage = (event, childId, isNewChild = false) => {
