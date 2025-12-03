@@ -12,7 +12,7 @@ import { toUTCUnixTimestamp } from "../../utilities/HelperFunctions";
 import moment from "moment";
 import { useTranslation } from "react-i18next";
 
-const CardScheduleModal = ({ label, isOpen, setIsOpen, refreshData, data, setModalData }) => {
+const MessageSchedule = ({ label, isOpen, setIsOpen, refreshData, data, setModalData }) => {
   // translation
   const { t } = useTranslation("common");
 
@@ -48,6 +48,40 @@ const CardScheduleModal = ({ label, isOpen, setIsOpen, refreshData, data, setMod
   // const [showError, setShowError] = useState(false);
 
 
+  const fetchAndSelectAllContacts = async () => {
+  let allSelected = {};
+
+  for (const group of groupOptions) {
+    const groupId = group.value;
+
+    // Fetch contacts for group if not already loaded
+    if (!groupContacts[groupId]) {
+      await ApiServices.contact.getGroupContactArrival(groupId, { event_id: eventSelect })
+        .then((res) => {
+          if (res.data?.code === 200) {
+            const contacts = res.data.data;
+
+            // Save contacts in state
+            setGroupContacts((prev) => ({
+              ...prev,
+              [groupId]: contacts
+            }));
+
+            // Select all users
+            allSelected[groupId] = contacts.map(c => c.uuid);
+          }
+        });
+    } else {
+      // Contacts already loaded → just select them
+      allSelected[groupId] = groupContacts[groupId].map(c => c.uuid);
+    }
+  }
+
+  // After all contacts fetched → update selection
+  setSelectedContactsByGroup(allSelected);
+};
+
+
   const getLocalDateTime = () => {
     const now = new Date();
     now.setMinutes(now.getMinutes() - now.getTimezoneOffset()); // Adjust for timezone offset
@@ -78,10 +112,13 @@ const CardScheduleModal = ({ label, isOpen, setIsOpen, refreshData, data, setMod
   };
 
   // Function to handle changes in Contact option
-  const handleContactOptionChange = (value) => {
+  const handleContactOptionChange = async(value) => {
     setContactOption(value);
     setContactOptionError("");
-    setShowError(false); // Hide error if event is selected
+    if (value === "allContacts") {
+    await fetchAndSelectAllContacts();
+  }
+    //setShowError(false); // Hide error if event is selected
   };
 
   // Function to handle changes in Sms option
@@ -90,15 +127,6 @@ const CardScheduleModal = ({ label, isOpen, setIsOpen, refreshData, data, setMod
     setSmsOptionError("");
   };
 
-  // const handleCheckboxChange = (value) => {
-  //   if (selectedContacts.includes(value)) {
-  //     setSelectedContacts(selectedContacts.filter((item) => item !== value));
-  //   } else {
-  //     setSelectedContacts([...selectedContacts, value]);
-  //   }
-  // };
-
-  // Form Validation
   const isValidForm = () => {
     let isValidData = true;
 
@@ -112,10 +140,6 @@ const CardScheduleModal = ({ label, isOpen, setIsOpen, refreshData, data, setMod
       isValidData = false;
     }
 
-    // if (event === null || Object.keys(event).length === 0) {
-    //   setEventError("Required");
-    //   isValidData = false;
-    // }
 
     if (contactOption === "selectedContacts") {
       // Validate that at least one contact is selected in any group
@@ -140,8 +164,9 @@ const CardScheduleModal = ({ label, isOpen, setIsOpen, refreshData, data, setMod
   // Handle Submit
   const handleSubmit = async (e) => {
     e.preventDefault();
-
+    
     if (isValidForm()) {
+      
       setBtnLoading(true);
       const requestData = {
         // message: message,
@@ -153,20 +178,22 @@ const CardScheduleModal = ({ label, isOpen, setIsOpen, refreshData, data, setMod
         send_to: selectedUsers,
         event_id: eventSelect,
       };
-      ApiServices.Card_Schedule.SendScheduleInvitation(requestData)
+      // console.log("values---", requestData); return false;
+      ApiServices.arrivalDeparture.SendArrivalDepartureMessage(requestData)
         .then((res) => {
+          
           const { data, message } = res;
-
           if (data?.code === 200) {
-            refreshData();
+            // refreshData(); 
             clearAllData();
             setSelectedContactsByGroup({});
             setGroupContacts({});
             setSelectedContacts({});
             setSelectedGroupID(null);
             openSuccessModal({
+              open:true,
               title: t("message.success"),
-              message: t("cardSchedule.cardScheduleAddedSuccess"),
+              message: t("arrival.arrivalMessageSent"),
               onClickDone: closeSuccessModel,
             });
             setIsOpen(false);
@@ -179,42 +206,6 @@ const CardScheduleModal = ({ label, isOpen, setIsOpen, refreshData, data, setMod
     }
   };
 
-  const updateSubmit = async (e) => {
-    e.preventDefault();
-    if (isValidForm()) {
-      setBtnLoading2(true);
-      const requestData = {
-        // message: message,
-        // group_id: selectedContacts,
-        event_id: eventSelect,
-        send_at: selectDateTime ? toUTCUnixTimestamp(selectDateTime) : "",
-        send_now: selectDateTime ? false : true,
-        // title: smsTitle,
-        send_to: selectedUsers,
-        event_id: eventSelect,
-      };
-
-      ApiServices.Card_Schedule.updateScheduleInvitation(data?.id, requestData)
-        .then((res) => {
-          const { data, message } = res;
-
-          if (data?.code === 200) {
-            refreshData();
-            clearAllData();
-            openSuccessModal({
-              title: t("message.success"),
-              message: t("cardSchedule.cardScheduleUpdatedSucess"),
-              onClickDone: closeSuccessModel,
-            });
-            setIsOpen(false);
-            setBtnLoading2(false);
-          }
-        })
-        .catch((err) => {
-          setBtnLoading2(false);
-        });
-    }
-  };
 
   //
 
@@ -253,6 +244,7 @@ const CardScheduleModal = ({ label, isOpen, setIsOpen, refreshData, data, setMod
   const getGroupNames = () => {
     let payload = {
       event_id: eventSelect,
+      from:'arrival'
     };
     ApiServices.contact
       .getGroup(payload)
@@ -272,29 +264,13 @@ const CardScheduleModal = ({ label, isOpen, setIsOpen, refreshData, data, setMod
       });
   };
 
-  // const getGroupContact = (groupId) => {
-  //   ApiServices.contact
-  //     .getGroupContact(groupId)
-  //     .then((res) => {
-  //       const { data } = res;
-  //       if (data?.code === 200) {
-  //         setGroupContacts((prevGroupContacts) => ({
-  //           ...prevGroupContacts,
-  //           [groupId]: data?.data,
-  //         }));
-  //       }
-  //     })
-  //     .catch((err) => {
-  //       console.error("Error fetching group contacts:", err);
-  //     });
-  // };
-
   const getGroupContact = (groupId) => {
     let payload = {
       event_id: eventSelect,
     };
+    // console.log("event----------", payload); return false;
     ApiServices.contact
-      .getGroupContact(groupId, payload)
+      .getGroupContactArrival(groupId, payload)
       .then((res) => {
         const { data } = res;
         if (data?.code === 200) {
@@ -506,12 +482,14 @@ const CardScheduleModal = ({ label, isOpen, setIsOpen, refreshData, data, setMod
                 <Dialog.Panel className="w-full max-w-3xl overflow-hidden rounded-2xl bg-white p-8 shadow-xl transition-all">
                   <div className="mb-5 flex items-center justify-between">
                     <Dialog.Title as="h3" className="font-poppins text-lg font-semibold leading-7 text-secondary-color">
-                      {data === null ? t("cardSchedule.addNewCardScheduled") : t("cardSchedule.updateCardScheduled")}
+                     
+                   {t("arrival.messageSchedule")}
                     </Dialog.Title>
                     <XMarkIcon onClick={closeModal} className="h-8 w-8 cursor-pointer text-info-color" />
                   </div>
 
-                  <form onSubmit={data === null ? handleSubmit : updateSubmit}>
+                  {/* <form onSubmit={data === null ? handleSubmit : updateSubmit}> */}
+                  <form onSubmit={handleSubmit}>
                     <div className="h-[400px]  overflow-y-auto p-2 md:h-[400px] lg:h-[400px] xl:h-[400px] 2xl:h-[400px]">
                       {/* <Input
                         isRequired
@@ -540,7 +518,7 @@ const CardScheduleModal = ({ label, isOpen, setIsOpen, refreshData, data, setMod
 
                       <div className="my-5 w-full space-y-3">
                         <div className="label ltr:text-left rtl:text-right">
-                          {t("cardSchedule.selectContact")} <span className="text-red-500">*</span>
+                          {t("arrival.selectContact")} <span className="text-red-500">*</span>
                           {contactOptionError && <span className="text-xs text-red-500">{contactOptionError}</span>}
                         </div>
 
@@ -555,7 +533,7 @@ const CardScheduleModal = ({ label, isOpen, setIsOpen, refreshData, data, setMod
                             className="h-4 w-4 border-gray-300 bg-gray-100 text-blue-600"
                           />
                           <label htmlFor="allContacts" className="ms-2 text-sm font-medium text-gray-900">
-                            {t("cardSchedule.allContacts")}
+                            {t("arrival.allContacts")}
                           </label>
                         </div>
 
@@ -570,7 +548,7 @@ const CardScheduleModal = ({ label, isOpen, setIsOpen, refreshData, data, setMod
                             className="h-4 w-4 border-gray-300 bg-gray-100 text-blue-600"
                           />
                           <label htmlFor="selectedContacts" className="ms-2 text-sm font-medium text-gray-900">
-                            {t("cardSchedule.selectedContacts")}
+                            {t("arrival.selectedContacts")}
                           </label>
                         </div>
                       </div>
@@ -582,7 +560,7 @@ const CardScheduleModal = ({ label, isOpen, setIsOpen, refreshData, data, setMod
                           <div className="label mb-5 ml-6 text-left">
                             <div className="flex items-center gap-x-2">
                               <div className="h-3 w-3 rounded-full bg-black"></div>
-                              <div className="font-medium">{t("cardSchedule.groups")}</div>
+                              <div className="font-medium">{t("arrival.groups")}</div>
                             </div>
                             {contactOptionError && <span className="text-xs text-red-500">* {contactOptionError}</span>}
                           </div>
@@ -643,7 +621,7 @@ const CardScheduleModal = ({ label, isOpen, setIsOpen, refreshData, data, setMod
 
                       <div className="mt-5 w-full">
                         <div className="label mb-5 ltr:text-left rtl:text-right">
-                          {t("cardSchedule.sendSMS")} <span className="text-red-500">*</span>
+                          {t("arrival.sendSMS")} <span className="text-red-500">*</span>
                           {sendOptionError && <span className="text-xs text-red-500">{sendOptionError}</span>}
                         </div>
 
@@ -658,7 +636,7 @@ const CardScheduleModal = ({ label, isOpen, setIsOpen, refreshData, data, setMod
                             className="h-4 w-4 border-gray-300 bg-gray-100 text-blue-600"
                           />
                           <label htmlFor="sendNow" className="ms-2 text-sm font-medium text-gray-900">
-                            {t("cardSchedule.sendNow")}
+                            {t("arrival.sendNow")}
                           </label>
                         </div>
 
@@ -673,7 +651,7 @@ const CardScheduleModal = ({ label, isOpen, setIsOpen, refreshData, data, setMod
                             className="h-4 w-4 border-gray-300 bg-gray-100 text-blue-600"
                           />
                           <label htmlFor="sendLater" className="ms-2 text-sm font-medium text-gray-900">
-                            {t("cardSchedule.sendLater")}
+                            {t("arrival.sendLater")}
                           </label>
                         </div>
                       </div>
@@ -697,7 +675,7 @@ const CardScheduleModal = ({ label, isOpen, setIsOpen, refreshData, data, setMod
                       <div className="mx-auto mt-10 grid w-8/12 grid-cols-2 gap-7">
                         <Button
                           icon={<CheckIcon />}
-                          title={data === null ? t("cardSchedule.proceed") : t("cardSchedule.sendOrSchedule")}
+                          title={data === null ? t("arrival.proceed") : t("arrival.sendOrSchedule")}
                           type="submit"
                           loading={data === null ? btnLoading : btnLoading2}
                         />
@@ -715,4 +693,4 @@ const CardScheduleModal = ({ label, isOpen, setIsOpen, refreshData, data, setMod
   );
 };
 
-export default CardScheduleModal;
+export default MessageSchedule;
