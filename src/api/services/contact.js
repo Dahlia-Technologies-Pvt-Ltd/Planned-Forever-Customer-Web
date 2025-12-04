@@ -171,7 +171,7 @@ export const getGroupContact = async (id , data) => {
 
 export const getGroupContactArrival = async (id , data) => {
   try {
-    let response = await axios.get(`${GET.GET_GROUP_CONTACT_ARRIVAL}/${id}` ,{
+    let response = await axios.get(`${GET.GET_GROUP_CONTACT}/${id}` ,{
       params: data,
     });
     return response;

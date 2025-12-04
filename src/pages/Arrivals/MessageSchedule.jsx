@@ -267,6 +267,7 @@ const MessageSchedule = ({ label, isOpen, setIsOpen, refreshData, data, setModal
   const getGroupContact = (groupId) => {
     let payload = {
       event_id: eventSelect,
+      from:'arrival'
     };
     // console.log("event----------", payload); return false;
     ApiServices.contact
