@@ -5,6 +5,7 @@ import ReactPaginate from "react-paginate";
 import ApiServices from "../../api/services";
 import Skeleton from "react-loading-skeleton";
 import AddArrivalModal from "./AddArrivalModal";
+import MessageSchedule from "./MessageSchedule";
 import { useMediaQuery } from "react-responsive";
 import React, { useEffect, useState } from "react";
 import Button from "../../components/common/Button";
@@ -56,6 +57,7 @@ const Arrivals = () => {
   const [addNewModal, setAddNewModal] = useState(false);
   const [openDeleteModal, setOpenDeleteModal] = useState({ open: false, data: null });
   const [addNewImportModal, setAddNewImportModal] = useState(false);
+  const [addNewSendMessageModal, setAddNewSendMessageModal] = useState(false);
 
   // Active Row
   const handleRowClick = (id) => {
@@ -202,12 +204,16 @@ const Arrivals = () => {
                   {(userData?.role?.display_name === "web_admin" || userData.role.permissions?.some((item) => item === "arrivals-create")) && (
                     <>
                       <Button title={t("arrival.addArrival")} onClick={() => setAddNewModal(true)} />
+                      
                       <Button title={t("contacts.importExcel")} buttonColor="bg-purple-600" onClick={() => setAddNewImportModal(true)} />
+                    
                     </>
                   )}
                   <Link to={ARRIVALS_PRINT}>
                     <Button title={t("buttons.print")} buttonColor="border-primary  bg-primary " />
                   </Link>
+                  
+                   <Button title="Send Message" onClick={() => setAddNewSendMessageModal(true)} buttonColor="bg-green-500"/>
                 </div>
                 <div className="flex items-center gap-x-4">
                   <div className="w-44">
@@ -546,6 +552,14 @@ const Arrivals = () => {
         refreshData={getArrivals}
         setIsOpen={() => setAddNewModal(false)}
       />
+
+      <MessageSchedule
+          refreshData=""
+          isOpen={addNewSendMessageModal}
+          setIsOpen={() => setAddNewSendMessageModal(false)}
+          setModalData={setModalData}
+          data={modalData}
+        />
 
       {/* Delete Modal */}
       <ConfirmationModal

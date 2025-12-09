@@ -11,6 +11,7 @@ i18n
     fallbackLng: "en",
     defaultNS: "common",
     backend: {
+      // loadPath: "/plannedforever-customer/locales/{{lng}}/{{ns}}.json",
       loadPath: "/locales/{{lng}}/{{ns}}.json",
     },
     detection: {
