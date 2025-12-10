@@ -11,8 +11,8 @@ import { ThemeContextProvider } from "./context/GlobalContext";
 
 ReactDOM.createRoot(document.getElementById("root")).render(
   //  <React.StrictMode>
-  // <BrowserRouter basename="/plannedforever-customer">
-   <BrowserRouter>
+  <BrowserRouter basename="/plannedforever-customer">
+    {/* <BrowserRouter> */}
     <ThemeContextProvider>
       <App />
     </ThemeContextProvider>

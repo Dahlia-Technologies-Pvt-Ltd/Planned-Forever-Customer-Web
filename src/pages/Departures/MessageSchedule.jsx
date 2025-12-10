@@ -12,7 +12,7 @@ import { toUTCUnixTimestamp } from "../../utilities/HelperFunctions";
 import moment from "moment";
 import { useTranslation } from "react-i18next";
 
-const MessageSchedule = ({ label, isOpen, setIsOpen, refreshData, data, setModalData }) => {
+const MessageSchedule = ({ label, isOpen, setIsOpen, refreshData, data, setModalData, type}) => {
   // translation
   const { t } = useTranslation("common");
 
@@ -177,7 +177,7 @@ const MessageSchedule = ({ label, isOpen, setIsOpen, refreshData, data, setModal
         // title: smsTitle,
         send_to: selectedUsers,
         event_id: eventSelect,
-        request_type:'arrival'
+        request_type:'departure'
       };
       // console.log("values---", requestData); return false;
       ApiServices.arrivalDeparture.SendArrivalDepartureMessage(requestData)
@@ -194,7 +194,7 @@ const MessageSchedule = ({ label, isOpen, setIsOpen, refreshData, data, setModal
             openSuccessModal({
               open:true,
               title: t("message.success"),
-              message:"Arrival Message Sent",
+              message: "Departure Message Sent",
               onClickDone: closeSuccessModel,
             });
             setIsOpen(false);
@@ -245,7 +245,7 @@ const MessageSchedule = ({ label, isOpen, setIsOpen, refreshData, data, setModal
   const getGroupNames = () => {
     let payload = {
       event_id: eventSelect,
-      from:'arrival'
+      from:'departure'
     };
     ApiServices.contact
       .getGroup(payload)
@@ -268,7 +268,7 @@ const MessageSchedule = ({ label, isOpen, setIsOpen, refreshData, data, setModal
   const getGroupContact = (groupId) => {
     let payload = {
       event_id: eventSelect,
-      from:'arrival'
+      from:'departure'
     };
     // console.log("event----------", payload); return false;
     ApiServices.contact

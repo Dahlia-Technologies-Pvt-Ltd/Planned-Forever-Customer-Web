@@ -6,11 +6,15 @@ import Skeleton from "react-loading-skeleton";
 import { useReactToPrint } from "react-to-print";
 import Button from "../../components/common/Button";
 import React, { useEffect, useState, useRef } from "react";
-import { ArrowLeftIcon, PrinterIcon } from "@heroicons/react/24/outline";
+import { ArrowLeftIcon, PrinterIcon, ClipboardIcon } from "@heroicons/react/24/outline";
+
 import { emptyFolderAnimation } from "../../utilities/lottieAnimations";
 import { useThemeContext } from "../../context/GlobalContext";
 import { useTranslation } from "react-i18next";
 import moment from "moment";
+
+import * as XLSX from "xlsx";
+import { saveAs } from "file-saver";
 
 const ContactPrint = () => {
   const { t } = useTranslation("common");
@@ -27,12 +31,15 @@ const ContactPrint = () => {
   // Use States
   const [loading, setLoading] = useState(false);
   const [allContactList, setAllContactList] = useState([]);
+  const [exportLoading, setExportLoading] = useState(false);
 
 
   // Handle Print
   const handlePrint = useReactToPrint({
     content: () => componentRef.current,
   });
+
+  
 
   const getContactListToPrint = async () => {
     let payload = {
@@ -41,6 +48,8 @@ const ContactPrint = () => {
     try {
       setLoading(true);
       const result = await ApiServices.contact.getContactReport(payload);
+
+     
       if (result.data.code === 200) {
         setAllContactList(result?.data?.data);
         setLoading(false);
@@ -146,6 +155,8 @@ const ContactPrint = () => {
 
     const allColumns = [...baseHeaders, ...childHeaders, ...phoneHeaders, ...emailHeaders];
 
+    console.log("allColumns-------------",allColumns);
+
     const renderCell = (item, header) => {
       // Base field mappings (best-effort to typical API fields)
       switch (header) {
@@ -250,6 +261,7 @@ const ContactPrint = () => {
       return "-";
     };
 
+
     return (
       <div ref={ref} className="pr-2 printableContactList">
         <table className="w-full text-left">
@@ -292,6 +304,195 @@ const ContactPrint = () => {
       </div>
     );
   });
+
+const handleExport = async () => {
+  try {
+    setExportLoading(true);
+
+    // Delay small time for UI smoothness
+    await new Promise(resolve => setTimeout(resolve, 300));
+
+    await exportExcel();  // We'll create this below
+
+  } catch (err) {
+    console.error(err);
+  } finally {
+    setExportLoading(false);
+  }
+};
+  
+    const exportExcel = async() => {
+      
+    // Compute dynamic counts
+    const maxChildren = Math.max(0, ...(allContactList || []).map(c => (c?.children?.length || 0)));
+    const maxPhones = Math.max(0, ...(allContactList || []).map(c => (c?.contact_numbers?.length || 0)));
+    const maxEmails = Math.max(0, ...(allContactList || []).map(c => (c?.emails?.length || 0)));
+
+    const getSpouse = (item) => (item?.children || []).find((c) => c?.type === "spouse");
+    const stripCode = (val) => (typeof val === "string" ? val.split(" ")[0] : val || "-");
+    const parseChildContact = (child) => {
+      try {
+        if (!child?.contact_number) return { number: "-", countryCode: "-" };
+        const parsed = JSON.parse(child.contact_number);
+        return {
+          number: parsed?.number ?? "-",
+          countryCode: stripCode(parsed?.countryCode ?? "-")
+        };
+      } catch {
+        return { number: "-", countryCode: "-" };
+      }
+    };
+
+    // Headers
+    const baseHeaders = [
+      "Salutation", "First Name", "Middle Name", "Last Name", "Nick Name",
+      "Salutation In Message", "Gender", "DOB", "No Of Member", "Marital Status",
+      "Anniversery Date", "Address", "City", "State", "Pin", "Country",
+      "Company Name", "Work Address", "Work City", "Work State", "Work Pin",
+      "Work Country", "Preferences", "Special Need", "Identity Image",
+      "Profile Image", "description", "Spouse Name", "Spouse Middle Name",
+      "Spouse Salutation", "Spouse last Name", "Spouse Contact", "Spouse Country Code",
+      "Spouse Gender", "Spouse Profile",
+    ];
+
+    const childHeaders = [];
+    for (let i = 1; i <= maxChildren; i++) {
+      childHeaders.push(
+        `Child ${i} Name`, `Child ${i} middle`, `Child ${i} salutation`, `Child ${i} last name`,
+        `Child ${i} gender`, `Child ${i} contact`, `Child ${i} country code`,
+        `Child ${i} type`, `Child ${i} is_adult`, `Child ${i} profile`
+      );
+    }
+
+    const phoneHeaders = [];
+    for (let i = 1; i <= maxPhones; i++) {
+      phoneHeaders.push(`Phone ${i} type`, `Phone ${i} number`, `Phone ${i} Country Code`);
+    }
+
+    const emailHeaders = [];
+    for (let i = 1; i <= maxEmails; i++) {
+      emailHeaders.push(`Email ${i} type`, `Email ${i} address`);
+    }
+
+    const allColumns = [...baseHeaders, ...childHeaders, ...phoneHeaders, ...emailHeaders];
+
+    const renderCell = (item, header) => {
+      switch (header) {
+        case "Salutation": return item?.salutation || "-";
+        case "First Name": return item?.first_name || "-";
+        case "Middle Name": return item?.middle_name || "-";
+        case "Last Name": return item?.last_name || "-";
+        case "Nick Name": return item?.nick_name || "-";
+        case "Salutation In Message": return item?.salutation_in_email || "-";
+        case "Gender": return item?.gender || "-";
+        case "DOB": return item?.DOB ? moment.unix(item?.DOB).format("DD MMM, YYYY") : "-";
+        case "No Of Member": return item?.no_of_members || "-";
+        case "Marital Status": return item?.marital_status || "-";
+        case "Anniversery Date": return item?.anniversery_date ? moment.unix(item?.anniversery_date).format("DD MMM, YYYY") : "-";
+        case "Address": return item?.address || "-";
+        case "City": return item?.city || "-";
+        case "State": return item?.state || "-";
+        case "Pin": return item?.pin || "-";
+        case "Country": return item?.country || "-";
+        case "Company Name": return item?.company_name || "-";
+        case "Work Address": return item?.work_address || "-";
+        case "Work City": return item?.work_city || "-";
+        case "Work State": return item?.work_state || "-";
+        case "Work Pin": return item?.work_pin || "-";
+        case "Work Country": return item?.work_country || "-";
+        case "Preferences": {
+          const mealPrefs = Array.isArray(item?.meal_preference) ? item?.meal_preference.map(p => p.name).join(", ") : "";
+          const beveragePrefs = Array.isArray(item?.beverage_preference) ? item?.beverage_preference.map(p => p.name).join(", ") : "";
+          return [mealPrefs, beveragePrefs].filter(Boolean).join("; ") || "-";
+        }
+        case "Special Need": return item?.special_need || "-";
+        case "Identity Image": return Array.isArray(item?.identity_image) ? item?.identity_image.join(", ") : item?.identity_image || "-";
+        case "Profile Image": return item?.profile_image || "-";
+        case "description": return item?.description || "-";
+        case "Spouse Name": return getSpouse(item)?.name || "-";
+        case "Spouse Middle Name": return getSpouse(item)?.middle_name || "-";
+        case "Spouse Salutation": return getSpouse(item)?.salutation || "-";
+        case "Spouse last Name": return getSpouse(item)?.last_name || "-";
+        case "Spouse Contact": return parseChildContact(getSpouse(item)).number;
+        case "Spouse Country Code": return parseChildContact(getSpouse(item)).countryCode;
+        case "Spouse Gender": return getSpouse(item)?.gender || "-";
+        case "Spouse Profile": return getSpouse(item)?.profile_image || "-";
+        default:
+          break;
+      }
+
+      // Dynamic children
+      if (header.startsWith("Child ")) {
+        const match = header.match(/^Child (\d+) (.+)$/);
+        if (match) {
+          const idx = parseInt(match[1], 10) - 1;
+          const field = match[2];
+          const child = item?.children?.[idx];
+          if (!child) return "-";
+          switch (field) {
+            case "Name": return child?.name || "-";
+            case "middle": return child?.middle_name || "-";
+            case "salutation": return child?.salutation || "-";
+            case "last name": return child?.last_name || "-";
+            case "gender": return child?.gender || "-";
+            case "contact": return parseChildContact(child).number;
+            case "country code": return parseChildContact(child).countryCode;
+            case "type": return child?.type || "-";
+            case "is_adult": return child?.isAdult === 1 ? "Yes" : child?.isAdult === 0 ? "No" : "-";
+            case "profile": return child?.profile_image || "-";
+            default: return "-";
+          }
+        }
+      }
+
+      // Dynamic phones
+      if (header.startsWith("Phone ")) {
+        const match = header.match(/^Phone (\d+) (type|number|Country Code)$/);
+        if (match) {
+          const idx = parseInt(match[1], 10) - 1;
+          const field = match[2];
+          const phone = item?.contact_numbers?.[idx];
+          if (!phone) return "-";
+          if (field === "type") return phone?.type || "-";
+          if (field === "number") return phone?.contact_number || "-";
+          if (field === "Country Code") return phone?.country_code || "-";
+        }
+      }
+
+      // Dynamic emails
+      if (header.startsWith("Email ")) {
+        const match = header.match(/^Email (\d+) (type|address)$/);
+        if (match) {
+          const idx = parseInt(match[1], 10) - 1;
+          const field = match[2];
+          const email = item?.emails?.[idx];
+          if (!email) return "-";
+          if (field === "type") return email?.type || "-";
+          if (field === "address") return email?.contact_email || "-";
+        }
+      }
+
+      return "-";
+    };
+
+    // Build rows
+    const excelRows = allContactList.map(item => {
+      const row = {};
+      allColumns.forEach(header => {
+        row[header] = renderCell(item, header);
+      });
+      return row;
+    });
+
+    // Create worksheet & workbook
+    const worksheet = XLSX.utils.json_to_sheet(excelRows, { header: allColumns });
+    const workbook = XLSX.utils.book_new();
+    XLSX.utils.book_append_sheet(workbook, worksheet, "Contacts");
+
+    // Save
+    const excelBuffer = XLSX.write(workbook, { bookType: "xlsx", type: "array" });
+    saveAs(new Blob([excelBuffer], { type: "application/octet-stream" }), "Contacts_Report.xlsx");
+  };
   return (
     <>
       {(userData?.role === "superAdmin" || userData?.role?.permissions?.includes("Contacts")) && (
@@ -353,7 +554,16 @@ const ContactPrint = () => {
 
         {allContactList?.length > 0 && (
           <div className="flex justify-end items-center mt-4">
-            <Button icon={<PrinterIcon />} title={t("buttons.print")} type="button" onClick={handlePrint} />
+            {/* <Button icon={<PrinterIcon />} title={t("buttons.print")} type="button" onClick={handlePrint} /> */}
+           <Button
+              icon={<ClipboardIcon />}
+              title={exportLoading ? "Exporting..." : "Export"}
+              type="button"
+              disabled={exportLoading}
+              onClick={handleExport}
+              loading={exportLoading}
+            />
+
           </div>
         )}
       </div>

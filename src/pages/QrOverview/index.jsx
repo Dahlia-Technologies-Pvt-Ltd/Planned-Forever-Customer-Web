@@ -502,7 +502,6 @@ const QrCodesOverview = () => {
       body: "",
       redirect: "follow",
     };
-
     fetch(
       "https://web-sandbox.dahlia.tech/plannedforever-mybagtags/api/index.php/PfQrCodesController/exportQRCodeList",
       requestOptions
