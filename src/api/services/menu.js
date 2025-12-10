@@ -35,6 +35,16 @@ export const getMenuType = async (data) => {
   }
 };
 
+export const getMenuById = async (id) => {
+  try {
+    let response = await axios.get(`${GET.RECOMMENDED_MENU_ID}/${id}`);
+    return response;
+  } catch (err) {
+    throw err;
+  }
+};
+
+
 export const getTasteProfile = async (data) => {
   try {
     let response = await axios.get(GET.GET_TASTE_PROFILE, {
@@ -125,4 +135,6 @@ export const getCeremonyTrendingMenus = async (data) => {
   } catch (err) {
     throw err;
   }
+
+  
 };

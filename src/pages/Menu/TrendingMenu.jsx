@@ -194,7 +194,7 @@ const Vendors = () => {
       const res = await ApiServices.menu.getMenuType();
       const { data, message } = res;
       if (data.code === 200) {
-        const formattedCeremonies = data?.data?.data?.map((ceremony) => ({
+        const formattedCeremonies = data?.data?.map((ceremony) => ({
           value: ceremony.id,
           label: ceremony.name,
         }));
@@ -208,7 +208,7 @@ const Vendors = () => {
       const res = await ApiServices.menu.getTasteProfile();
       const { data, message } = res;
       if (data.code === 200) {
-        const formattedCeremonies = data?.data?.data?.map((ceremony) => ({
+        const formattedCeremonies = data?.data?.map((ceremony) => ({
           value: ceremony.id,
           label: ceremony.name,
         }));
@@ -222,7 +222,7 @@ const Vendors = () => {
       const res = await ApiServices.menu.getCuisine();
       const { data, message } = res;
       if (data.code === 200) {
-        const formattedCeremonies = data?.data?.data?.map((ceremony) => ({
+        const formattedCeremonies = data?.data?.map((ceremony) => ({
           value: ceremony.id,
           label: ceremony.name,
         }));
@@ -309,7 +309,7 @@ const Vendors = () => {
                 </div>
               </div>
             </div>
-            <div className="grid grid-cols-3 gap-7 mt-7 mb-5">
+            <div className="mt-7 mb-7 grid gap-4 items-end grid-cols-[1fr_1fr_1fr_auto]">
               <Dropdown
                 isSearchable
                 options={allRecCeremonies}
@@ -340,6 +340,15 @@ const Vendors = () => {
                 }}
                 title={t("menu.tasteProfile")}
               />
+              <Button
+                  title="Clear"
+                  onClick={() => {
+                    setMenuTaste(null);
+                    setMenuCuisine(null);
+                    setMenuType(null);
+                  }}
+                  className="px-3 py-2 text-sm w-auto"
+                />
             </div>
             <div className="mt-5">
               <div className="overflow-x-auto -mx-6 mb-8">

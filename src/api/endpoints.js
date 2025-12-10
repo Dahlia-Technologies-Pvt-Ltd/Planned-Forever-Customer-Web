@@ -290,6 +290,7 @@ const GET = {
   // =============================================================================
   // MENU & CATERING MANAGEMENT
   // =============================================================================
+  RECOMMENDED_MENU_ID: "trending_menu",
   GET_MENU: "menu",
   GET_TRENDING_MENU: "trending_menu",
   GET_CEREMONY_MENU_ITEM: "recommended_menu",
