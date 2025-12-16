@@ -529,6 +529,7 @@ const Accordian = ({ data, rsvpModal, inviteeCheckbox, eventId, onSuccess, cardA
     }
   }, [childCheckedStates]);
 
+console.log("data--------------", data);
   return (
     <>
       <div className="space-y-4">
@@ -703,8 +704,9 @@ const Accordian = ({ data, rsvpModal, inviteeCheckbox, eventId, onSuccess, cardA
                                 <MagnifyingGlassIcon className="h-4 w-4 text-blue-400" /> {t("invitee.allocateCard")}
                               </button>
                             </td>
-                            <td className="w-1/3 p-4">{`${member?.salutation} ${member?.first_name} ${member?.last_name}` || ""}</td>
-                            <td className="w-1/3 p-4">{member?.card_allocation?.map((card) => card?.card.name).join(", ") || ""}</td>{" "}
+                            <td className="w-1/5 p-2">{`${member?.salutation} ${member?.first_name} ${member?.last_name}` || ""}</td>
+                             <td className="w-1/4 p-2">{member?.card_allocation?.map((card) => card?.name_on_card) || ""}</td>{" "}
+                            <td className="w-1/2 p-2">{member?.card_allocation?.map((card) => card?.card.name).join(", ") || ""}</td>{" "}
                           </tr>
                         ))}
                       </tbody>

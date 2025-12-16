@@ -10,11 +10,12 @@ import "react-big-calendar/lib/css/react-big-calendar.css";
 import { ThemeContextProvider } from "./context/GlobalContext";
 
 ReactDOM.createRoot(document.getElementById("root")).render(
-  // <React.StrictMode>
-  <BrowserRouter>
+  //  <React.StrictMode>
+  <BrowserRouter basename="/plannedforever-customer">
+    {/* <BrowserRouter> */}
     <ThemeContextProvider>
       <App />
     </ThemeContextProvider>
   </BrowserRouter>,
-  // </React.StrictMode>,
+   {/* </React.StrictMode>, */}
 );

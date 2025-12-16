@@ -573,7 +573,17 @@
     "arrivalDeleteSuccess": "Arrival has been deleted successfully",
     "arrivalDeleteConf": "Are you sure you want to delete this arrival?",
     "arrivalAddedSuccess": "Arrival has been added successfully!",
-    "arrivalUpdatedSucess": "Arrival has been updated successfully!"
+    "arrivalMessageSent": "Arrival/ Departure message scheduled successfully",
+    "arrivalUpdatedSucess": "Arrival has been updated successfully!",
+    "selectContact": "Select Contact",
+    "allContacts": "All Contacts",
+    "selectedContacts": "Selected Contacts",
+    "groups": "Groups",
+    "sendSMS": "Send SMS",
+    "sendNow": "Send Now",
+    "sendLater": "Send Later",
+    "messageSchedule":"Send Message",
+    "proceed":"Proceed"
   },
   "departure": {
     "dateTime": "Date & Time",

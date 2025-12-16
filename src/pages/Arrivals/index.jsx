@@ -5,6 +5,7 @@ import ReactPaginate from "react-paginate";
 import ApiServices from "../../api/services";
 import Skeleton from "react-loading-skeleton";
 import AddArrivalModal from "./AddArrivalModal";
+import MessageSchedule from "./MessageSchedule";
 import { useMediaQuery } from "react-responsive";
 import React, { useEffect, useState } from "react";
 import Button from "../../components/common/Button";
@@ -56,6 +57,7 @@ const Arrivals = () => {
   const [addNewModal, setAddNewModal] = useState(false);
   const [openDeleteModal, setOpenDeleteModal] = useState({ open: false, data: null });
   const [addNewImportModal, setAddNewImportModal] = useState(false);
+  const [addNewSendMessageModal, setAddNewSendMessageModal] = useState(false);
 
   // Active Row
   const handleRowClick = (id) => {
@@ -195,62 +197,75 @@ const Arrivals = () => {
       <div className="grid grid-cols-12 gap-5">
         <div className="col-span-12 lg:col-span-8">
           <div className="card min-h-[82vh]">
-            <div className="flex justify-between">
+            <div className="flex flex-col gap-y-4">
               <h3 className="heading">Arrivals</h3>
-              <div className="flex w-full items-center justify-between">
-                <div className="flex items-center gap-x-3">
-                  {(userData?.role?.display_name === "web_admin" || userData.role.permissions?.some((item) => item === "arrivals-create")) && (
-                    <>
-                      <Button title={t("arrival.addArrival")} onClick={() => setAddNewModal(true)} />
-                      <Button title={t("contacts.importExcel")} buttonColor="bg-purple-600" onClick={() => setAddNewImportModal(true)} />
-                    </>
-                  )}
-                  <Link to={ARRIVALS_PRINT}>
-                    <Button title={t("buttons.print")} buttonColor="border-primary  bg-primary " />
-                  </Link>
+
+              {/* Top buttons */}
+              <div className="flex items-center gap-x-3">
+                {(userData?.role?.display_name === "web_admin" ||
+                  userData.role.permissions?.some((item) => item === "arrivals-create")) && (
+                  <>
+                    <Button title={t("arrival.addArrival")} onClick={() => setAddNewModal(true)} />
+                    <Button
+                      title={t("contacts.importExcel")}
+                      buttonColor="bg-purple-600"
+                      onClick={() => setAddNewImportModal(true)}
+                    />
+                  </>
+                )}
+
+                <Link to={ARRIVALS_PRINT}>
+                  <Button title={t("buttons.print")} buttonColor="border-primary bg-primary" />
+                </Link>
+
+                <Button
+                  title="Send Message"
+                  onClick={() => setAddNewSendMessageModal(true)}
+                  buttonColor="bg-green-500"
+                />
+              </div>
+
+              {/* Filters section under Add Arrival */}
+              <div className="flex items-center gap-x-4">
+                <div className="w-44">
+                  <Dropdown
+                    placeholder="Select"
+                    options={[
+                      { label: "All", value: "" },
+                      { label: "Car Allocated", value: "car_allocated" },
+                      { label: "Car Not Allocated", value: "car_not_allocated" },
+                      { label: "Has Arrived", value: "arrived" },
+                      { label: "Not Arrived", value: "not_arrived" },
+                    ]}
+                    value={arrivalFilter}
+                    onChange={(e) => setArrivalFilter(e)}
+                    noMargin
+                  />
                 </div>
-                <div className="flex items-center gap-x-4">
-                  <div className="w-44">
-                    <Dropdown
-                      placeholder="Select"
-                      options={[
-                        { label: "All", value: "" },
-                        { label: "Car Allocated", value: "car_allocated" },
-                        { label: "Car Not Allocated", value: "car_not_allocated" },
-                        { label: "Has Arrived", value: "arrived" },
-                        { label: "Not Arrived", value: "not_arrived" },
-                      ]}
-                      value={arrivalFilter}
-                      onChange={(e) => {
-                        setArrivalFilter(e);
-                      }}
-                      noMargin
-                    />
+
+                <div className="relative flex items-center">
+                  <div className="pointer-events-none absolute inset-y-0 left-0 z-20 flex items-center pl-4">
+                    <MagnifyingGlassIcon className="h-5 w-5 text-primary-light-color" />
                   </div>
-                  <div className="relative flex items-center">
-                    <div className="pointer-events-none absolute inset-y-0 left-0 z-20 flex items-center pl-4">
-                      <MagnifyingGlassIcon className="h-5 w-5 text-primary-light-color" />
-                    </div>
-                    <input
-                      type="text"
-                      id="search"
-                      name="search"
-                      placeholder={t("placeholders.search") + "..."}
-                      autoComplete="off"
-                      value={searchText}
-                      onChange={(e) => {
-                        setSearchText(e.target.value);
-                        if (e.target.value.trim() === "") {
-                          getArrivals(true);
-                        }
-                      }}
-                      onKeyPress={handleSearch}
-                      className="focus:border-primary-color-100 block h-11 w-52 rounded-10 border border-primary-light-color px-4 pl-11 text-sm text-primary-color focus:ring-primary-color 3xl:w-full"
-                    />
-                  </div>
+
+                  <input
+                    type="text"
+                    id="search"
+                    name="search"
+                    placeholder={t("placeholders.search") + "..."}
+                    autoComplete="off"
+                    value={searchText}
+                    onChange={(e) => {
+                      setSearchText(e.target.value);
+                      if (e.target.value.trim() === "") getArrivals(true);
+                    }}
+                    onKeyPress={handleSearch}
+                    className="focus:border-primary-color-100 block h-11 w-52 rounded-10 border border-primary-light-color px-4 pl-11 text-sm text-primary-color focus:ring-primary-color 3xl:w-full"
+                  />
                 </div>
               </div>
             </div>
+
             {/* Table Start */}
             <div className="mt-5">
               <div className="-mx-6 mb-8 overflow-x-auto">
@@ -546,6 +561,14 @@ const Arrivals = () => {
         refreshData={getArrivals}
         setIsOpen={() => setAddNewModal(false)}
       />
+
+      <MessageSchedule
+          refreshData=""
+          isOpen={addNewSendMessageModal}
+          setIsOpen={() => setAddNewSendMessageModal(false)}
+          setModalData={setModalData}
+          data={modalData}
+        />
 
       {/* Delete Modal */}
       <ConfirmationModal

@@ -105,11 +105,10 @@ const getTemplatesList = async () => {
           placeholders: placeholders,
         };
       }
-
+      // console.log("vvvvvv------", payload); return false;
       const res = await ApiServices.doubleTick.sendTemplate(payload, {
         headers: headerImage ? { "Content-Type": "multipart/form-data" } : {},
       });
-
       handleResponse(res);
     } catch (err) {
       console.error("Error sending template:", err);
@@ -122,7 +121,7 @@ const getTemplatesList = async () => {
   // Success Handler
   const handleResponse = (res) => {
     const { data } = res;
-    if (data.status === true) {
+    if (data.code === 200) {
       setBtnLoading(false);
       openSuccessModal({
         title: "Success",
@@ -266,7 +265,7 @@ const getTemplatesList = async () => {
                 {shouldShowImageInput && (
                   <div className="">
                     <h2 className={`label `}>
-                      Image
+                      Document
                       <span className="text-base text-red-500">* {errors.headerImage}</span>
                     </h2>{" "}
                     <ChooseFile

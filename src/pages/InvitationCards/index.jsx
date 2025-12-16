@@ -178,7 +178,7 @@ const InvitationCards = () => {
         },
       });
 
-      // Create a temporary anchor element to trigger download
+      //Create a temporary anchor element to trigger download
       const anchor = document.createElement("a");
       anchor.href = qrCodeDataUrl;
       anchor.download = "guest-invitations-qr-code.png";
@@ -200,6 +200,7 @@ const InvitationCards = () => {
     }
   };
 
+  console.log("items----------------------", items);
   return (
     <>
       <div className="grid grid-cols-12 gap-5">
@@ -303,7 +304,7 @@ const InvitationCards = () => {
                           </td>
 
                           <td className="py-3 pl-4 pr-3 3xl:px-4">
-                            <p className="text-primary-color-200 text-xs font-normal 3xl:text-sm">{item?.description || "-" || item?.description === "null" ? "-" : item?.description}</p>
+                            <p className="text-primary-color-200 text-xs font-normal 3xl:text-sm">{item?.description ? item?.description : '-'}</p>
                           </td>
 
                           {/* <td className="py-3 pl-4 pr-3 3xl:px-4">
@@ -432,7 +433,7 @@ const InvitationCards = () => {
 
                   <div>
                     <h2 className="sub-heading mb-5">{t("headings.otherInfo")}</h2>
-                    <TitleValue title={t("headings.notes")} value={detail?.description || "-" || detail?.description === "null" ? "-" : detail?.description} />
+                    <TitleValue title={t("headings.notes")} value={detail?.description ? detail?.description : '-'} />
                   </div>
                 </div>
               </>

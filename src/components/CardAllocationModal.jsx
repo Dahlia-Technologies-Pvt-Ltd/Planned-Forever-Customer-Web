@@ -10,6 +10,7 @@ import { useTranslation } from "react-i18next";
 
 export default function CardAllocationModal({ label, isOpen, setIsOpen, allocateData, eventId, onSuccess, isBulkAllocation = false }) {
   // useContext
+  console.log("isBulkAllocation-----------", isBulkAllocation);
   const { eventSelect, loading, setLoading, btnLoading, setBtnLoading, openSuccessModal, closeSuccessModel } = useThemeContext();
 
   const { t } = useTranslation("common");
@@ -384,12 +385,19 @@ export default function CardAllocationModal({ label, isOpen, setIsOpen, allocate
                   )}
 
                   <div>
-                    <table className="mt-8 w-full border-collapse">
+                    {/* <table className="mt-8 w-full border-collapse"> */}
+                    <table
+                        className={`mt-8 border-collapse ${
+                          isBulkAllocation ? "w-1/3" : "w-full"
+                        }`}
+                      >
                       <thead>
                         <tr>
                           <th className="border border-gray-400 px-2 py-2 text-start">{t("cardAllocation.card")}</th>
-                          <th className="border border-gray-400 px-2 py-2 text-start">{t("cardAllocation.nameOnCard")}</th>
-                          <th className="border border-gray-400 px-2 text-start">{t("headings.actions")}</th>
+                          {!isBulkAllocation && (
+                            <th className="border border-gray-400 px-2 py-2 text-start">{t("cardAllocation.nameOnCard")}</th>
+                          )}
+                          {/* <th className="border border-gray-400 px-2 text-start">{t("headings.actions")}</th> */}
                         </tr>
                       </thead>
                       <tbody>
@@ -404,16 +412,21 @@ export default function CardAllocationModal({ label, isOpen, setIsOpen, allocate
                                 onChange={(label) => handleInputChange(label, "card", index)}
                               />
                             </td>
-                            <td className="border border-gray-400 px-2 pb-3 pt-2">
-                              <Input
-                                type="text"
-                                labelOnTop
-                                value={item.name}
-                                withError={errors[index]?.name}
-                                onChange={(e) => handleInputChange(e.target.value, "name", index)}
-                              />
-                            </td>
-                            <td className="flex items-center justify-center gap-x-2 border border-gray-400 px-3 py-4">
+                           {isBulkAllocation ? (
+                                <td></td>
+                              ) : (
+                                <td className="border border-gray-400 px-2 pb-3 pt-2">
+                                  <Input
+                                    type="text"
+                                    labelOnTop
+                                    value={item.name}
+                                    withError={errors[index]?.name}
+                                    onChange={(e) => handleInputChange(e.target.value, "name", index)}
+                                  />
+                                </td>
+                              )}
+
+                            {/* <td className="flex items-center justify-center gap-x-2 border border-gray-400 px-3 py-4">
                               {items.length > 1 ? (
                                 <Button
                                   icon={<TrashIcon className="w-5" />}
@@ -424,14 +437,14 @@ export default function CardAllocationModal({ label, isOpen, setIsOpen, allocate
                               ) : (
                                 <div className="py-5"></div>
                               )}
-                            </td>
+                            </td> */}
                           </tr>
                         ))}
                       </tbody>
                     </table>
-                    <button className="float-left mt-4 rounded-lg bg-secondary px-4 py-2 text-white" onClick={addNewFieldSet}>
+                    {/* <button className="float-left mt-4 rounded-lg bg-secondary px-4 py-2 text-white" onClick={addNewFieldSet}>
                       {t("cardAllocation.addAnotherSet")}
-                    </button>
+                    </button> */}
                   </div>
 
                   <div className="mt-64 flex justify-end gap-x-6 px-8">

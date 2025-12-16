@@ -12,6 +12,24 @@ export const getArrivalDeparture = async (data) => {
   }
 };
 
+export const SendScheduleInvitation = async (data) => {
+  try {
+    let response = await axios.post(POST.SEND_SCHEDULE_INVITATION, data);
+    return response;
+  } catch (err) {
+    throw err;
+  }
+};
+
+export const SendArrivalDepartureMessage = async (data) => {
+  try {
+    let response = await axios.post(POST.SEND_ARRIVAL_DEPARTURE_MESSAGE, data);
+    return response;
+  } catch (err) {
+    throw err;
+  }
+};
+
 export const getArrivalDepartureReport = async (data) => {
   try {
     let response = await axios.get(GET.GET_ARRIVAL_DEPARTURE_REPORT, {

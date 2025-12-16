@@ -33,7 +33,7 @@ const QrCodesOverview = () => {
 
   // Table Head with translations
   const TABLE_HEAD = ["Qr Code", t("qrCodeOverview.name"), "Status"];
-
+  const [loadingExport, setLoadingExport] = useState(false);
   // Context
   const { loading, setLoading, setBtnLoading, btnLoading, openSuccessModal, setErrorMessage, closeSuccessModel, eventSelect, eventDetail } =
     useThemeContext();
@@ -117,7 +117,7 @@ const QrCodesOverview = () => {
         redirect: "follow",
       };
 
-      const response = await fetch("https://plannedforever.my-bagtags.com/api/index.php/PfQrCodesController/getUserQrCodeCounts", requestOptions);
+      const response = await fetch("https://web-sandbox.dahlia.tech/plannedforever-mybagtags/api/index.php/PfQrCodesController/getUserQrCodeCounts", requestOptions);
 
       const result = await response.text();
       console.log("User counts response:", result);
@@ -167,7 +167,7 @@ const QrCodesOverview = () => {
         redirect: "follow",
       };
 
-      const response = await fetch("https://plannedforever.my-bagtags.com/api/index.php/PfQrCodesController/getQrCodeList", requestOptions1);
+      const response = await fetch("https://web-sandbox.dahlia.tech/plannedforever-mybagtags/api/index.php/PfQrCodesController/getQrCodeList", requestOptions1);
 
       const result = await response.text();
       const data = JSON.parse(result);
@@ -486,6 +486,60 @@ const QrCodesOverview = () => {
     }
   }, [selectedColorCode]);
 
+
+  const handleExport = () => {
+  setLoadingExport(true);
+   const userData = JSON.parse(localStorage.getItem("userData"));
+   const authToken = userData?.qr_token;
+
+  try {
+    const myHeaders = new Headers();
+     myHeaders.append("Auth-Token", authToken);
+
+    const requestOptions = {
+      method: "POST",
+      headers: myHeaders,
+      body: "",
+      redirect: "follow",
+    };
+    fetch(
+      "https://web-sandbox.dahlia.tech/plannedforever-mybagtags/api/index.php/PfQrCodesController/exportQRCodeList",
+      requestOptions
+    )
+      .then((response) => response.text())
+      .then((result) => {
+        console.log("Dashboard response:", result);
+
+        const data = JSON.parse(result);
+
+        if (data.status === 200 || data.status === true) {
+          const dashboardData = data?.result || {};
+          console.log("Dashboard Data:", dashboardData);
+          const fileUrl = data.result.file_url;
+          console.log("File URL:", fileUrl);
+          const link = document.createElement("a");
+          link.href = fileUrl;
+          link.download = "qrCode_export.xlsx";
+          document.body.appendChild(link);
+          link.click();
+          document.body.removeChild(link);
+        } else {
+          console.warn("Unexpected status:", data);
+        }
+      })
+      .catch((error) => {
+        console.error("Error during fetch:", error);
+      })
+      .finally(() => {
+        setLoadingExport(false);
+      });
+
+  } catch (e) {
+    console.error("Unexpected error:", e);
+    setLoadingExport(false);
+  }
+};
+
   return (
     <>
       <div className="grid grid-cols-12 gap-5">
@@ -531,6 +585,7 @@ const QrCodesOverview = () => {
                     <Button title={t("buttons.print")} buttonColor="border-primary  bg-primary " />
                   </Link> */}
                 </div>
+                <Button title={loadingExport ? "Exporting..." : "Export"} onClick={handleExport} />
                 <div className="relative flex items-center">
                   <div className="pointer-events-none absolute inset-y-0 left-0 z-20 flex items-center pl-4">
                     <MagnifyingGlassIcon className="h-5 w-5 text-primary-light-color" />

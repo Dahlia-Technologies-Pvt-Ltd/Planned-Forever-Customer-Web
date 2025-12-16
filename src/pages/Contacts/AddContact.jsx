@@ -214,7 +214,7 @@ const AddContact = () => {
       redirect: "follow",
     };
 
-    fetch("https://plannedforever.my-bagtags.com/api/index.php/PfQrCodesController/getQrCodeList", requestOptions)
+    fetch("https://web-sandbox.dahlia.tech/plannedforever-mybagtags/api/index.php/PfQrCodesController/getQrCodeList", requestOptions)
       .then((response) => response.text())
       .then((result) => {
         console.log(result);
@@ -277,7 +277,7 @@ const AddContact = () => {
       redirect: "follow",
     };
 
-    fetch("https://plannedforever.my-bagtags.com/api/index.php/PfQrCodesController/getUserQrCodeCounts", requestOptions)
+    fetch("https://web-sandbox.dahlia.tech/plannedforever-mybagtags/api/index.php/PfQrCodesController/getUserQrCodeCounts", requestOptions)
       .then((response) => response.text())
       .then((result) => {
         console.log(result);
@@ -805,51 +805,113 @@ const AddContact = () => {
   };
 
   // Spouse Profile Image Handler
-  const handleSpouseProfileImage = (event) => {
-    // Prevent event bubbling and ensure we're only handling spouse uploads
-    event.stopPropagation();
+  // const handleSpouseProfileImage = (event) => {
+  //   // Prevent event bubbling and ensure we're only handling spouse uploads
+  //   event.stopPropagation();
 
-    if (!event.target.files || event.target.files.length === 0) return;
+  //   if (!event.target.files || event.target.files.length === 0) return;
 
-    const file = event.target.files[0];
-    console.log("Spouse profile image upload initiated");
+  //   const file = event.target.files[0];
+  //   console.log("Spouse profile image upload initiated");
 
-    const formData = new FormData();
-    formData.append("file", file);
+  //   const formData = new FormData();
+  //   formData.append("file", file);
 
-    setSpouseProfileLoading(true);
-    setSpouseProfileError("");
+  //   setSpouseProfileLoading(true);
+  //   setSpouseProfileError("");
 
-    ApiServices.contact
-      .contactProfileUpload(formData)
-      .then((res) => {
-        const { data, message } = res;
+  //   ApiServices.contact
+  //     .contactProfileUpload(formData)
+  //     .then((res) => {
+  //       const { data, message } = res;
 
-        if (res.code === 200) {
-          setSpouse({
-            salutation: spouse?.salutation || "",
-            name: spouse?.name || "",
-            middleName: spouse?.middleName || "",
-            lastName: spouse?.lastName || "",
-            gender: spouse?.gender || "",
-            countryCode: spouse?.countryCode || "",
-            contactNumber: spouse?.contactNumber || "",
-            profileImage: spouse?.profile_image || null,
-            profileFile: spouse?.profile_image || null,
-            meal_preference: spouse?.meal_preference?.flatMap((category) => category?.map((item) => item.value)) || [], // [primary, secondary, alcoholic]
-          });
-          setSpouseProfileLoading(false);
-          // Clear the input to allow re-selection of the same file
-          event.target.value = "";
-        }
-      })
-      .catch((err) => {
+  //       if (res.code === 200) {
+  //         setSpouse({
+  //           salutation: spouse?.salutation || "",
+  //           name: spouse?.name || "",
+  //           middleName: spouse?.middleName || "",
+  //           lastName: spouse?.lastName || "",
+  //           gender: spouse?.gender || "",
+  //           countryCode: spouse?.countryCode || "",
+  //           contactNumber: spouse?.contactNumber || "",
+  //           profileImage: spouse?.profile_image || null,
+  //           profileFile: spouse?.profile_image || null,
+  //           meal_preference: spouse?.meal_preference?.flatMap((category) => category?.map((item) => item.value)) || [], // [primary, secondary, alcoholic]
+  //         });
+  //         setSpouseProfileLoading(false);
+  //         // Clear the input to allow re-selection of the same file
+  //         event.target.value = "";
+  //       }
+  //     })
+  //     .catch((err) => {
+  //       setSpouseProfileLoading(false);
+  //       setSpouseProfileError(err?.response?.data?.message || "Upload failed");
+  //       // Clear the input
+  //       event.target.value = "";
+  //     });
+  // };
+
+  // ===============================
+// FULL WORKING SPOUSE IMAGE UPLOAD FUNCTION
+// ===============================
+const handleSpouseProfileImage = (event) => {
+  event.stopPropagation();
+
+  if (!event.target.files || event.target.files.length === 0) {
+    console.log("No spouse image selected");
+    return;
+  }
+
+  const file = event.target.files[0];
+  console.log("Spouse image selected:", file);
+
+  const formData = new FormData();
+  formData.append("file", file);
+
+  console.log("Uploading spouse profile image to server...");
+
+  setSpouseProfileLoading(true);
+  setSpouseProfileError("");
+
+  ApiServices.contact
+    .contactProfileUpload(formData)
+    .then((res) => {
+      console.log("Image upload response:", res);
+
+      if (res.code === 200) {
+        console.log("Spouse image uploaded successfully:", res.data);
+
+        // Update spouse state properly
+        setSpouse((prev) => {
+          const updatedSpouse = {
+            ...prev,
+            profileImage: file,     // for preview
+            profileFile: res.data,  // uploaded image URL/path from backend
+          };
+
+          console.log("Updated spouse object:", updatedSpouse);
+          return updatedSpouse;
+        });
+
         setSpouseProfileLoading(false);
-        setSpouseProfileError(err?.response?.data?.message || "Upload failed");
-        // Clear the input
+
+        // Reset input so user can select same image again
         event.target.value = "";
-      });
-  };
+      } else {
+        console.error("Image upload failed:", res.message);
+        setSpouseProfileError(res.message || "Upload failed");
+        setSpouseProfileLoading(false);
+        event.target.value = "";
+      }
+    })
+    .catch((err) => {
+      console.error("Error uploading spouse image:", err);
+      setSpouseProfileError(err?.response?.data?.message || "Upload failed");
+      setSpouseProfileLoading(false);
+      event.target.value = "";
+    });
+};
+
 
   // Child Profile Image Handler
   const handleChildProfileImage = (event, childId, isNewChild = false) => {
@@ -1021,6 +1083,9 @@ const AddContact = () => {
         setErrorMessageServer(err.response?.data?.message);
       });
   };
+
+
+  console.log("emails----------", emails);
 
   const getFamilyNames = () => {
     const requestData = {
@@ -1303,9 +1368,11 @@ const AddContact = () => {
       }),
 
       contact_emails: emails.map((item) => {
-        return { type: item?.emailType?.value, contact_email: item?.emailAddress };
+        return { type: item?.emailType, contact_email: item?.emailAddress };
       }),
     };
+
+    // console.log("requested data--------------", requestData); return false;
 
     setAddLoading(true);
 
@@ -1471,7 +1538,7 @@ const AddContact = () => {
         .filter((medicine) => medicine.name && medicine.ailment),
       // Conditionally set contact_children based on marital status
       contact_children:
-        martialStatus.toLowerCase() === "single"
+        martialStatus?.toLowerCase() == "single"
           ? []
           : [
               ...(Array.isArray(children)
@@ -1541,16 +1608,21 @@ const AddContact = () => {
           })
         : [],
 
+      // contact_emails: Array.isArray(emails)
+      //   ? emails.map((item) => {
+      //       return {
+      //         type: item?.emailType?.value,
+      //         contact_email: item?.emailAddress,
+      //       };
+      //     })
+      //   : [],
       contact_emails: Array.isArray(emails)
-        ? emails.map((item) => {
-            return {
-              type: item?.emailType?.value,
-              contact_email: item?.emailAddress,
-            };
-          })
+        ? emails.map(item => ({
+            type: item.emailType,              // <-- now simple string
+            contact_email: item.emailAddress,
+          }))
         : [],
     };
-
     setUpdateLoading(true);
 
     ApiServices.contact
@@ -1638,6 +1710,8 @@ const AddContact = () => {
         }
       }
 
+
+      console.log("data----------------", data);
       // Update state with the processed array
       setIndentityFile(finalArray);
       setFile(finalArray);
@@ -1652,6 +1726,13 @@ const AddContact = () => {
       setGender(data?.gender);
       setCountry({ value: data?.country, label: data?.country });
       setAddress(data?.address);
+      setEmails(
+            data.emails.map(email => ({
+              id: email.id,
+              emailType: email.type,
+              emailAddress: email.contact_email
+            }))
+          );
       setLastName(data?.last_name);
       setNickName(data?.nick_name);
       setBeverage(data?.beverage_preference);
@@ -2299,6 +2380,13 @@ const AddContact = () => {
     updatedNewChildMeals[index] = value;
     setNewChild({ ...newChild, meal_preference: updatedNewChildMeals });
   };
+
+  const emailTypeOptions = [
+  { label: "Main", value: "Main" },
+  { label: "Personal", value: "Personal" },
+  { label: "Work", value: "Work" },
+  { label: "Other", value: "Other" },
+];
 
   return (
     <>
@@ -3468,18 +3556,13 @@ const AddContact = () => {
             {emails?.map((emailItem, index) => (
               <div key={emailItem.id} className="mt-5 grid grid-cols-12 gap-3">
                 <div className="col-span-2">
-                  <Dropdown
-                    title={`Email  ${index + 1}`}
-                    placeholder="Select Type"
-                    value={emailItem.emailType}
-                    onChange={(value) => handleInputChangeEmail(emailItem.id, "emailType", value)}
-                    options={[
-                      { label: "Main", value: "Main" },
-                      { label: "Personal", value: "Personal" },
-                      { label: "Work", value: "Work" },
-                      { label: "Other", value: "Other" },
-                    ]}
-                  />
+                    <Dropdown
+                      title={`Email  ${index + 1}`}
+                      placeholder="Select Type"
+                      value={emailTypeOptions.find(opt => opt.value === emailItem.emailType) || null}
+                      onChange={(value) => handleInputChangeEmail(emailItem.id, "emailType", value.value)}
+                      options={emailTypeOptions}
+                    />
                 </div>
 
                 <div className="col-span-3 mt-6">

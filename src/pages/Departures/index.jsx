@@ -8,6 +8,7 @@ import Skeleton from "react-loading-skeleton";
 import ApiServices from "../../api/services";
 import { useMediaQuery } from "react-responsive";
 import AddDepartureModal from "./AddDepartureModal";
+import MessageSchedule from "./MessageSchedule";
 import Button from "../../components/common/Button";
 import { DEPARTURES_PRINT } from "../../routes/Names";
 import TitleValue from "../../components/common/TitleValue";
@@ -55,7 +56,7 @@ const Departures = () => {
   const [addNewModal, setAddNewModal] = useState(false);
   const [openDeleteModal, setOpenDeleteModal] = useState({ open: false, data: null });
   const [addNewImportModal, setAddNewImportModal] = useState(false);
-
+ const [addNewSendMessageModal, setAddNewSendMessageModal] = useState(false);
   // Active Row
   const handleRowClick = (id) => {
     setActiveRow(id);
@@ -194,21 +195,36 @@ const Departures = () => {
       <div className="grid grid-cols-12 gap-5">
         <div className="col-span-12 lg:col-span-8">
           <div className="card min-h-[82vh]">
-            <div className="flex justify-between">
-              <h3 className="heading">Departures</h3>
-              <div className="flex w-full items-center justify-between">
+            <div className="flex flex-col gap-y-4">
+                <h3 className="heading">Departures</h3>
+
+                {/* Top Buttons */}
                 <div className="flex items-center gap-x-3">
-                  {(userData?.role?.display_name === "web_admin" || userData.role.permissions?.some((item) => item === "departures-create")) && (
+                  {(userData?.role?.display_name === "web_admin" ||
+                    userData.role.permissions?.some((item) => item === "departures-create")) && (
                     <>
                       <Button title={t("departure.addDeparture")} onClick={() => setAddNewModal(true)} />
-                      <Button title={t("contacts.importExcel")} buttonColor="bg-purple-600" onClick={() => setAddNewImportModal(true)} />{" "}
+
+                      <Button
+                        title={t("contacts.importExcel")}
+                        buttonColor="bg-purple-600"
+                        onClick={() => setAddNewImportModal(true)}
+                      />
                     </>
                   )}
 
                   <Link to={DEPARTURES_PRINT}>
-                    <Button title={t("buttons.print")} buttonColor="border-primary  bg-primary " />
+                    <Button title={t("buttons.print")} buttonColor="border-primary bg-primary" />
                   </Link>
+
+                  <Button
+                    title="Send Message"
+                    onClick={() => setAddNewSendMessageModal(true)}
+                    buttonColor="bg-green-500"
+                  />
                 </div>
+
+                {/* Filters under buttons */}
                 <div className="flex items-center gap-x-4">
                   <div className="w-44">
                     <Dropdown
@@ -221,9 +237,7 @@ const Departures = () => {
                         { label: "Not Departured", value: "not_arrived" },
                       ]}
                       value={departuredFilter}
-                      onChange={(e) => {
-                        setDeparturedFilter(e);
-                      }}
+                      onChange={(e) => setDeparturedFilter(e)}
                       noMargin
                     />
                   </div>
@@ -232,6 +246,7 @@ const Departures = () => {
                     <div className="pointer-events-none absolute inset-y-0 left-0 z-20 flex items-center pl-4">
                       <MagnifyingGlassIcon className="h-5 w-5 text-primary-light-color" />
                     </div>
+
                     <input
                       type="text"
                       id="search"
@@ -241,9 +256,7 @@ const Departures = () => {
                       value={searchText}
                       onChange={(e) => {
                         setSearchText(e.target.value);
-                        if (e.target.value.trim() === "") {
-                          getDeparture(true);
-                        }
+                        if (e.target.value.trim() === "") getDeparture(true);
                       }}
                       onKeyPress={handleSearch}
                       className="focus:border-primary-color-100 block h-11 w-52 rounded-10 border border-primary-light-color px-4 pl-11 text-sm text-primary-color focus:ring-primary-color 3xl:w-full"
@@ -251,7 +264,7 @@ const Departures = () => {
                   </div>
                 </div>
               </div>
-            </div>
+
             {/* Table Start */}
             <div className="mt-5">
               <div className="-mx-6 mb-8 overflow-x-auto">
@@ -534,6 +547,14 @@ const Departures = () => {
         setModalData={setModalData}
         data={modalData}
         refreshData={getDeparture}
+      />
+
+       <MessageSchedule
+        refreshData=""
+        isOpen={addNewSendMessageModal}
+        setIsOpen={() => setAddNewSendMessageModal(false)}
+        setModalData={setModalData}
+        data={modalData}
       />
 
       {/* Delete Modal */}

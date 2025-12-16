@@ -160,6 +160,7 @@ const POST = {
   IMPORT_GUEST_FLIGHT_EXCEL: "guest-flight-train/import",
   IMPORT_GUEST_TRAIN_EXCEL: "guest-flight-train/import",
   IMPORT_ARRIVAL_DEPARTURE_EXCEL: "arrival_departure/import",
+  SEND_ARRIVAL_DEPARTURE_MESSAGE: "arrival_departure/send-arrival-message",
 
   // =============================================================================
   // REPORTS & ANALYTICS
@@ -241,6 +242,7 @@ const GET = {
   GET_GROUP: "group",
   GET_FAMILY: "family",
   GET_GROUP_CONTACT: "contact_user/get_by_group",
+  GET_GROUP_CONTACT_ARRIVAL: "contact_user/get_by_group_arrival",
   INVITE_CONTACT_LIST_BY_ID: "invitee/contact_list",
   GET_PREFERENCE_COUNT: "contact_user/preferences/count",
 
@@ -272,6 +274,7 @@ const GET = {
   ROOM_TYPE_BY_HOTEL: "hotel_room",
   GET_ROOM_BY_HOTEL_AND_ROOM_TYPE: "hotel_room/by-type-and-hotel",
   GET_ARRIVAL_DEPARTURE: "arrival_departure",
+  UPDATE_SEND_SCHEDULE_INVITATION: "card_allocation/update_schedule",
   GET_CAR: "car",
   GET_AVAILABLE_CAR: "car/available",
   GET_ALLOCATE_CAR: "car_allocation",
@@ -287,6 +290,7 @@ const GET = {
   // =============================================================================
   // MENU & CATERING MANAGEMENT
   // =============================================================================
+  RECOMMENDED_MENU_ID: "trending_menu",
   GET_MENU: "menu",
   GET_TRENDING_MENU: "trending_menu",
   GET_CEREMONY_MENU_ITEM: "recommended_menu",

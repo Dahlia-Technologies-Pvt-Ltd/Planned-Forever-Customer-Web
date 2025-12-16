@@ -96,7 +96,7 @@ const GeneralTab = ({ data, userIdData, t }) => {
       redirect: "follow",
     };
 
-    fetch("https://plannedforever.my-bagtags.com/api/index.php/PfQrCodesController/getQrCodeList", requestOptions)
+    fetch("https://web-sandbox.dahlia.tech/plannedforever-mybagtags/api/index.php/PfQrCodesController/getQrCodeList", requestOptions)
       .then((response) => response.text())
       .then((result) => {
         console.log(result);

@@ -92,7 +92,7 @@ const ImportContactModal = ({ isOpen, setIsOpen, refreshData }) => {
 
         const response = await ApiServices.contact.ImportExcel(formData);
         const { data } = response;
-
+        
         if (response?.code === 200) {
           setBtnLoading(false);
           setIsOpen(false);

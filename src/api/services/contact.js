@@ -169,6 +169,17 @@ export const getGroupContact = async (id , data) => {
   }
 };
 
+export const getGroupContactArrival = async (id , data) => {
+  try {
+    let response = await axios.get(`${GET.GET_GROUP_CONTACT}/${id}` ,{
+      params: data,
+    });
+    return response;
+  } catch (err) {
+    throw err;
+  }
+};
+
 export const ImportExcel = async (data) => {
   try {
     let response = await axios.post(POST.IMPORT_EXCEL, data);
