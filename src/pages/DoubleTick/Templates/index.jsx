@@ -22,9 +22,11 @@ const Templates = () => {
   const [sendTemplate, setSendTemplate] = useState(false);
   const [templatesListing, setTemplatesListing] = useState([]);
   const [selectedTemplate, setSelectedTemplate] = useState(null);
+  const [showHeaderImage, setShowHeaderImage] = useState(true);
 
   console.log("selectedTemplate", selectedTemplate);
   console.log("guestNames", guestNames);
+  console.log("allContact", allContact);
 
   let indexCounter = 0;
   // Check if there's any HEADER component
@@ -189,13 +191,27 @@ const getTemplatesList = async () => {
             <h2 className="text-lg font-medium">{formatName(selectedTemplate?.name)}</h2>
 
             {/* Render Image when type is "HEADER" */}
-            {selectedTemplate?.components?.map((component, index) =>
+            {/* {selectedTemplate?.components?.map((component, index) =>
               component.type === "HEADER" && component.variables?.[0]?.mediaUrl ? (
                 <div key={index} className="h-96 w-full rounded-md">
                   <img src={component.variables[0].mediaUrl} alt="Template Header" className="h-full w-full rounded-md object-contain" />
                 </div>
               ) : null,
-            )}
+            )} */}
+            {selectedTemplate?.components?.map((component, index) =>
+  component.type === "HEADER" &&
+  component.variables?.[0]?.mediaUrl &&
+  showHeaderImage ? (
+    <div key={index} className="h-96 w-full rounded-md">
+      <img
+        src={component.variables[0].mediaUrl}
+        alt="Template Header"
+        className="h-full w-full rounded-md object-contain"
+        onError={() => setShowHeaderImage(false)}
+      />
+    </div>
+  ) : null
+)}
 
             {/* Render Text when type is "BODY" */}
             {selectedTemplate?.components?.map((component, index) =>

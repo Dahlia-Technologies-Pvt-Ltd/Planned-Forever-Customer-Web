@@ -16,6 +16,7 @@ import { useThemeContext } from "../../context/GlobalContext";
 import RangePicker from "../../components/common/RangePicker";
 import { emptyFolderAnimation } from "../../utilities/lottieAnimations";
 import ConfirmationModal from "../../components/common/ConfirmationModal";
+import { mediaUrl } from "../../utilities/config";
 import { ChevronDownIcon, ChevronLeftIcon, ChevronRightIcon, ChevronUpIcon, MagnifyingGlassIcon } from "@heroicons/react/24/solid";
 import { useTranslation } from "react-i18next";
 import { Menu } from "@headlessui/react";
@@ -37,6 +38,7 @@ const Tasks = () => {
     t("tasks.status"),
     t("tasks.assignedBy"),
     t("tasks.tags"),
+    t("tasks.attachments"),
     t("headings.actions"),
   ];
   const TABLE_HEAD_DELEGATED = [
@@ -47,6 +49,7 @@ const Tasks = () => {
     t("tasks.status"),
     t("tasks.assignedTo"),
     t("tasks.tags"),
+    t("tasks.attachments"),
     t("headings.actions"),
   ];
   const TABLE_HEAD_OTHERS = [
@@ -58,6 +61,7 @@ const Tasks = () => {
     t("tasks.assignedBy"),
     t("tasks.assignedTo"),
     t("tasks.tags"),
+    t("tasks.attachments"),
     t("headings.actions"),
   ];
 
@@ -778,13 +782,13 @@ const Tasks = () => {
                         </td>
                         <td className="py-3 pl-4 pr-3 3xl:px-4">
                           <p className="text-primary-color-200 text-xs font-normal 3xl:text-sm">
-                            {`${item?.assign_by?.first_name} ${item?.assign_by?.last_name}` || "-"}
+                            {`${item?.assign_by?.first_name} ${item?.assign_by?.last_name??""}` || "-"}
                           </p>
                         </td>
 
                         <td className="py-3 pl-4 pr-3 3xl:px-4">
                           <p className="text-primary-color-200 text-xs font-normal 3xl:text-sm">
-                            {`${item?.assign_to?.first_name} ${item?.assign_to?.last_name}` || "-"}
+                            {`${item?.assign_to?.first_name} ${item?.assign_to?.last_name??""}` || "-"}
                           </p>
                         </td>
                         <td className="py-3 pl-4 pr-3 3xl:px-4">
@@ -795,6 +799,16 @@ const Tasks = () => {
                                 </span>
                               ))
                             : "No Tags"}
+                        </td>
+                        <td className="py-3 pl-4 pr-3 3xl:px-4">
+                          <a
+                            href={mediaUrl + item?.attachments || "#"}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            className="underline underline-offset-4 cursor-pointer text-primary-color-200 text-xs font-normal 3xl:text-sm"
+                          >
+                            View
+                          </a>
                         </td>
                         <td className="py-3 pl-4 pr-3 3xl:px-4">
                           <div className="flex items-center gap-x-3">
@@ -814,6 +828,7 @@ const Tasks = () => {
                             >
                               {t("buttons.delete")}
                             </span>
+                            
                           </div>
                         </td>
                       </tr>
