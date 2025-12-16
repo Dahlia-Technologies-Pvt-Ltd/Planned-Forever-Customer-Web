@@ -27,3 +27,9 @@ yarn.lock
 package-lock.json
 
 .codegpt
+
+# Ignore specific modified files
+src/i18n.js
+src/main.jsx
+src/utilities/config.js
+vite.config.js

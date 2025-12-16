@@ -260,7 +260,7 @@ export const ThemeContextProvider = ({ children }) => {
         if (data?.code === 200) {
           const formattedContacts = data?.data?.map((contact) => ({
             value: contact?.uuid,
-            label: contact?.first_name + " " + contact?.last_name,
+            label: contact?.salutation + " " +contact?.first_name + " " + contact?.last_name,
           }));
 
           setAllContact(formattedContacts);
