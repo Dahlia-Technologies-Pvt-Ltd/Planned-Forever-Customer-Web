@@ -117,7 +117,7 @@ const Contact = () => {
             message: t("contacts.contactDeleteSuccess"),
             onClickDone: (close) => {
               closeSuccessModel();
-              onSuccess();
+              // onSuccess();
             },
           });
         }
@@ -227,6 +227,8 @@ const Contact = () => {
   };
 
   const handleEditClick = (data) => {
+
+    // console.log("edit data--------", data); return false;
     // Navigate to the edit screen, passing the data as state
     navigate("/add-contact", { state: { data } });
   };

@@ -642,7 +642,7 @@ const MessageSchedule = ({ label, isOpen, setIsOpen, refreshData, data, setModal
                           </label>
                         </div>
 
-                        <div className="flex items-center">
+                        {/* <div className="flex items-center">
                           <input
                             id="sendLater"
                             type="radio"
@@ -655,7 +655,7 @@ const MessageSchedule = ({ label, isOpen, setIsOpen, refreshData, data, setModal
                           <label htmlFor="sendLater" className="ms-2 text-sm font-medium text-gray-900">
                             {t("arrival.sendLater")}
                           </label>
-                        </div>
+                        </div> */}
                       </div>
 
                       {/* Send Sms Later */}

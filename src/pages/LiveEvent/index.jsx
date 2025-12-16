@@ -82,11 +82,10 @@ function LiveEvent() {
         url: url,
         broadcast_all: true,
       };
-
+      
       ApiServices.Nearby_Attraction.addLiveEvent(payload)
         .then((res) => {
           const { data, message } = res;
-
           if (data.code === 200) {
             setBtnLoading(false);
             setSelectedItem(null);
@@ -129,11 +128,10 @@ function LiveEvent() {
         broadcast_all: false,
         contact_ids: selectedContacts,
       };
-
+      
       ApiServices.Nearby_Attraction.addLiveEvent(payload)
         .then((res) => {
           const { data, message } = res;
-
           if (data.code === 200) {
             setLoading(false);
             setSelectedItem(null);
@@ -443,7 +441,7 @@ function LiveEvent() {
                   </div>
                 </div>
               )}
-              <Button title={t("liveEvent.selectContactsForBroadcast")} onClick={handleAddBudget} buttonColor="bg-primary" className="w-full" />
+              <Button title={loading ? <Spinner /> : t("liveEvent.selectContactsForBroadcast")} onClick={handleAddBudget} buttonColor="bg-primary" className="w-full" />
             </div>
           </div>
         </div>

@@ -1084,6 +1084,9 @@ const handleSpouseProfileImage = (event) => {
       });
   };
 
+
+  console.log("emails----------", emails);
+
   const getFamilyNames = () => {
     const requestData = {
       event_id: eventSelect,
@@ -1365,9 +1368,11 @@ const handleSpouseProfileImage = (event) => {
       }),
 
       contact_emails: emails.map((item) => {
-        return { type: item?.emailType?.value, contact_email: item?.emailAddress };
+        return { type: item?.emailType, contact_email: item?.emailAddress };
       }),
     };
+
+    // console.log("requested data--------------", requestData); return false;
 
     setAddLoading(true);
 
@@ -1533,7 +1538,7 @@ const handleSpouseProfileImage = (event) => {
         .filter((medicine) => medicine.name && medicine.ailment),
       // Conditionally set contact_children based on marital status
       contact_children:
-        martialStatus.toLowerCase() === "single"
+        martialStatus?.toLowerCase() == "single"
           ? []
           : [
               ...(Array.isArray(children)
@@ -1603,16 +1608,21 @@ const handleSpouseProfileImage = (event) => {
           })
         : [],
 
+      // contact_emails: Array.isArray(emails)
+      //   ? emails.map((item) => {
+      //       return {
+      //         type: item?.emailType?.value,
+      //         contact_email: item?.emailAddress,
+      //       };
+      //     })
+      //   : [],
       contact_emails: Array.isArray(emails)
-        ? emails.map((item) => {
-            return {
-              type: item?.emailType?.value,
-              contact_email: item?.emailAddress,
-            };
-          })
+        ? emails.map(item => ({
+            type: item.emailType,              // <-- now simple string
+            contact_email: item.emailAddress,
+          }))
         : [],
     };
-
     setUpdateLoading(true);
 
     ApiServices.contact
@@ -1700,6 +1710,8 @@ const handleSpouseProfileImage = (event) => {
         }
       }
 
+
+      console.log("data----------------", data);
       // Update state with the processed array
       setIndentityFile(finalArray);
       setFile(finalArray);
@@ -1714,6 +1726,13 @@ const handleSpouseProfileImage = (event) => {
       setGender(data?.gender);
       setCountry({ value: data?.country, label: data?.country });
       setAddress(data?.address);
+      setEmails(
+            data.emails.map(email => ({
+              id: email.id,
+              emailType: email.type,
+              emailAddress: email.contact_email
+            }))
+          );
       setLastName(data?.last_name);
       setNickName(data?.nick_name);
       setBeverage(data?.beverage_preference);
@@ -2361,6 +2380,13 @@ const handleSpouseProfileImage = (event) => {
     updatedNewChildMeals[index] = value;
     setNewChild({ ...newChild, meal_preference: updatedNewChildMeals });
   };
+
+  const emailTypeOptions = [
+  { label: "Main", value: "Main" },
+  { label: "Personal", value: "Personal" },
+  { label: "Work", value: "Work" },
+  { label: "Other", value: "Other" },
+];
 
   return (
     <>
@@ -3530,18 +3556,13 @@ const handleSpouseProfileImage = (event) => {
             {emails?.map((emailItem, index) => (
               <div key={emailItem.id} className="mt-5 grid grid-cols-12 gap-3">
                 <div className="col-span-2">
-                  <Dropdown
-                    title={`Email  ${index + 1}`}
-                    placeholder="Select Type"
-                    value={emailItem.emailType}
-                    onChange={(value) => handleInputChangeEmail(emailItem.id, "emailType", value)}
-                    options={[
-                      { label: "Main", value: "Main" },
-                      { label: "Personal", value: "Personal" },
-                      { label: "Work", value: "Work" },
-                      { label: "Other", value: "Other" },
-                    ]}
-                  />
+                    <Dropdown
+                      title={`Email  ${index + 1}`}
+                      placeholder="Select Type"
+                      value={emailTypeOptions.find(opt => opt.value === emailItem.emailType) || null}
+                      onChange={(value) => handleInputChangeEmail(emailItem.id, "emailType", value.value)}
+                      options={emailTypeOptions}
+                    />
                 </div>
 
                 <div className="col-span-3 mt-6">
