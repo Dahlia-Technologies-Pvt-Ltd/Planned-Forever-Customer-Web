@@ -79,6 +79,7 @@ const SamagriPrint = () => {
             </tr>
           ) : allSamagriList?.length > 0 ? (
             allSamagriList?.map((item, index) => (
+              item.samagri_items.map((samagri, index) => (
               <tr key={item?.id}>
                 <td className="py-3 pl-6 pr-4">
                   <p className="text-primary-color-200 text-xs font-normal 3xl:text-sm">{item?.title}</p>
@@ -96,10 +97,11 @@ const SamagriPrint = () => {
 
                 <td className="py-3 pl-4 pr-3 3xl:px-4">
                   <p className="text-primary-color-200 text-xs font-normal 3xl:text-sm">
-                    {`${item?.samagri_items[0]?.name} (${item?.samagri_items[0]?.qty} ${item?.samagri_items[0]?.unit})`}
+                    {`${samagri?.name} (${samagri?.qty} ${samagri?.unit})`}
                   </p>
                 </td>
               </tr>
+            ))
             ))
           ) : (
             <tr className="h-[400px]">
