@@ -436,10 +436,16 @@ const Menu = () => {
                       <TitleValue title={t("menu.start_time")} value={moment(detail?.start_time, "HH:mm").format("hh:mm A") || "-"} />
                       <TitleValue title={t("menu.end_time")} value={moment(detail?.end_time, "HH:mm").format("hh:mm A") || "-"} />
                     </div>
-                    <div className="my-5">
+                    {/* <div className="my-5">
                       <h2 className="sub-heading mb-5">{t("headings.otherInfo")}</h2>
                       <TitleValue title={t("headings.notes")} value={detail?.notes || "-"} />
-                    </div>
+                    </div> */}
+                    {detail?.notes && detail.notes !== "-" && (
+                      <div className="my-5">
+                        <h2 className="sub-heading mb-5">{t("headings.otherInfo")}</h2>
+                        <TitleValue title={t("headings.notes")} value={detail.notes} />
+                      </div>
+                    )}
                     <div className="mt-3">
                       <div className="space-y-2">
                         <h3 className="sub-heading text-xs text-info-color">{t("menu.menuFile")}</h3>

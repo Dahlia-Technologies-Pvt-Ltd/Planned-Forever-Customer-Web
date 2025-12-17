@@ -198,12 +198,12 @@ const Samagri = () => {
         <div className="col-span-12 lg:col-span-7">
           <div className="card min-h-[82vh]">
             <h3 className="heading">{t("title")}</h3>
-            <div className="mt-4 flex justify-end">
+            <div className="mt-4 flex justify-start">
               <div className="flex items-center justify-between gap-3">
                 <div className="flex flex-wrap items-center gap-2">
                   {selectedEventRights?.rights?.includes("Suggested Samagri List") && (
                     <Link to={RECOMMENDED_SAMAGRI}>
-                      <Button title={t("samagri.recommendedSamagri")} buttonColor="border-primary  bg-primary " />
+                      <Button title={t("samagri.recommendedSamagri")} buttonColor="border-primary  bg-primary px-4" />
                     </Link>
                   )}{" "}
                   {(userData?.role?.display_name === "web_admin" || userData.role.permissions?.some((item) => item === "samagri-create")) && (

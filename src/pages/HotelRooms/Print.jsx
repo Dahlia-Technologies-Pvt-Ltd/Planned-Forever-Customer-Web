@@ -22,8 +22,8 @@ const HotelRoomsPrint = () => {
     t("hotelRoom.hotelName"),
     t("hotelRoom.roomNo"),
     t("hotelRoom.roomType"),
-    t("hotelRoom.checkinDateTime"),
-    t("hotelRoom.checkoutDateTime"),
+    t("hotelRoom.CheckIn"),
+    t("hotelRoom.CheckOut"),
   ];
 
   const { eventSelect, userData } = useThemeContext();
@@ -100,7 +100,7 @@ const HotelRoomsPrint = () => {
                 </td>
                 <td className="py-3 pl-4 pr-3 3xl:px-4">
                   <p className="text-primary-color-200 text-xs font-normal 3xl:text-sm">
-                    {item?.child === null ? item?.user?.contact_numbers?.[0]?.contact_number : item?.child?.contact_numbers?.[0]?.contact_number || "-"}
+                    {item?.child === null ? item?.user?.contact_number?.[0] : item?.child?.contact_number?.[0] || "-"}
                   </p>
                 </td>
                 <td className="py-3 pl-4 pr-3 3xl:px-4">

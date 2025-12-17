@@ -1,4 +1,4 @@
-import React, { useRef, useState } from "react";
+import React, { useRef, useState, useEffect } from "react";
 import Dropdown from "../../components/common/Dropdown";
 import { ArrowLeftIcon, PrinterIcon } from "@heroicons/react/24/outline";
 import { useNavigate } from "react-router";
@@ -17,7 +17,7 @@ const MenuPrint = () => {
   const { t } = useTranslation("common");
 
   const TABLE_HEAD_MENU = [t("menu.dateTime"), t("menu.sessionName"), t("menu.menuItemCourse")];
-  const TABLE_HEAD_MENU_ITEMS = [t("menu.menuItemName"), t("qty	"), t("notes"), t("type")];
+  const TABLE_HEAD_MENU_ITEMS = [t("menu.dateTime"), t("menu.sessionName"), t("menu.menuItemName"), t("qty	"), t("notes"), t("type")];
 
   const menu_options = [
     {
@@ -41,12 +41,21 @@ const MenuPrint = () => {
   const [loading, setLoading] = useState(false);
   const [allMenuList, setAllMenuList] = useState([]);
   const [selectedItem, setSelectedItem] = useState(null);
-
+//'Print Menu Items'
   // Handle Print
   const handlePrint = useReactToPrint({
     content: () => componentRef.current,
   });
 
+  useEffect(() => {
+    setSelectedItem("menuItems");
+  }, []);
+
+  useEffect(() => {
+    if (selectedItem) {
+      getMenuListToPrint(selectedItem);
+    }
+  }, [selectedItem]);
   //   Get Menu List to Print
   const getMenuListToPrint = async (type) => {
     let payload = {
@@ -120,7 +129,15 @@ const MenuPrint = () => {
                   </td>
                 </tr>
               ) : (
+                
                 <tr key={item?.id}>
+                  <td className="py-3 pr-4 pl-6">
+                    <p className="text-xs font-normal text-primary-color-200 3xl:text-sm">{moment.unix(item.menu.date).format("D MMM YYYY")}</p>
+                  </td>
+
+                  <td className="py-3 pr-3 pl-4 3xl:px-4">
+                    <p className="text-xs font-normal text-primary-color-200 3xl:text-sm">{item.menu.session}</p>
+                  </td>
                   <td className="py-3 pr-4 pl-6">
                     <p className="text-xs font-normal text-primary-color-200 3xl:text-sm">{item?.name}</p>
                   </td>
@@ -168,9 +185,9 @@ const MenuPrint = () => {
           <span> Back to Menu list</span>
         </div>
       )}
-      <div className="card min-h-[76vh]">
+      <div className="card ">
         <h3 className="heading">Print Menu</h3>
-        <div className="grid grid-cols-12">
+        {/* <div className="grid grid-cols-12">
           <div className="col-span-4">
             <Dropdown
               isRequired
@@ -184,9 +201,9 @@ const MenuPrint = () => {
               }}
             />
           </div>
-        </div>
+        </div> */}
 
-        <div className="mt-5 h-[50vh]">
+        <div className="mt-5 ">
           <div className="overflow-x-auto -mx-6 mb-8">
             <PrintableMenuList ref={componentRef} allMenuList={allMenuList} selectedItem={selectedItem} loading={loading} />
           </div>
