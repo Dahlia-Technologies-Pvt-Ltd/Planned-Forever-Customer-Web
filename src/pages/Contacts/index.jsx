@@ -7,6 +7,7 @@ import React, { useEffect, useState } from "react";
 import Button from "../../components/common/Button";
 import { Link, useNavigate } from "react-router-dom";
 import ImportContactModal from "./ImportContactModal";
+import QuickImportContactModal from "./QuickImportContactModal"
 import { useThemeContext } from "../../context/GlobalContext";
 import { useSortableData } from "../../hooks/useSortableData";
 import { ADD_CONTACT, CONTACT_PRINT } from "../../routes/Names";
@@ -48,6 +49,7 @@ const Contact = () => {
   const [activeRow, setActiveRow] = useState(null);
   const [searchText, setSearchText] = useState("");
   const [addNewModal, setAddNewModal] = useState(false);
+  const [quickImportModal, setquickImportModal] = useState(false);
   const [openDeleteModal, setOpenDeleteModal] = useState({ open: false, data: null });
   const [openQuickContactModal, setOpenQuickContactModal] = useState({ open: false, data: null });
   const [openRegisterModal, setOpenRegisterModal] = useState({ open: false, data: null });
@@ -296,6 +298,7 @@ const Contact = () => {
                     <>
                       <Button title={t("contacts.addContact")} onClick={() => navigate(ADD_CONTACT)} />
                       <Button title={t("contacts.importExcel")} buttonColor="bg-purple-600" onClick={() => setAddNewModal(true)} />
+                      <Button title={t("contacts.quickImport")} buttonColor="bg-blue-600" onClick={() => setquickImportModal(true)} />
                     </>
                   )}
 
@@ -554,6 +557,7 @@ const Contact = () => {
       </div>
 
       <ImportContactModal isOpen={addNewModal} setIsOpen={() => setAddNewModal(false)} refreshData={getContacts} />
+      <QuickImportContactModal isOpen={quickImportModal} setIsOpen={() => setquickImportModal(false)} refreshData={getContacts} />
 
       <ConfirmationModal
         message="Are you sure you want to delete this contact?"
