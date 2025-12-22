@@ -238,9 +238,10 @@ const ImportContactModal = ({ isOpen, setIsOpen, refreshData }) => {
                       </div>
 
                       {errorMessage && <span className="text-sm font-medium text-red-500">{errorMessage}</span>}
-                      <div className="grid grid-cols-2 gap-7 mx-auto mt-10 w-8/12">
+                      <div className="grid grid-cols-3 gap-1 mx-auto mt-8 w-10/12">
                         <Button icon={<CheckIcon />} title={t("buttons.save")} type="submit" loading={btnLoading} />
                         <Button icon={<XMarkIcon />} title={t("buttons.cancel")} type="button" buttonColor="bg-red-500" onClick={handleClose} />
+                        {/* <Button title={t("buttons.quickImport")} type="button" buttonColor="bg-blue-500" /> */}
                       </div>
                     </div>
                   </form>

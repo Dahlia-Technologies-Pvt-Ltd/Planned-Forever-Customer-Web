@@ -44,6 +44,22 @@ export const AddContact = async (requestData) => {
   }
 };
 
+
+export const AddBulkContact = async (requestData) => {
+  try {
+    let response = await axios.post(POST.BULK_INSERT, requestData, {
+      headers: {
+        "Content-Type": "application/json",
+      },
+    });
+    return response.data;
+  } catch (err) {
+    throw err;
+  }
+};
+
+
+
 export const getContactReport = async (data) => {
   try {
     let response = await axios.get(GET.GET_CONTACT_REPORT, {

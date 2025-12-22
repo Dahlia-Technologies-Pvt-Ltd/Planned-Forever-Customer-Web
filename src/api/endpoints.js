@@ -63,6 +63,7 @@ const POST = {
   MARK_RSVP: "mark_RSVP",
   ADD_QUICK_CONTACT: "quick_mark/contact",
   DELETE_QUICK_CONTACT: "quick_mark/contact",
+  BULK_INSERT: "contact/bulkInsert",
 
   SEND_OTP: "/mobile/send_otp",
   VERIFY_OTP_LOGIN: "/mobile/login",
