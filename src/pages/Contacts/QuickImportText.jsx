@@ -239,26 +239,49 @@ const QuickImportText = ({ isOpen, setIsOpen, refreshData }) => {
   };
 
   const parseContacts = (text, country = "IN", groups, family) => {
-  //console.log('groups :',groups);
-  //console.log('family :',family);
-  return text
-    .split("\n")                 // split lines
-    .map(line => line.trim())    // remove extra spaces
-    .filter(line => line)        // remove empty lines
-    .map(line => {
-      const parts = line.split(/\s+/); // split by space(s)
-      const number = parts.pop();      // last value = number
-      const name = parts.join(" ");    // remaining = name
+    return text
+        .split("\n")
+        .map(line => line.trim())
+        .filter(Boolean)
+        .map(line => {
+        let parts = line.split(/\s+/);
 
-      return {
-        country,
-        name,
-        number,
-        groups,
-        family
-      };
-    });
-};
+        // --- Email (optional) ---
+        let email = "";
+        if (parts.length && parts[parts.length - 1].includes("@")) {
+            email = parts.pop();
+        }
+
+        // --- Phone number (required) ---
+        const number = parts.pop() || "";
+
+        // --- Salutation (optional) ---
+        let salutation = "";
+        const salutations = ["Mr.", "Mr", "Mrs.", "Mrs", "Ms.", "Ms", "Dr.", "Dr"];
+        if (parts.length && salutations.includes(parts[0])) {
+            salutation = parts.shift();
+        }
+
+        // --- Names ---
+        const first_name = parts.shift() || "";
+        const last_name = parts.length ? parts.pop() : "";
+        const middle_name = parts.join(" "); // can be blank
+
+        return {
+            country,
+            salutation,   // "" if missing
+            first_name,   // required
+            middle_name,  // "" if missing
+            last_name,    // "" if missing
+            number,
+            email,        // "" if missing
+            groups,
+            family
+        };
+        });
+    };
+
+
 
 
   return (
@@ -318,7 +341,7 @@ const QuickImportText = ({ isOpen, setIsOpen, refreshData }) => {
                             />
                             
                     </div>
-                    <Input label={t("contacts.enterNameandNumbers")} placeholder={`Example:\nJohn 9876000431\nAlex 7540005938`} textarea rows={4}
+                    <Input label={t("contacts.enterNameandNumbers")} placeholder={`Example:\nMr. John Michael Doe 9876000431 johndoe@gmail.com\nMr. Alex Robert Brown  7540005938 alexbrown@gmail.com` } textarea rows={4}
                     onChange={(e) => {
                             const value = e.target.value;
                             setAddress(value);

@@ -70,6 +70,12 @@ useEffect(() => {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
+    const validationErrors = validateContacts(contacts);
+    if (Object.keys(validationErrors).length > 0) {
+        setErrors(validationErrors);
+        return;
+    }
+    setErrors({});
     try {
       setBtnLoading(true);
       // API call placeholder
@@ -78,22 +84,33 @@ useEffect(() => {
         setSubmittedContacts([...contacts]);
 
         const payload = contacts.map(c => ({
-            group: c.groups,
-            family: c.family,
+            group: c.groups || null,
+            family: c.family || null,
             country: c.country,
-            first_name: c.name,
-            number: c.number
+            salutation: c.salutation,
+            first_name: c.first_name,
+            middle_name: c.middle_name || null,
+            last_name: c.last_name,
+            email: c.email,
+            number: c.number,
+            event_id:eventSelect
         }));
 
         // console.log("Submitting:", payload);
-        const data = ApiServices.contact.AddBulkContact(payload);
-        console.log("data====", data);
-        return false;
-      openSuccessModal({
-        title: "Success!",
-        message: "Contact verified successfully",
-        onClickDone: closeSuccessModel,
-      });
+        const response = await ApiServices.contact.AddBulkContact(payload);
+        //console.log("data====", data);
+        //console.log('data :',response.code);
+        //return false;
+        if(response.code === 200)
+        {
+            setOpenQuickImportDisplayText(false);
+            openSuccessModal({
+                title: "Success!",
+                message: response.message,
+                onClickDone: closeSuccessModel,
+            }); 
+            window.location.reload();
+        } 
     } catch (err) {
       setErrorMessage("Something went wrong");
     } finally {
@@ -107,6 +124,54 @@ useEffect(() => {
       getFamilyNames();
     }
   }, [isOpen]);
+
+  const generateEmail = (firstName) => {
+    if (!firstName) return "";
+    const cleanName = firstName.toLowerCase().replace(/\s+/g, "");
+    const random = Math.floor(1000 + Math.random() * 9000); // 4-digit number
+    return `${cleanName}${random}@yak.com`;
+    };
+
+
+
+  const handleAutoGenerateEmail = () => {
+        setContacts(prev =>
+            prev.map(contact => {
+            if (!contact.email || contact.email.trim() === "") {
+                return {
+                ...contact,
+                email: generateEmail(contact.first_name),
+                };
+            }
+            return contact;
+            })
+        );
+    };
+    //for validation of all fields
+    const [errors, setErrors] = useState({});
+    const validateContacts = (contacts) => {
+        const errors = {};
+
+        contacts.forEach((c, i) => {
+            const rowErrors = {};
+
+            if (!c.country) rowErrors.country = "Country required";
+            if (!c.number) rowErrors.number = "Number required";
+            if (!c.salutation) rowErrors.salutation = "Salutation required";
+            if (!c.first_name) rowErrors.first_name = "First name required";
+            if (!c.last_name) rowErrors.last_name = "Last name required";
+            if (!c.email) rowErrors.email = "Email required";
+
+            // Middle name is OPTIONAL → no validation
+
+            if (Object.keys(rowErrors).length) {
+            errors[i] = rowErrors;
+            }
+        });
+
+        return errors;
+    };
+
 //   console.log(contacts[0].groups);
   /* ================= UI ================= */
   return (
@@ -115,7 +180,7 @@ useEffect(() => {
         <div className="fixed inset-0 bg-black/30" />
 
         <div className="fixed inset-0 flex items-center justify-center p-4">
-          <Dialog.Panel className="w-full max-w-3xl bg-white rounded-2xl shadow-xl">
+          <Dialog.Panel className="w-full max-w-xxl bg-white rounded-2xl shadow-xl">
 
             {/* HEADER */}
             <div className="p-5 border-b flex justify-between items-center">
@@ -129,10 +194,29 @@ useEffect(() => {
             <div className="p-5 max-h-[75vh] overflow-y-auto">
 
               {/* Back */}
-              <div className="flex items-center gap-2 text-sm font-semibold mb-4 cursor-pointer">
-                <ArrowLeftIcon className="w-4 h-4" onClick={()=> {setIsOpen(true); setOpenQuickImportDisplayText(false);}}/>
-                {t("contacts.backArrorw")}
-              </div>
+              <div className="flex items-center justify-between text-sm font-semibold mb-4">
+  
+                {/* Left side (Back) */}
+                <div className="flex items-center gap-2 cursor-pointer">
+                    <ArrowLeftIcon
+                    className="w-4 h-4"
+                    onClick={() => {
+                        setIsOpen(true);
+                        setOpenQuickImportDisplayText(false);
+                    }}
+                    />
+                    {t("contacts.backArrorw")}
+                </div>
+
+                {/* Right side (Button) */}
+                <Button
+                    title="Auto Generate Email"
+                    buttonColor="bg-blue-500"
+                    onClick={handleAutoGenerateEmail}
+                />
+
+                </div>
+
 
               {/* TABLE */}
               <div className="overflow-x-auto mb-4">
@@ -166,56 +250,98 @@ useEffect(() => {
 
                 </div>
                 </div>
-
-
-              <div className="overflow-x-auto mb-4">
-
-                <div className="min-w-[650px]">
-                  <div className="grid grid-cols-[40px_100px_1fr_1fr] gap-2 text-sm font-semibold mb-2">
-                    <div>#</div>
-                    <div>Country Code</div>
-                    <div style={{width:"10px"}}>Name</div>
-                    <div>Number</div>
-                  </div>
-
-                  {contacts.map((c, i) => (
-                    <div
-                      key={i}
-                      className="grid grid-cols-[40px_150px_1fr_1fr] gap-3 mb-2 items-center"
-                    >
-                      <div>{i + 1}</div>
-
-                      <select
-                        value={c.country}
-                        onChange={(e) => handleChange(i, "country", e.target.value)}
-                        className="border rounded px-2 py-1"
-                      >
-                        {countriesCodeData?.countries?.map((country, index) => (
-                            <option
-                            key={index}
-                            value={`+${country.callingCodes[0]}`}
-                            >
-                            +{country.callingCodes[0]} {country.name}
-                            </option>
-                        ))}
-                      </select>
-                      <input
-                        value={c.number}
-                        onChange={(e) => handleChange(i, "number", e.target.value)}
-                        className="border rounded px-2 py-1"
-                        //style={{ width: "210px" }}
-                      />
-                      <input
-                        value={c.name}
-                        onChange={(e) => handleChange(i, "name", e.target.value)}
-                        className="border rounded px-2 py-1"
-                        //style={{ width: "140px" }}
-                      />
-
-                      
+                <div className="overflow-x-auto mb-4">
+                    <div className="min-w-[950px]">
+                    {/* HEADER */}
+                    <div className="grid grid-cols-[40px_120px_140px_120px_1fr_1fr_1fr_1fr] gap-2 text-sm font-semibold mb-2">
+                        <div>#</div>
+                        <div>{t("contacts.countryCode")}<span className="text-red-500">*</span></div>
+                        <div>{t("contacts.contactNumber")}<span className="text-red-500">*</span></div>
+                        <div>{t("contacts.salutation")}<span className="text-red-500">*</span></div>
+                        <div>{t("contacts.firstName")}<span className="text-red-500">*</span></div>
+                        <div>{t("contacts.middleName")}</div>
+                        <div>{t("contacts.lastName")}<span className="text-red-500">*</span></div>
+                        <div>{t("contacts.email")}<span className="text-red-500">*</span></div>
                     </div>
-                  ))}
-                </div>
+                    {/* ROWS */}
+                        {contacts.map((c, i) => (
+                            <div
+                            key={i}
+                            className="grid grid-cols-[40px_120px_140px_120px_1fr_1fr_1fr_1fr] gap-2 mb-2 items-center"
+                            >
+                            <div>{i + 1}</div>
+
+                            <select
+                                value={c.country}
+                                onChange={(e) => handleChange(i, "country", e.target.value)}
+                                className={`border rounded px-2 py-1 w-full ${
+                                errors?.[i]?.country ? "border-red-500" : ""
+                                }`}
+                            >
+                            <option value="">
+                                {errors?.[i]?.country ? errors[i].country : "Select Country Code"}
+                            </option>
+                                {countriesCodeData?.countries?.map((country, index) => (
+                                <option key={index} value={`+${country.callingCodes[0]}`}>
+                                    +{country.callingCodes[0]} {country.name}
+                                </option>
+                                ))}
+                            </select>
+                            
+                            <input
+                                value={c.number}
+                                onChange={(e) => handleChange(i, "number", e.target.value)}
+                                placeholder={errors?.[i]?.number || "Enter number"}
+                                className={`border rounded px-2 py-1 w-full ${
+                                errors?.[i]?.first_name ? "border-red-500" : ""
+                                }`}
+                            />
+                            
+                            <input
+                                value={c.salutation}
+                                placeholder={errors?.[i]?.salutation || "Enter Salutation"}
+                                onChange={(e) => handleChange(i, "salutation", e.target.value)}
+                                className={`border rounded px-2 py-1 w-full ${
+                                errors?.[i]?.salutation ? "border-red-500" : ""
+                                }`}
+                            />
+                            
+                            <input
+                                value={c.first_name}
+                                placeholder={errors?.[i]?.first_name || "Enter First Name"}
+                                onChange={(e) => handleChange(i, "first_name", e.target.value)}
+                                className={`border rounded px-2 py-1 w-full ${
+                                errors?.[i]?.first_name ? "border-red-500" : ""
+                                }`}
+                            />
+                            
+                            <input
+                                value={c.middle_name}
+                                onChange={(e) => handleChange(i, "middle_name", e.target.value)}
+                                className="border rounded px-2 py-1"
+                            />
+
+                            <input
+                                value={c.last_name}
+                                placeholder={errors?.[i]?.last_name || "Enter Last Name"}
+                                onChange={(e) => handleChange(i, "last_name", e.target.value)}
+                                className={`border rounded px-2 py-1 w-full ${
+                                errors?.[i]?.last_name ? "border-red-500" : ""
+                                }`}
+                            />
+                            
+                            <input
+                                value={c.email}
+                                onChange={(e) => handleChange(i, "email", e.target.value)}
+                                placeholder={errors?.[i]?.email || "Enter Email"}
+                                className={`border rounded px-2 py-1 w-full ${
+                                    errors?.[i]?.email ? "border-red-500" : ""
+                                    }`}
+                            />
+                            
+                            </div>
+                        ))}
+                    </div>
               </div>
 
              
