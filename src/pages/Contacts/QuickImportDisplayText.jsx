@@ -9,25 +9,80 @@ import Button from "../../components/common/Button";
 import Input from "../../components/common/Input";
 import { useThemeContext } from "../../context/GlobalContext";
 import { registerSubscriber, assignBulkQrCodes } from "../../api/services/qr_codes";
+import Dropdown from "../../components/common/Dropdown";
 
 const QuickImportDisplayText = ({ isOpen, setOpenQuickImportDisplayText, refreshData, contacts, setContacts, setIsOpen}) => {
     const [submittedContacts, setSubmittedContacts] = useState([]);
   const { t } = useTranslation("common");
-  console.log("contacts---------------", contacts);
+  //console.log("contacts---------------", contacts);
   const {
     eventSelect,
     btnLoading,
     setBtnLoading,
     openSuccessModal,
     closeSuccessModel,
-    getGroupNames,
-    getFamilyNames,
+    //getGroupNames,
+    //getFamilyNames,
   } = useThemeContext();
 const [spouse, setSpouse] = useState({
     countryCode: ""
 });
 
   const [errorMessage, setErrorMessage] = useState("");
+  const [groupOptions, setGroupOptions] = useState([]);
+  const [groups, setGroups] = useState("");
+  const [openDeleteModal, setOpenDeleteModal] = useState({ open: false, data: null });
+  const [openDeleteModalFamily, setOpenDeleteModalFamily] = useState({ open: false, data: null });
+  const [options, setOptions] = useState([]);
+  const [family, setFamily] = useState("");
+
+  const handleFamilyChange = (selectedOption) => {
+    if (selectedOption.value === "add_family") {
+      setOpenFamilyModal(true);
+    } else {
+      setFamily(selectedOption);
+    }
+  };
+
+  const getFamilyNames = () => {
+    const requestData = {
+      event_id: eventSelect,
+    };
+    ApiServices.contact
+      .getFamily(requestData)
+      .then((res) => {
+        const { data, message } = res;
+        if (data.code === 200) {
+          const familyNames = data?.data?.data?.map((name) => ({ value: name?.id, label: name?.name }));
+          setOptions(familyNames);
+        }
+      })
+      .catch((err) => {});
+  };
+
+  const handleGroupChange = (selectedOption) => {
+    if (selectedOption.value === "add_group") {
+      setOpenGroupModal(true);
+    } else {
+      setGroups(selectedOption);
+    }
+  };
+
+  const getGroupNames = () => {
+    const requestData = {
+      event_id: eventSelect,
+    };
+    ApiServices.contact
+      .getGroup(requestData)
+      .then((res) => {
+        const { data, message } = res;
+        if (data.code === 200) {
+          const groupNames = data?.data?.data?.map((name) => ({ value: name.id, label: name.name }));
+          setGroupOptions(groupNames);
+        }
+      })
+      .catch((err) => {});
+  };
 
   /* ================= HANDLERS ================= */
 //  const handleChange = (index, field, value) => {
@@ -84,8 +139,8 @@ useEffect(() => {
         setSubmittedContacts([...contacts]);
 
         const payload = contacts.map(c => ({
-            group: c.groups || null,
-            family: c.family || null,
+            group: c.groups || contacts?.[0]?.groups || null,
+            family: c.family || contacts?.[0]?.family || null,
             country: c.country,
             salutation: c.salutation,
             first_name: c.first_name,
@@ -96,7 +151,7 @@ useEffect(() => {
             event_id:eventSelect
         }));
 
-        // console.log("Submitting:", payload);
+        // console.log("Submitting:", payload);return false;
         const response = await ApiServices.contact.AddBulkContact(payload);
         //console.log("data====", data);
         //console.log('data :',response.code);
@@ -172,6 +227,23 @@ useEffect(() => {
         return errors;
     };
 
+  const normalizeCountry = (country) => {
+    if (!country) return "";
+
+    // If dropdown object { label, value }
+    if (typeof country === "object") {
+      return country.value?.startsWith("+")
+        ? country.value
+        : `+${country.value}`;
+    }
+
+    // If number → convert to string
+    const str = String(country);
+
+    return str.startsWith("+") ? str : `+${str}`;
+  };
+
+//console.log(contacts);
 //   console.log(contacts[0].groups);
   /* ================= UI ================= */
   return (
@@ -219,35 +291,29 @@ useEffect(() => {
 
 
               {/* TABLE */}
-              <div className="overflow-x-auto mb-4">
+              <div className="mb-4">
                 <div className="min-w-[650px] flex gap-6">
-                    
                     <div className="flex-1">
-                    <Input
-                        type="text"
-                        label={t("contacts.groups")}
-                        placeholder="Enter group name"
-                        className="border rounded px-2 py-1 w-full"
-                        value={contacts?.[0]?.groups || ""}
-                        onChange={(e) =>
-                        handleChange(0, "groups", e.target.value)
-                        }
-                    />
+                      <Dropdown
+                        options={groupOptions}
+                        placeholder="Select groups"
+                        value={
+                            groupOptions.find(opt => opt.label === contacts?.[0]?.groups) || null
+                          }
+                          onChange={(opt) => handleChange(0, "groups", opt.label)}
+                        />
                     </div>
 
                     <div className="flex-1">
-                    <Input
-                        type="text"
-                        label={t("contacts.family")}
-                        placeholder="Enter family name"
-                        className="border rounded px-2 py-1 w-full"
-                        value={contacts?.[0]?.family || ""}
-                        onChange={(e) =>
-                        handleChange(0, "family", e.target.value)
-                        }
-                    />
+                      <Dropdown
+                          options={options}
+                          placeholder="Select family"
+                          value={
+                            options.find(opt => opt.label === contacts?.[0]?.family) || null
+                          }
+                          onChange={(opt) => handleChange(0, "family", opt.label)}
+                        />
                     </div>
-
                 </div>
                 </div>
                 <div className="overflow-x-auto mb-4">
@@ -272,7 +338,7 @@ useEffect(() => {
                             <div>{i + 1}</div>
 
                             <select
-                                value={c.country}
+                                value={normalizeCountry(c.country)}
                                 onChange={(e) => handleChange(i, "country", e.target.value)}
                                 className={`border rounded px-2 py-1 w-full ${
                                 errors?.[i]?.country ? "border-red-500" : ""

@@ -158,7 +158,7 @@ const Dashboard = () => {
     },
   ];
 
-  console.log({ location });
+  //console.log({ location });
 
   // const [sidebarWithTitle, setSidebarWithTitle] = useState(true);
 
