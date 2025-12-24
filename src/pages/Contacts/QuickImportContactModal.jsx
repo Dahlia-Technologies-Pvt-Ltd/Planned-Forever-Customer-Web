@@ -12,16 +12,17 @@ import QuickImportText from "./QuickImportText";
 import Tesseract from "tesseract.js";
 import * as XLSX from "xlsx";
 import mammoth from "mammoth";
-import * as pdfjsLib from "pdfjs-dist";
-
-pdfjsLib.GlobalWorkerOptions.workerSrc =
-  `https://cdnjs.cloudflare.com/ajax/libs/pdf.js/${pdfjsLib.version}/pdf.worker.min.js`;
+import QuickImportDisplayText from "./QuickImportDisplayText";
+import { pdfjs } from "react-pdf";
+pdfjs.GlobalWorkerOptions.workerSrc = "/pdf.worker.min.js";
 
 
 const QuickImportContactModal = ({ isOpen, setIsOpen, refreshData }) => {
   const { t } = useTranslation("common");
   const [text, setText] = useState("");
   const [loading, setLoading] = useState(false);
+  const [openQuickImportDisplayText, setOpenQuickImportDisplayText] = useState(false);
+  const [contacts, setContacts] = useState([]);
   const handleFile = async (file) => {
     if (!file) return;
 
@@ -29,42 +30,63 @@ const QuickImportContactModal = ({ isOpen, setIsOpen, refreshData }) => {
     setText("");
 
     const ext = file.name.split(".").pop().toLowerCase();
-
+    //console.log(ext);
     try {
         if (["jpg", "jpeg", "png"].includes(ext)) {
-        const result = await Tesseract.recognize(file, "eng");
-        setText(result.data.text);
-        console.log(result);
-
+          const result = await Tesseract.recognize(file, "eng");
+          setText(result.data.text);
+          //console.log(result.data.text);
+          const jsonData = convertTextToJson(result.data.text);
+          setContacts(jsonData);
+          setOpenQuickImportDisplayText(true);
+          setIsOpen(false);
         } else if (ext === "pdf") {
-        const arrayBuffer = await file.arrayBuffer();
-        const pdf = await pdfjsLib.getDocument(arrayBuffer).promise;
+          const arrayBuffer = await file.arrayBuffer();
+          const pdf = await pdfjs.getDocument({
+            data: arrayBuffer,
+          }).promise;
+          let pdfText = "";
 
-        let pdfText = "";
-        for (let i = 1; i <= pdf.numPages; i++) {
+          for (let i = 1; i <= pdf.numPages; i++) {
             const page = await pdf.getPage(i);
             const content = await page.getTextContent();
-            pdfText += content.items.map((s) => s.str).join(" ") + "\n";
-        }
+            pdfText += content.items
+              .map(item => item.str)
+              .join(" ")
+              .replace(/\s+/g, " ")
+              + "\n";
+          }
 
-        setText(pdfText);
-
+          setText(pdfText);
+          const jsonData = convertTextToJson(pdfText);
+          setContacts(jsonData);
+          setOpenQuickImportDisplayText(true);
+          setIsOpen(false);
         } else if (["xls", "xlsx"].includes(ext)) {
         const data = await file.arrayBuffer();
         const workbook = XLSX.read(data);
         const sheet = workbook.Sheets[workbook.SheetNames[0]];
-        setText(XLSX.utils.sheet_to_csv(sheet));
+        setText(XLSX.utils.sheet_to_json(sheet));
+        //console.log(XLSX.utils.sheet_to_json(sheet));return false;
+        setOpenQuickImportDisplayText(true); 
+        setIsOpen(false);
+        setContacts(XLSX.utils.sheet_to_json(sheet));
 
         } else if (["doc", "docx"].includes(ext)) {
-        const data = await file.arrayBuffer();
-        const result = await mammoth.extractRawText({ arrayBuffer: data });
-        setText(result.value);
+          const data = await file.arrayBuffer();
+          const result = await mammoth.extractRawText({ arrayBuffer: data });
+          setText(result.value);
+          const jsonData = convertTextToJson(result.value);
+          
+          setContacts(jsonData);
+          setOpenQuickImportDisplayText(true);
+          setIsOpen(false);
 
         } else {
         alert("Unsupported file type");
         }
     } catch (err) {
-        console.error(err);
+        //console.error(err);
         alert("Failed to read file");
     } finally {
         setLoading(false);
@@ -187,8 +209,72 @@ const QuickImportContactModal = ({ isOpen, setIsOpen, refreshData }) => {
 
   const downloadFile = () => {
     const fileId = "1759750584.sample_contact_import.xls";
-    window.location.href = `${mediaUrl + fileId}`;
-  };
+      window.location.href = `${mediaUrl + fileId}`;
+    };
+
+  const convertTextToJson = (text, defaultCountry = "+91") => {
+  const cleanedText = text.replace(/\s+/g, " ").trim();
+
+  // Match blocks ending with a 10-digit number (with optional +country)
+  const matches = cleanedText.match(/(.+?)(\+?\d{1,3}\s?)?\d{10}/g) || [];
+
+  return matches.map(block => {
+    const numberMatch = block.match(/(\+?\d{1,3}\s?)?(\d{10})$/);
+
+    const country = numberMatch?.[1]
+      ? numberMatch[1].trim()
+      : defaultCountry;
+
+    const number = numberMatch?.[2] || "";
+
+    // Remove country + number from block
+    let namePart = block
+      .replace(/(\+?\d{1,3}\s?)?\d{10}$/, "")
+      .trim();
+
+    let tokens = namePart.split(" ");
+
+    // Salutation
+    let salutation = "";
+    if (/^(Mr\.|Ms\.|Mrs\.|Dr\.)$/.test(tokens[0])) {
+      salutation = tokens.shift();
+    }
+
+    // Remove trailing "Ji"
+    if (tokens[tokens.length - 1] === "Ji") {
+      tokens.pop();
+    }
+
+    let first_name = "";
+    let middle_name = "";
+    let last_name = "";
+
+    if (tokens.length === 1) {
+      first_name = tokens[0];
+    } else if (tokens.length === 2) {
+      first_name = tokens[0];
+      last_name = tokens[1];
+    } else if (tokens.length > 2) {
+      first_name = tokens[0];
+      last_name = tokens[tokens.length - 1];
+      middle_name = tokens.slice(1, -1).join(" ");
+    }
+
+    return {
+      salutation,
+      first_name,
+      middle_name,
+      last_name,
+      country,
+      number,
+      email: ""
+    };
+  });
+};
+
+
+
+
 
   return (
     <>
@@ -267,6 +353,7 @@ const QuickImportContactModal = ({ isOpen, setIsOpen, refreshData }) => {
         </Dialog>
         </Transition>
         <QuickImportText isOpen={openQuickImport} setIsOpen={setOpenQuickImport} />
+         <QuickImportDisplayText isOpen={openQuickImportDisplayText} setOpenQuickImportDisplayText={setOpenQuickImportDisplayText} contacts={contacts} setContacts={setContacts} setIsOpen={setIsOpen}/>
     </>
   );
 };
