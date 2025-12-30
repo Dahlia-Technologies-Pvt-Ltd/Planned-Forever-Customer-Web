@@ -103,20 +103,28 @@ const FamilyTab = ({ data, userIdData, t }) => {
   return (
     <div className="mt-6 space-y-8">
       {/* Family Overview */}
+       {data?.no_of_members != '' && data?.no_of_members != null || 
+        data?.marital_status != '' && data?.marital_status != null ||
+        data.anniversery_date != '' && data.anniversery_date != null ||
+        data?.family?.name != '' && data?.family?.name != null
+        && (
       <div className="card p-6">
         <h2 className="sub-heading mb-4">{t("contacts.familyOverview")}</h2>
         <div className="grid grid-cols-1 gap-4 md:grid-cols-3">
-          <TitleValue title={t("contacts.totalMembers")} value={data?.no_of_members || 0} />
-          <TitleValue title={t("contacts.maritalStatus")} value={data?.marital_status || "-"} />
-          <TitleValue title={t("contacts.familyGroup")} value={data?.family?.name || "-"} />
-          <TitleValue
+           {data?.no_of_members != '' && data?.no_of_members != null && (<TitleValue title={t("contacts.totalMembers")} value={data?.no_of_members || 0} />)}
+           {data?.marital_status != '' && data?.marital_status != null && (<TitleValue title={t("contacts.maritalStatus")} value={data?.marital_status || "-"} />)}
+          {data?.family?.name != '' && data?.family?.name != null && (<TitleValue title={t("contacts.familyGroup")} value={data?.family?.name || "-"} />)}
+          {data.anniversery_date != '' && data.anniversery_date != null && (<TitleValue
             title={t("contacts.anniversaryDate")}
             value={data?.anniversery_date ? moment.unix(data.anniversery_date).format("DD MMM, YYYY") : "-"}
           />
+          )}
         </div>
       </div>
+        )}
 
       {/* Spouse Section */}
+      {spouseData.length > 0 && (
       <div>
         <div className="mb-4 flex items-center justify-between">
           <h2 className="sub-heading">{t("contacts.spouseDetails")}</h2>
@@ -145,8 +153,10 @@ const FamilyTab = ({ data, userIdData, t }) => {
           <div className="space-y-4">{spouseData.map((spouse) => renderPersonCard(spouse, true))}</div>
         )}
       </div>
+      )}
 
       {/* Children Section */}
+      {childrenData.length > 0 && (
       <div>
         <div className="mb-4 flex items-center justify-between">
           <h2 className="sub-heading">{t("contacts.childrenDetails")}</h2>
@@ -175,6 +185,7 @@ const FamilyTab = ({ data, userIdData, t }) => {
           <div className="space-y-4">{childrenData.map((child) => renderPersonCard(child, false))}</div>
         )}
       </div>
+      )}
     </div>
   );
 };

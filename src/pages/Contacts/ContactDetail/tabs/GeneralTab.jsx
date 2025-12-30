@@ -217,42 +217,53 @@ const GeneralTab = ({ data, userIdData, t }) => {
           </div>
         </div>
       </div>
-
-      <div>
-        <div className="my-2 ltr:text-left rtl:text-right">
+      {/* {data?.wedding_hall_seat != "" ? ( */}
+      {data?.wedding_hall_seat &&
+        data.wedding_hall_seat !== "null" &&
+        data.wedding_hall_seat !== "" && (
           <div>
-            <div className="label mb-2 text-secondary">{t("Wedding Hall Seat")}</div>
+            <div className="my-2 ltr:text-left rtl:text-right">
+              <div className="label mb-2 text-secondary">
+                {t("Wedding Hall Seat")}
+              </div>
+            </div>
+
+            <div className="mb-3 flex flex-wrap">
+              <span className="text-sm text-gray-500">
+                {data.wedding_hall_seat}
+              </span>
+            </div>
+          </div>
+        )}
+      {/* ): null} */}
+      {qrCodeOptions?.length > 0 && (
+        <div>
+          <div className="my-5 ltr:text-left rtl:text-right">
+            <div className="label mb-2 text-secondary">
+              {t("QR Codes")}
+            </div>
+          </div>
+
+          <div className="mb-3 flex flex-wrap">
+            {qrCodeOptions.map((qr) => (
+              <span
+                key={qr.value}
+                className="mb-2 mr-2 inline-block rounded-full bg-gray-100 px-3 py-1 text-sm font-medium text-gray-800"
+              >
+                {qr.label}
+              </span>
+            ))}
           </div>
         </div>
-        <div className="mb-3 flex flex-wrap">
-          <span className="text-sm text-gray-500">{data?.wedding_hall_seat}</span>
-        </div>
-        <div className="mb-3 flex flex-wrap">
-          {data?.wedding_hall_seat === "null" || data?.wedding_hall_seat === null || data?.wedding_hall_seat === "" && <span className="text-sm text-gray-500">No Wedding Hall Seat assigned</span>}
-        </div>
-      </div>
+      )}
 
-      <div>
-        <div className="my-5 ltr:text-left rtl:text-right">
-          <div>
-            <div className="label mb-2 text-secondary">{t("QR Codes")}</div>
-          </div>
-        </div>
-
-        <div className="mb-3 flex flex-wrap">
-          {qrCodeOptions.length === 0 && <span className="text-sm text-gray-500">No QR Codes assigned</span>}
-          {qrCodeOptions.map((qr) => (
-            <span key={qr.value} className="mb-2 mr-2 inline-block rounded-full bg-gray-100 px-3 py-1 text-sm font-medium text-gray-800">
-              {qr.label}
-            </span>
-          ))}
-        </div>
-      </div>
 
       {/* Contact Address Section */}
       <div>
         <h2 className="sub-heading mb-5">Contact Address</h2>
         <div className="grid grid-cols-2 gap-16">
+
+          {data.contact_numbers?.length > 0 && (
           <div className="card flex flex-wrap gap-x-5 gap-y-4">
             {data?.contact_numbers?.length ? (
               data.contact_numbers.map((item, index) => (
@@ -268,6 +279,8 @@ const GeneralTab = ({ data, userIdData, t }) => {
               </React.Fragment>
             )}
           </div>
+          )}
+          {data.emails?.length > 0 && (
           <div className="card flex flex-wrap gap-x-5 gap-y-4">
             {data?.emails?.length ? (
               data.emails.map((item, index) => (
@@ -283,6 +296,8 @@ const GeneralTab = ({ data, userIdData, t }) => {
               </React.Fragment>
             )}
           </div>
+          )}
+
         </div>
       </div>
 
@@ -294,58 +309,76 @@ const GeneralTab = ({ data, userIdData, t }) => {
               <h2 className="sub-heading">{t("headings.residenceAddress")}</h2>
             </div>
             <div className="card flex flex-wrap gap-x-5 gap-y-4">
-              <TitleValue title={t("contacts.address")} value={data?.address || "-"} />
-              <TitleValue title={t("contacts.city")} value={data?.city || "-"} />
-              <TitleValue title={t("contacts.state")} value={data?.state || "-"} />
-              <TitleValue title={t("contacts.pin")} value={data?.pin || "-"} />
-              <TitleValue title={t("contacts.country")} value={data?.country || "-"} />
+              {data?.address != '' && data?.address != null && ( <TitleValue title={t("contacts.address")} value={data?.address || "-"} />)}
+              {data?.city != '' && data?.city != null && ( <TitleValue title={t("contacts.city")} value={data?.city || "-"} /> )}
+              {data?.state != '' && data?.state != null && ( <TitleValue title={t("contacts.state")} value={data?.state || "-"} />)}
+              {data?.pin != '' && data?.pin != null && ( <TitleValue title={t("contacts.pin")} value={data?.pin || "-"} />)}
+              {data?.country != '' && data?.country != null && ( <TitleValue title={t("contacts.country")} value={data?.country || "-"} />)}
             </div>
           </div>
           <div>
+            {userIdData?.preferences != '' && userIdData?.preferences != null && (
+              <>
             <div className="mb-5 flex items-center gap-x-4">
               <h2 className="sub-heading">{t("headings.otherInfo")}</h2>
             </div>
+            
             <div className="card flex flex-wrap gap-x-5 gap-y-4">
-              <TitleValue title={t("contacts.primaryMealPreference")} value={getPreferencesByType(userIdData?.preferences || [], "primary")} />
-              <TitleValue title={t("contacts.secondaryMealPreference")} value={getPreferencesByType(userIdData?.preferences || [], "secondary")} />
-              <TitleValue title={t("contacts.alcoholPreference")} value={getPreferencesByType(userIdData?.preferences || [], "alcoholic")} />
-              <TitleValue title={t("contacts.specialNeeds")} value={data?.special_need || "-"} />
+              {userIdData?.preferences != '' && userIdData?.preferences != null && ( <TitleValue title={t("contacts.primaryMealPreference")} value={getPreferencesByType(userIdData?.preferences || [], "primary")} />)}
+              {userIdData?.preferences != '' && userIdData?.preferences != null && ( <TitleValue title={t("contacts.secondaryMealPreference")} value={getPreferencesByType(userIdData?.preferences || [], "secondary")} />)}
+              {userIdData?.preferences != '' && userIdData?.preferences != null && ( <TitleValue title={t("contacts.alcoholPreference")} value={getPreferencesByType(userIdData?.preferences || [], "alcoholic")} />)}
+              {data?.special_need != '' && data?.special_need != null && ( <TitleValue title={t("contacts.specialNeeds")} value={data?.special_need || "-"} />)}
 
             </div>
+            </>
+            )}
           </div>
         </div>
       </div>
 
       {/* Work Address Section */}
       <div>
+        {data?.work_address != '' && data?.work_address != null || 
+        data?.work_city != '' && data?.work_city != null ||
+        data?.work_state != '' && data?.work_state != null ||
+        data?.work_pin != '' && data?.work_pin != null ||
+        data?.work_country != '' && data?.work_country != null 
+        && (
+        <>
         <div className="mb-5 flex items-center gap-x-4">
           <h2 className="sub-heading">{t("headings.workAddress")}</h2>
         </div>
         <div className="grid grid-cols-2 gap-16">
           <div className="card flex flex-wrap gap-x-5 gap-y-4">
-            <TitleValue title={t("contacts.address")} value={data?.work_address || "-"} />
-            <TitleValue title={t("contacts.city")} value={data?.work_city || "-"} />
-            <TitleValue title={t("contacts.state")} value={data?.work_state || "-"} />
-            <TitleValue title={t("contacts.pin")} value={data?.work_pin || "-"} />
-            <TitleValue title={t("contacts.country")} value={data?.work_country || "-"} />
+            {data?.work_address != '' && data?.work_address != null && (<TitleValue title={t("contacts.address")} value={data?.work_address || "-"} />)}
+            {data?.work_city != '' && data?.work_city != null && (<TitleValue title={t("contacts.city")} value={data?.work_city || "-"} />)}
+            {data?.work_state != '' && data?.work_state != null && (<TitleValue title={t("contacts.state")} value={data?.work_state || "-"} />)}
+            {data?.work_pin != '' && data?.work_pin != null && (<TitleValue title={t("contacts.pin")} value={data?.work_pin || "-"} />)}
+            {data?.work_country != '' && data?.work_country != null && (<TitleValue title={t("contacts.country")} value={data?.work_country || "-"} />)}
           </div>
         </div>
+        </>
+        )}
       </div>
       <div>
+        {data?.medicines.length >0  && (
+        <>
         <div className="mb-5 flex items-center gap-x-4">
           <h2 className="sub-heading">{t("Medicine")}</h2>
         </div>
         <div className="grid grid-cols-2 gap-16">
           {data?.medicines?.map((medicine, index) => (
             <div className="card flex flex-wrap gap-x-5 gap-y-4">
-              <TitleValue title={t("Medicine Name")} value={medicine?.name || "-"} />
-              <TitleValue title={t("Problem/Ailment")} value={medicine?.ailment || "-"} />
-              <TitleValue title={t("Medicine Type")} value={medicine?.type || "-"} />
-              <TitleValue title={t("Medication Type")} value={medicine?.usage || "-"} />
-              <TitleValue title={t("Special Instructions")} value={medicine?.special_instructions || "-"} />
+              {medicine?.name != '' && medicine?.name != null && (<TitleValue title={t("Medicine Name")} value={medicine?.name || "-"} /> )}
+              {medicine?.ailment != '' && medicine?.ailment != null && (<TitleValue title={t("Problem/Ailment")} value={medicine?.ailment || "-"} />)}
+              {medicine?.type != '' && medicine?.type != null && (<TitleValue title={t("Medicine Type")} value={medicine?.type || "-"} />)}
+              {medicine?.usage != '' && medicine?.usage != null && (<TitleValue title={t("Medication Type")} value={medicine?.usage || "-"} />)}
+              {medicine?.special_instructions != '' && medicine?.special_instructions != null && (<TitleValue title={t("Special Instructions")} value={medicine?.special_instructions || "-"} />)}
             </div>
           ))}
         </div>
+        </>
+        )}
       </div>
     </div>
   );
