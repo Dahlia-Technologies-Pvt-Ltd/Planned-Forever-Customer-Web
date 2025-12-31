@@ -2498,6 +2498,17 @@ const AddContact = () => {
         { label: "Other", value: "Other" },
     ];
 
+    const [isOtherInfoOpen, setIsOtherInfoOpen] = useState(false);
+    const [isPreferenceOpen, setIsPreferenceOpen] = useState(false);
+    const [isAddressOpen, setIsAddressOpen] = useState(false);
+    const [isMedicinesOpen, setIsMedicinesOpen] = useState(false);
+    const [isMaritalStatusOpen, setIsMaritalStatusOpen] = useState(true);
+    const [isQrCodesOpen, setIsQrCodesOpen] = useState(true);
+    const [isContactInfoOpen, setIsContactInfoOpen] = useState(true);
+    const [isProfileImgOpen, setIsProfileImgOpen] = useState(true);
+    const [isPersonalInfoOpen, setIsPersonalInfoOpen] = useState(true);
+    const [isBasicInfoOpen, setIsBasicInfoOpen] = useState(true);
+
     return (
         <>
             <div
@@ -2510,1735 +2521,1796 @@ const AddContact = () => {
 
               <form onSubmit={handleSubmit}>
                 <div className="card ">
-                    <h2 className="heading mb-5">{t("contacts.addContact")}</h2>
-                    {/* Registration Status and Error Display */}
-                    {registrationLoading && (
-                        <div className="mb-5 rounded-lg bg-blue-50 p-4">
-                            <div className="flex items-center">
-                                <Spinner />
-                                <span className="ml-2 text-blue-700">Registering user...</span>
-                            </div>
-                        </div>
-                    )}
-                    {registrationError && (
-                        <div className="mb-5 rounded-lg bg-red-50 p-4">
-                            <span className="text-sm text-red-700">{registrationError}</span>
-                        </div>
-                    )}
-                    <div className="mb-5 ltr:text-left rtl:text-right">
-                        <div className="flex items-center justify-between">
-                            <div className="label mb-2 text-secondary text-lg font-semibold text-gray-800">{t("headings.basicInfo")}</div>
-                        </div>
-                    </div>
-                    <div className="grid grid-cols-4 gap-7 md:grid-cols-3 lg:grid-cols-4">
-                        {/* Existing basic info fields */}
-                        <div ref={fieldRefs?.salutation}>
-                            <Input
-                                label={t("contacts.salutation")}
-                                placeholder="Salutation"
-                                value={salutation}
-                                onChange={(e) => setSalutation(e.target.value)}
-                                isRequired
-                                error={isSubmitted && !salutation ? "Required" : ""}
-                            />
-                        </div>
-                        <div ref={fieldRefs?.firstName}>
-                            <Input
-                                label={t("contacts.firstName")}
-                                placeholder="First Name"
-                                value={firstName}
-                                onChange={(e) => setFirstName(e.target.value)}
-                                isRequired
-                                error={isSubmitted && !firstName ? "Required" : ""}
-                            />
-                        </div>
-                        <Input
-                            label={t("contacts.middleName")}
-                            placeholder="Middle Name"
-                            value={middleName}
-                            onChange={(e) => setMiddleName(e.target.value)}
-                        />
-                        <div ref={fieldRefs?.lastName}>
-                            <Input
-                                label={t("contacts.lastName")}
-                                placeholder="Last Name"
-                                value={lastName}
-                                onChange={(e) => setLastName(e.target.value)}
-                                isRequired
-                                error={isSubmitted && !lastName ? "Required" : ""}
-                            />
-                        </div>
-                        <Input
-                            label={t("contacts.nickName")}
-                            placeholder="Nick Name"
-                            value={nickName}
-                            onChange={(e) => setNickName(e.target.value)}
-                        />
-                        <Input
-                            label={"Salutation in Message"}
-                            placeholder="Example, Dear Deepak, Hello Mr. & Mrs. Aggarwal"
-                            value={salutationEmail}
-                            onChange={(e) => setSalutationEmail(e.target.value)}
-                            labelOnTop
-                        />
-
-                        {/* Color Code Dropdown */}
-                        <Dropdown
-                            isSearchable
-                            options={colorCodeOptions.concat({ value: "add_color_code", label: "Add New Color Code" })}
-                            title="Select Guest Colour Code"
-                            placeholder="Select Color Code"
-                            value={selectedColorCode}
-                            onChange={handleColorCodeChange}
-                            Delete
-                            setOpenDeleteModal={setOpenDeleteModalColorCode}
-                        />
-
-                        <Input
-                            label="Wedding Hall Seat"
-                            placeholder="Wedding Hall Seat"
-                            value={weddingHallSeat}
-                            onChange={(e) => setWeddingHallSeat(e.target.value)}
-                        />
-
-                        {/* QR Code Dropdown with Allot Button */}
-                        
-                    </div>
+                  <div className="mb-5 flex cursor-pointer items-center justify-between"  onClick={() => setIsBasicInfoOpen(!isBasicInfoOpen)}>
+                    <div className="label text-secondary">{t("contacts.addContact")}</div>
+                    <span className="flex h-9 w-9 items-center justify-center rounded-full bg-secondary text-white hover:bg-secondary/90">
+                    {isBasicInfoOpen ? "−" : "+"}
+                    </span>
                   </div>
-                  <div className="card mt-6">
-                    <div className="mb-5 ltr:text-left rtl:text-right">
-                        <div className="flex items-center justify-between">
-                            <div className="label mb-2 text-secondary text-lg font-semibold text-gray-800">{t("QR Codes")}</div>
-                        </div>
-                    </div>
-                    <div className="flex flex-wrap items-center justify-between gap-4">
-
-                      {/* LEFT: Label + QR tags */}
-                      <div className="flex flex-wrap items-center gap-2">
-                        {qrCodeOptions.map((qr) => (
-                          <span
-                            key={qr.value}
-                            className="rounded-full bg-gray-100 px-3 py-1 text-sm font-medium text-gray-800"
-                          >
-                            {qr.label}
-                          </span>
-                        ))}
+                  {/* Registration Status and Error Display */}
+                  {registrationLoading && (
+                      <div className="mb-5 rounded-lg bg-blue-50 p-4">
+                          <div className="flex items-center">
+                              <Spinner />
+                              <span className="ml-2 text-blue-700">Registering user...</span>
+                          </div>
                       </div>
-
-                      {/* RIGHT: Button */}
-                      <Button
-                        title="Allot QR Codes"
-                        type="button"
-                        onClick={() => setShowAllotQRModal(true)}
-                        buttonColor="bg-purple-600"
-                        disabled={!currentSubscriberData?.AutoID}
+                  )}
+                  {registrationError && (
+                      <div className="mb-5 rounded-lg bg-red-50 p-4">
+                          <span className="text-sm text-red-700">{registrationError}</span>
+                      </div>
+                  )}
+                  {isBasicInfoOpen && (
+	                <>
+                  <div className="mb-5 ltr:text-left rtl:text-right">
+                      <div className="flex items-center justify-between">
+                          <div className="label mb-2 text-secondary text-lg font-semibold text-gray-800">{t("headings.basicInfo")}</div>
+                      </div>
+                  </div>
+                  <div className="grid grid-cols-4 gap-7 md:grid-cols-3 lg:grid-cols-4">
+                      {/* Existing basic info fields */}
+                      <div ref={fieldRefs?.salutation}>
+                          <Input
+                              label={t("contacts.salutation")}
+                              placeholder="Salutation"
+                              value={salutation}
+                              onChange={(e) => setSalutation(e.target.value)}
+                              isRequired
+                              error={isSubmitted && !salutation ? "Required" : ""}
+                          />
+                      </div>
+                      <div ref={fieldRefs?.firstName}>
+                          <Input
+                              label={t("contacts.firstName")}
+                              placeholder="First Name"
+                              value={firstName}
+                              onChange={(e) => setFirstName(e.target.value)}
+                              isRequired
+                              error={isSubmitted && !firstName ? "Required" : ""}
+                          />
+                      </div>
+                      <Input
+                          label={t("contacts.middleName")}
+                          placeholder="Middle Name"
+                          value={middleName}
+                          onChange={(e) => setMiddleName(e.target.value)}
+                      />
+                      <div ref={fieldRefs?.lastName}>
+                          <Input
+                              label={t("contacts.lastName")}
+                              placeholder="Last Name"
+                              value={lastName}
+                              onChange={(e) => setLastName(e.target.value)}
+                              isRequired
+                              error={isSubmitted && !lastName ? "Required" : ""}
+                          />
+                      </div>
+                      <Input
+                          label={t("contacts.nickName")}
+                          placeholder="Nick Name"
+                          value={nickName}
+                          onChange={(e) => setNickName(e.target.value)}
+                      />
+                      <Input
+                          label={"Salutation in Message"}
+                          placeholder="Example, Dear Deepak, Hello Mr. & Mrs. Aggarwal"
+                          value={salutationEmail}
+                          onChange={(e) => setSalutationEmail(e.target.value)}
+                          labelOnTop
                       />
 
-                    </div>
+                      {/* Color Code Dropdown */}
+                      <Dropdown
+                          isSearchable
+                          options={colorCodeOptions.concat({ value: "add_color_code", label: "Add New Color Code" })}
+                          title="Select Guest Colour Code"
+                          placeholder="Select Color Code"
+                          value={selectedColorCode}
+                          onChange={handleColorCodeChange}
+                          Delete
+                          setOpenDeleteModal={setOpenDeleteModalColorCode}
+                      />
+
+                      <Input
+                          label="Wedding Hall Seat"
+                          placeholder="Wedding Hall Seat"
+                          value={weddingHallSeat}
+                          onChange={(e) => setWeddingHallSeat(e.target.value)}
+                      />
+
+                      {/* QR Code Dropdown with Allot Button */}
+                      
+                  </div>
+                  </>
+                  )}
+                </div>
+                <div className="card mt-6">
+                  <div className="mb-5 flex cursor-pointer items-center justify-between"  onClick={() => setIsPersonalInfoOpen(!isPersonalInfoOpen)}>
+                    <div className="label text-secondary">{t("Personal Information")}</div>
+                    <span className="flex h-9 w-9 items-center justify-center rounded-full bg-secondary text-white hover:bg-secondary/90">
+                    {isPersonalInfoOpen ? "−" : "+"}
+                    </span>
+                  </div>
+                  {isPersonalInfoOpen && (
+	                <>
+                  <div className="my-5">
+                      <div className="label mb-2">{t("contacts.gender")}</div>
+
+                      <RadioInput
+                          name="Gender"
+                          options={[
+                              {
+                                  id: "male",
+                                  value: "Male",
+                                  label: t("contacts.male"),
+                              },
+                              { id: "female", value: "Female", label: t("contacts.female") },
+                              { id: "other", value: "Other", label: t("contacts.other") },
+                              { id: "n/a", value: "N/A", label: "N/A" },
+                          ]}
+                          Classes="flex"
+                          labelClasses="ml-3"
+                          onChange={(value) => setGender(value)}
+                          checked={gender}
+                      />
+                  </div>
+                    <div className="grid grid-cols-4 gap-7 md:grid-cols-2 lg:grid-cols-4">
+                      <div ref={fieldRefs.birthDate}>
+                          <Input
+                              type="date"
+                              label={t("contacts.birthDate")}
+                              placeholder="Date"
+                              value={birthDate}
+                              onChange={(e) => {
+                                  setBirthDate(e.target.value);
+                              }}
+                              max={moment().format("YYYY-MM-DD")}
+                          />
+                      </div>
+                      <Dropdown
+                          options={groupOptions?.concat({ value: "add_group", label: "Add New Group" })}
+                          title={t("contacts.groups")}
+                          placeholder="Select groups"
+                          value={groups}
+                          onChange={handleGroupChange}
+                          Delete
+                          setOpenDeleteModal={setOpenDeleteModal}
+                      />
+                      <AddGroupModal
+                          isOpen={openGroupModal}
+                          setIsOpen={setOpenGroupModal}
+                          handleSubmit={addNewGroup}
+                          value={newGroupName}
+                          handleChange={(e) => setNewGroupName(e.target.value)}
+                          message={errorMessageServer}
+                          setErrorMessageServer={setErrorMessageServer}
+                          setNewGroupName={setNewGroupName}
+                      />
+
+                      <Dropdown
+                          options={options?.concat({ value: "add_family", label: "Add New Family" })}
+                          title={t("contacts.family")}
+                          placeholder="Select family"
+                          value={family}
+                          onChange={handleFamilyChange}
+                          Delete
+                          setOpenDeleteModal={setOpenDeleteModal}
+                          setOpenDeleteModalFamily={setOpenDeleteModalFamily}
+                      />
+                      <AddFamilyModal
+                          isOpen={openFamilyModal}
+                          setIsOpen={setOpenFamilyModal}
+                          handleSubmit={addNewFamily}
+                          value={newFamilyName}
+                          handleChange={(e) => setNewFamilyName(e.target.value)}
+                          message={errorMessageServer}
+                          setErrorMessageServer={setErrorMessageServer}
+                          setNewFamilyName={setNewFamilyName}
+                      />
+                  </div>
+                  </>
+                  )}
+                </div>
+                  
+                <div className="card mt-6">
+                  <div className="mb-5 flex cursor-pointer items-center justify-between"  onClick={() => setIsProfileImgOpen(!isProfileImgOpen)}>
+                    <div className="label text-secondary">{t("contacts.profileImage")}</div>
+                    <span className="flex h-9 w-9 items-center justify-center rounded-full bg-secondary text-white hover:bg-secondary/90">
+                    {isProfileImgOpen ? "−" : "+"}
+                    </span>
+                  </div>
+                  {isProfileImgOpen && (
+	                <>
+                  <div className="my-5 flex items-center gap-x-4">
+                      <div className="">
+                          <ChooseFile
+                              // label={t("contacts.profileImage")}
+                              onClickCross={handleRemoveProfileImage}
+                              placeholder
+                              selectedFile={ProfileImage}
+                              loading={profileLoading}
+                              dir
+                              onChange={handleProfileImage}
+                          />
+                      </div>
                   </div>
 
-                  <div className="card mt-6">
-                    <div className="mb-5 ltr:text-left rtl:text-right">
-                        <div className="flex items-center justify-between">
-                            <div className="label mb-2 text-secondary text-lg font-semibold text-gray-800">{t("contacts.profileImage")}</div>
-                        </div>
-                    </div>
-                    <div className="my-5 flex items-center gap-x-4">
-                        <div className="">
-                            <ChooseFile
-                                // label={t("contacts.profileImage")}
-                                onClickCross={handleRemoveProfileImage}
-                                placeholder
-                                selectedFile={ProfileImage}
-                                loading={profileLoading}
-                                dir
-                                onChange={handleProfileImage}
-                            />
-                        </div>
-                    </div>
-
-                    {profileError && <span className="mt-5 block text-xs text-red-500"> {profileError}</span>}
+                  {profileError && <span className="mt-5 block text-xs text-red-500"> {profileError}</span>}
+                  </>
+                  )}
+                </div>
+                <div className="card mt-6">
+                  <div className="mb-5 flex cursor-pointer items-center justify-between"  onClick={() => setIsContactInfoOpen(!isContactInfoOpen)}>
+                    <div className="label text-secondary">{t("Contact Information")}</div>
+                    <span className="flex h-9 w-9 items-center justify-center rounded-full bg-secondary text-white hover:bg-secondary/90">
+                    {isContactInfoOpen ? "−" : "+"}
+                    </span>
                   </div>
-                  <div className="card mt-6 rounded-2xl bg-white p-6 shadow">
+                  {isContactInfoOpen && (
+                  <>
+                  <div ref={fieldRefs.contacts} className="space-y-4">
 
-                    {/* HEADER */}
-                    <div className="mb-5 flex items-center justify-between">
-                      <div className="mb-5 ltr:text-left rtl:text-right">
-                          <div className="flex items-center justify-between">
-                              <div className="label mb-2 text-secondary text-lg font-semibold text-gray-800">Medicines</div>
-                          </div>
-                      </div>
-
-                      <button
-                        type="button"
-                        onClick={handleAddMedicine}
-                        className="rounded-lg bg-secondary px-4 py-2 text-sm font-medium text-white hover:bg-secondary/90"
-                      >
-                        + Add Medicine
-                      </button>
-                    </div>
-
-                    {/* EMPTY STATE */}
-                    {medicines.length === 0 && (
-                      <div className="rounded-lg bg-gray-50 py-10 text-center">
-                        <p className="text-sm text-gray-500">
-                          No medicines added yet. Click <strong>“Add Medicine”</strong> to get started.
-                        </p>
-                      </div>
-                    )}
-
-                    {/* MEDICINE LIST */}
-                    {medicines.map((medicine, index) => (
+                    {contacts.map((contact, index) => (
                       <div
-                        key={medicine.id}
-                        className="mb-6 rounded-xl border p-5"
+                        key={contact.id}
+                        className="grid w-full grid-cols-[2fr_2fr_3fr_60px] items-end gap-3"
                       >
+                        {/* CONTACT TYPE */}
+                        <Dropdown
+                          title={`Contact ${index + 1}`}
+                          placeholder="Type"
+                          value={contact.contactType}
+                          onChange={(value) =>
+                            handleInputChangePhone(contact.id, "contactType", value)
+                          }
+                          isRequired={isSubmitted && !contact.contactType}
+                          withError={isSubmitted && !contact.contactType && "Required"}
+                          options={[
+                            { label: "Home", value: "Home" },
+                            { label: "Mobile", value: "Mobile" },
+                            { label: "Land line", value: "Land line" },
+                            { label: "Work", value: "Work" },
+                            { label: "Fax", value: "Fax" },
+                            { label: "Other", value: "Other" },
+                          ]}
+                        />
 
-                        {/* TITLE + DELETE */}
-                        <div className="mb-4 flex items-center justify-between">
-                          <h4 className="text-sm font-medium text-gray-700">
-                            Medicine {index + 1}
-                          </h4>
+                        {/* COUNTRY CODE */}
+                        <Dropdown
+                          isSearchable
+                          placeholder="Country Code"
+                          value={contact.countryCode}
+                          onChange={(value) =>
+                            handleInputChangePhone(contact.id, "countryCode", value)
+                          }
+                          isRequired={isSubmitted && !contact.countryCode}
+                          withError={isSubmitted && !contact.countryCode}
+                          options={countriesCodeData?.countries.map((country) => ({
+                            label: `+${country.callingCodes[0]} ${country.name}`,
+                            value: `+${country.callingCodes[0]}`,
+                          }))}
+                          invisible
+                        />
 
-                          <button
-                            type="button"
-                            onClick={() => handleRemoveMedicine(medicine.id)}
-                          >
-                            <TrashIcon className="h-5 w-5 text-red-500 hover:text-red-600" />
-                          </button>
+                        {/* CONTACT NUMBER */}
+                        <Input
+                          type="tel"
+                          placeholder="Contact Number"
+                          value={contact.contactNumber}
+                          onChange={(e) =>
+                            handleInputChangePhone(contact.id, "contactNumber", e.target.value)
+                          }
+                          isRequired={isSubmitted && !contact.contactNumber}
+                          error={isSubmitted && !contact.contactNumber ? "Required" : ""}
+                          invisible
+                        />
+
+                        {/* ACTION BUTTON */}
+                        <div className="flex justify-center pb-1">
+                          {index === 0 ? (
+                            <button
+                              type="button"
+                              onClick={handleAddContactField}
+                              className="flex h-9 w-9 items-center justify-center rounded-full bg-secondary text-white hover:bg-secondary/90"
+                              title="Add Contact"
+                            >
+                              +
+                            </button>
+                          ) : (
+                            <button
+                              type="button"
+                              onClick={() => handleRemoveContact(contact.id)}
+                              title="Remove Contact"
+                            >
+                              <TrashIcon className="h-5 w-5 text-red-500 hover:text-red-600" />
+                            </button>
+                          )}
                         </div>
-
-                        {/* FORM GRID */}
-                        <div className="grid grid-cols-1 gap-5 md:grid-cols-2 lg:grid-cols-4">
-                          <Input
-                            label="Medicine Name *"
-                            placeholder="Enter medicine name"
-                            value={medicine.name}
-                            onChange={(e) =>
-                              handleMedicineChange(medicine.id, "name", e.target.value)
-                            }
-                          />
-
-                          <Input
-                            label="Problem / Ailment *"
-                            placeholder="Enter problem"
-                            value={medicine.ailment}
-                            onChange={(e) =>
-                              handleMedicineChange(medicine.id, "ailment", e.target.value)
-                            }
-                          />
-
-                          <Input
-                            label="Medicine Type"
-                            placeholder="Tablet, Capsule, Syrup"
-                            value={medicine.type}
-                            onChange={(e) =>
-                              handleMedicineChange(medicine.id, "type", e.target.value)
-                            }
-                          />
-
-                          <Input
-                            label="Medication Schedule"
-                            placeholder="Once daily, Twice daily"
-                            value={medicine.usage}
-                            onChange={(e) =>
-                              handleMedicineChange(medicine.id, "usage", e.target.value)
-                            }
-                          />
-                        </div>
-
-                        {/* INSTRUCTIONS */}
-                        <div className="mt-4">
-                          <Input
-                            textarea
-                            rows={3}
-                            label="Special Instructions"
-                            placeholder="Enter instructions"
-                            value={medicine.special_instructions}
-                            onChange={(e) =>
-                              handleMedicineChange(
-                                medicine.id,
-                                "special_instructions",
-                                e.target.value
-                              )
-                            }
-                          />
-                        </div>
-
-                        {/* VALIDATION ERROR */}
-                        {medicineValidationErrors[medicine.id] && (
-                          <div className="mt-3 rounded-md bg-red-50 p-3">
-                            <p className="text-sm text-red-600">
-                              {medicineValidationErrors[medicine.id]}
-                            </p>
-                          </div>
-                        )}
                       </div>
                     ))}
+
                   </div>
-
-                  <div className="card mt-6">
-                    <div className="mb-5 ltr:text-left rtl:text-right">
-                        <div className="flex items-center justify-between">
-                            <div className="label mb-2 text-secondary text-lg font-semibold text-gray-800">Personal Details</div>
-                        </div>
-                    </div>
-                    <div className="my-5">
-                        <div className="label mb-2">{t("contacts.gender")}</div>
-
-                        <RadioInput
-                            name="Gender"
-                            options={[
-                                {
-                                    id: "male",
-                                    value: "Male",
-                                    label: t("contacts.male"),
-                                },
-                                { id: "female", value: "Female", label: t("contacts.female") },
-                                { id: "other", value: "Other", label: t("contacts.other") },
-                                { id: "n/a", value: "N/A", label: "N/A" },
-                            ]}
-                            Classes="flex"
-                            labelClasses="ml-3"
-                            onChange={(value) => setGender(value)}
-                            checked={gender}
-                        />
-                    </div>
-                      <div className="grid grid-cols-4 gap-7 md:grid-cols-2 lg:grid-cols-4">
-                        <div ref={fieldRefs.birthDate}>
-                            <Input
-                                type="date"
-                                label={t("contacts.birthDate")}
-                                placeholder="Date"
-                                value={birthDate}
-                                onChange={(e) => {
-                                    setBirthDate(e.target.value);
-                                }}
-                                max={moment().format("YYYY-MM-DD")}
-                            />
-                        </div>
+                  <div className="space-y-4">
+                    {emails.map((emailItem, index) => (
+                      <div
+                        key={emailItem.id}
+                        className="grid w-full grid-cols-[2fr_4fr_60px] items-end gap-3"
+                      >
+                        {/* EMAIL TYPE */}
                         <Dropdown
-                            options={groupOptions?.concat({ value: "add_group", label: "Add New Group" })}
-                            title={t("contacts.groups")}
-                            placeholder="Select groups"
-                            value={groups}
-                            onChange={handleGroupChange}
-                            Delete
-                            setOpenDeleteModal={setOpenDeleteModal}
-                        />
-                        <AddGroupModal
-                            isOpen={openGroupModal}
-                            setIsOpen={setOpenGroupModal}
-                            handleSubmit={addNewGroup}
-                            value={newGroupName}
-                            handleChange={(e) => setNewGroupName(e.target.value)}
-                            message={errorMessageServer}
-                            setErrorMessageServer={setErrorMessageServer}
-                            setNewGroupName={setNewGroupName}
+                          title={`Email ${index + 1}`}
+                          placeholder="Type"
+                          value={emailTypeOptions.find(
+                            (opt) => opt.value === emailItem.emailType
+                          )}
+                          onChange={(value) =>
+                            handleInputChangeEmail(emailItem.id, "emailType", value.value)
+                          }
+                          options={emailTypeOptions}
                         />
 
-                        <Dropdown
-                            options={options?.concat({ value: "add_family", label: "Add New Family" })}
-                            title={t("contacts.family")}
-                            placeholder="Select family"
-                            value={family}
-                            onChange={handleFamilyChange}
-                            Delete
-                            setOpenDeleteModal={setOpenDeleteModal}
-                            setOpenDeleteModalFamily={setOpenDeleteModalFamily}
+                        {/* EMAIL ADDRESS */}
+                        <Input
+                          type="email"
+                          placeholder="Email Address"
+                          value={emailItem.emailAddress}
+                          onChange={(e) =>
+                            handleInputChangeEmail(emailItem.id, "emailAddress", e.target.value)
+                          }
+                          isRequired
+                          invisible
                         />
-                        <AddFamilyModal
-                            isOpen={openFamilyModal}
-                            setIsOpen={setOpenFamilyModal}
-                            handleSubmit={addNewFamily}
-                            value={newFamilyName}
-                            handleChange={(e) => setNewFamilyName(e.target.value)}
-                            message={errorMessageServer}
-                            setErrorMessageServer={setErrorMessageServer}
-                            setNewFamilyName={setNewFamilyName}
-                        />
-                    </div>
 
-                    <div className="my-5">
-                        <div className="label mb-2">{t("contacts.maritalStatus")}</div>
-
-                        <RadioInput
-                            name="Marital"
-                            options={[
-                                {
-                                    id: "Single",
-                                    value: "Single",
-                                    label: t("contacts.single"),
-                                },
-                                { id: "Married", value: "Married", label: t("contacts.married") },
-                            ]}
-                            Classes="flex"
-                            labelClasses="ml-3"
-                            onChange={(value) => setMartialStatus(value)}
-                            checked={martialStatus}
-                        />
-                    </div>
-
-                    {martialStatus === "Married" && (
-                        <>
-                            <div className="mb-3 w-3/12">
-                                <Input
-                                    type="date"
-                                    label="Anniversary Date"
-                                    placeholder="Date"
-                                    value={anniversaryDate}
-                                    onChange={(e) => {
-                                        setAnniversaryDate(e.target.value);
-                                    }}
-                                />
-                            </div>
-
-                            {/* UPDATED: Enhanced Spouse Section with Middle Name */}
-                            <div className="mb-5 grid grid-cols-12 gap-7">
-                                <h2 className="label">Spouse</h2>
-                                <div className="col-span-12 -mt-3 rounded-lg border border-dashed bg-yellow-50 p-4">
-                                    <h3 className="pb-3 text-sm font-medium text-gray-700">Add Spouse</h3>
-
-                                    <div className="grid grid-cols-12 gap-x-4">
-                                        <div className="col-span-2">
-                                            <Input
-                                                label=" Salutation"
-                                                placeholder="Mr./Mrs./Ms./Dr."
-                                                value={spouse.salutation}
-                                                onChange={(e) => setSpouse({ ...spouse, salutation: e.target.value })}
-                                            />
-                                        </div>
-
-                                        <div className="col-span-2">
-                                            <Input
-                                                label=" First Name"
-                                                placeholder="First Name"
-                                                value={spouse.name}
-                                                onChange={(e) => setSpouse({ ...spouse, name: e.target.value })}
-                                            />
-                                        </div>
-
-                                        <div className="col-span-2">
-                                            <Input
-                                                label=" Middle Name"
-                                                placeholder="Middle Name"
-                                                value={spouse.middleName}
-                                                onChange={(e) => setSpouse({ ...spouse, middleName: e.target.value })}
-                                            />
-                                        </div>
-
-                                        <div className="col-span-2">
-                                            <Input
-                                                label=" Last Name"
-                                                placeholder="Last Name"
-                                                value={spouse.lastName}
-                                                onChange={(e) => setSpouse({ ...spouse, lastName: e.target.value })}
-                                            />
-                                        </div>
-
-                                        <div className="col-span-2 mt-6">
-                                            <Dropdown
-                                                isSearchable
-                                                options={countriesCodeData?.countries.map((country) => ({
-                                                    label: `+${country.callingCodes[0]} ${country.name}`,
-                                                    value: `+${country.callingCodes[0]} ${country.name}`,
-                                                }))}
-                                                placeholder="Country Code"
-                                                value={spouse.countryCode}
-                                                onChange={(e) => setSpouse({ ...spouse, countryCode: e })}
-                                                invisible
-                                            />
-                                        </div>
-
-                                        <div className="col-span-2 mt-6">
-                                            <Input
-                                                type="tel"
-                                                placeholder="Contact Number"
-                                                value={spouse.contactNumber}
-                                                onChange={(e) =>
-                                                    setSpouse({ ...spouse, contactNumber: e.target.value })
-                                                }
-                                                invisible
-                                            />
-                                        </div>
-                                    </div>
-
-                                    {/* Spouse Gender Selection */}
-                                    <div className="mt-4">
-                                        <div className="label mb-2">Spouse Gender</div>
-                                        <RadioInput
-                                            name="SpouseGender"
-                                            options={[
-                                                { id: "spouse_male", value: "Male", label: "Male" },
-                                                { id: "spouse_female", value: "Female", label: "Female" },
-                                                { id: "spouse_other", value: "Other", label: "Other" },
-                                                { id: "spouse_na", value: "N/A", label: "N/A" },
-                                            ]}
-                                            Classes="flex space-x-3"
-                                            onChange={(value) => setSpouse({ ...spouse, gender: value })}
-                                            checked={spouse?.gender}
-                                        />
-                                    </div>
-
-                                    {/* Spouse Profile Image */}
-                                    <div className="mt-4">
-                                        <ChooseFile
-                                            label=" Profile Image"
-                                            onClickCross={handleRemoveSpouseProfileImage}
-                                            placeholder
-                                            selectedFile={spouse.profileImage}
-                                            loading={spouseProfileLoading}
-                                            dir
-                                            onChange={(event) => handleSpouseProfileImage(event)}
-                                            key={`spouse-profile-${spouse.profileImage ? "with-image" : "no-image"}`}
-                                            uni="Spouse"
-                                        />
-                                        {spouseProfileError && (
-                                            <span className="mt-2 block text-xs text-red-500">
-                                                {spouseProfileError}
-                                            </span>
-                                        )}
-                                    </div>
-                                    <div className="w-3/12">
-                                        <Input
-                                            label="Wedding Hall Seat"
-                                            placeholder="Wedding Hall Seat"
-                                            value={spouse.weddingHallSeat}
-                                            onChange={(e) => setSpouse({ ...spouse, weddingHallSeat: e.target.value })}
-                                        />
-                                    </div>
-                                    {/* Spouse Preferences Section */}
-                                    <div className="mt-6">
-                                        <div className="mb-3">
-                                            <div className="label text-secondary">Spouse Preferences</div>
-                                        </div>
-                                        <div className="grid grid-cols-3 gap-x-5">
-                                            <Dropdown
-                                                isSearchable
-                                                options={primaryArray}
-                                                title={t("contacts.primaryMealPreference")}
-                                                placeholder="Select Primary Meal"
-                                                value={spouse.meal_preference?.[0] || ""}
-                                                onChange={(value) => handleSpouseMealChange(value, 0)}
-                                                isMulti
-                                            />
-
-                                            <Dropdown
-                                                isSearchable
-                                                options={secondaryArray}
-                                                title={t("contacts.secondaryMealPreference")}
-                                                placeholder="Select Secondary Meal"
-                                                value={spouse.meal_preference?.[1] || ""}
-                                                onChange={(value) => handleSpouseMealChange(value, 1)}
-                                                isMulti
-                                            />
-
-                                            <Dropdown
-                                                isSearchable
-                                                options={alcoholicArray}
-                                                title={t("contacts.alcoholPreference")}
-                                                placeholder="Select Alcohol Preference"
-                                                value={spouse.meal_preference?.[2] || ""}
-                                                onChange={(value) => handleSpouseMealChange(value, 2)}
-                                                isMulti
-                                            />
-                                        </div>
-                                    </div>
-
-                                    {/* Auto-add indicator for spouse */}
-                                    {showSpouseIndicator && (
-                                        <div className="mt-4 rounded bg-yellow-100 p-2 text-sm text-yellow-700">
-                                            ✓ Spouse information is complete and will be saved with the contact
-                                        </div>
-                                    )}
-
-                                    {/* Spouse Medicine Section */}
-                                    <div className="mt-6">
-                                        <div className="mt-5 grid grid-cols-12 gap-2">
-                                            <div className="col-span-8">
-                                                <button
-                                                    type="button"
-                                                    className="rounded-lg bg-secondary px-4 py-2 text-white"
-                                                    onClick={handleAddSpouseMedicine}
-                                                >
-                                                    Add Medicine for Spouse
-                                                </button>
-                                            </div>
-                                        </div>
-
-                                        {/* Only show medicine fields if there are medicines */}
-                                        {spouse.medicines &&
-                                            spouse.medicines.length > 0 &&
-                                            spouse.medicines.map((medicine, index) => (
-                                                <div key={medicine.id} className="mb-4 mt-5">
-                                                    <div className="mb-3 flex items-center justify-between">
-                                                        <h4 className="text-sm font-medium text-gray-700">
-                                                            Spouse Medicine {index + 1}
-                                                        </h4>
-                                                        <button
-                                                            type="button"
-                                                            className="mt-4"
-                                                            onClick={() => handleRemoveSpouseMedicine(medicine.id)}
-                                                        >
-                                                            <TrashIcon className="h-5 w-5 cursor-pointer text-red-500" />
-                                                        </button>
-                                                    </div>
-
-                                                    <div className="grid grid-cols-4 gap-7 md:grid-cols-2 lg:grid-cols-4">
-                                                        <Input
-                                                            type="text"
-                                                            label="Medicine Name *"
-                                                            placeholder="Enter medicine name"
-                                                            value={medicine.name}
-                                                            onChange={(e) =>
-                                                                handleSpouseMedicineChange(
-                                                                    medicine.id,
-                                                                    "name",
-                                                                    e.target.value
-                                                                )
-                                                            }
-                                                        />
-
-                                                        <Input
-                                                            type="text"
-                                                            label="Problem/Ailment *"
-                                                            placeholder="Enter problem or ailment"
-                                                            value={medicine.ailment}
-                                                            onChange={(e) =>
-                                                                handleSpouseMedicineChange(
-                                                                    medicine.id,
-                                                                    "ailment",
-                                                                    e.target.value
-                                                                )
-                                                            }
-                                                        />
-
-                                                        <Input
-                                                            type="text"
-                                                            label="Medicine Type"
-                                                            placeholder="e.g., Tablet, Capsule, Syrup"
-                                                            value={medicine.type}
-                                                            onChange={(e) =>
-                                                                handleSpouseMedicineChange(
-                                                                    medicine.id,
-                                                                    "type",
-                                                                    e.target.value
-                                                                )
-                                                            }
-                                                        />
-
-                                                        <Input
-                                                            type="text"
-                                                            label="Medication Type"
-                                                            placeholder="e.g., Once daily, Twice daily"
-                                                            value={medicine.usage}
-                                                            onChange={(e) =>
-                                                                handleSpouseMedicineChange(
-                                                                    medicine.id,
-                                                                    "usage",
-                                                                    e.target.value
-                                                                )
-                                                            }
-                                                        />
-                                                    </div>
-
-                                                    <div className="mt-4">
-                                                        <Input
-                                                            textarea
-                                                            label="Special Instructions"
-                                                            placeholder="Enter special instructions"
-                                                            value={medicine.special_instructions}
-                                                            onChange={(e) =>
-                                                                handleSpouseMedicineChange(
-                                                                    medicine.id,
-                                                                    "special_instructions",
-                                                                    e.target.value
-                                                                )
-                                                            }
-                                                            rows={3}
-                                                        />
-                                                    </div>
-                                                    {/* Show validation error if any */}
-                                                    {spouseMedicineValidationErrors[medicine.id] && (
-                                                        <div className="mb-3 rounded-md bg-red-50 p-3">
-                                                            <p className="text-sm text-red-600">
-                                                                {spouseMedicineValidationErrors[medicine.id]}
-                                                            </p>
-                                                        </div>
-                                                    )}
-                                                </div>
-                                            ))}
-
-                                        {/* Show message when no medicines added */}
-                                        {(!spouse.medicines || spouse.medicines.length === 0) && (
-                                            <div className="mt-5 text-center text-gray-500">
-                                                <p className="text-sm">
-                                                    No medicines added for spouse yet. Click "Add Medicine for Spouse"
-                                                    to get started.
-                                                </p>
-                                            </div>
-                                        )}
-                                    </div>
-                                </div>
-                            </div>
-
-                            {/* UPDATED: Enhanced Children Section with Middle Name */}
-                            <div>
-                                <div className="mb-4 flex items-center gap-x-10">
-                                    {/* <h2 className="label"></h2> */}
-                                    <div className="mb-5 ltr:text-left rtl:text-right">
-                                        <div className="flex items-center justify-between">
-                                            <div className="label mb-2 text-secondary text-lg font-semibold text-gray-800">Children</div>
-                                        </div>
-                                    </div>
-                                    {/* Plus button to add new child form block */}
-                                    <button
-                                        type="button"
-                                        onClick={handleAddNewChildForm}
-                                        className="flex items-center gap-2 text-green-600 hover:text-green-700"
-                                    >
-                                        <PlusCircleIcon className="h-6 w-6" />
-                                        <span className="text-sm">Add Child</span>
-                                    </button>
-                                </div>
-
-                                {/* Existing Children */}
-                                {children?.map((child, index) => (
-                                    <div
-                                        key={`child-${child.id}`}
-                                        className="mt-5 space-y-4 rounded-lg border bg-gray-50 p-4"
-                                    >
-                                        <div className="grid gap-x-4 xl:grid-cols-8 3xl:grid-cols-12">
-                                            <div className="col-span-2">
-                                                <Input
-                                                    label="Salutation"
-                                                    placeholder="Mr./Mrs./Ms./Dr."
-                                                    labelOnTop
-                                                    value={child.salutation || ""}
-                                                    onChange={(event) =>
-                                                        handleChildAdultFieldChange(
-                                                            child.id,
-                                                            "salutation",
-                                                            event.target.value
-                                                        )
-                                                    }
-                                                />
-                                            </div>
-
-                                            <div className="col-span-2">
-                                                <Input
-                                                    label={`First Name`}
-                                                    placeholder="First Name"
-                                                    labelOnTop
-                                                    value={child.name}
-                                                    onChange={(event) =>
-                                                        handleChildAdultFieldChange(
-                                                            child.id,
-                                                            "name",
-                                                            event.target.value
-                                                        )
-                                                    }
-                                                />
-                                            </div>
-
-                                            <div className="col-span-2">
-                                                <Input
-                                                    label="Middle Name"
-                                                    placeholder="Middle Name"
-                                                    labelOnTop
-                                                    value={child.middleName || ""}
-                                                    onChange={(event) =>
-                                                        handleChildAdultFieldChange(
-                                                            child.id,
-                                                            "middleName",
-                                                            event.target.value
-                                                        )
-                                                    }
-                                                />
-                                            </div>
-
-                                            <div className="col-span-2">
-                                                <Input
-                                                    label="Last Name"
-                                                    placeholder="Last Name"
-                                                    labelOnTop
-                                                    value={child.lastName || ""}
-                                                    onChange={(event) =>
-                                                        handleChildAdultFieldChange(
-                                                            child.id,
-                                                            "lastName",
-                                                            event.target.value
-                                                        )
-                                                    }
-                                                />
-                                            </div>
-
-                                            <div className="col-span-2 mt-6">
-                                                <Dropdown
-                                                    isSearchable
-                                                    options={countriesCodeData?.countries.map((country) => ({
-                                                        label: `+${country.callingCodes[0]} ${country.name}`,
-                                                        value: `+${country.callingCodes[0]} ${country.name}`,
-                                                    }))}
-                                                    placeholder="Country Code"
-                                                    value={child.countryCode}
-                                                    onChange={(event) =>
-                                                        handleChildAdultFieldChange(child.id, "countryCode", event)
-                                                    }
-                                                    invisible
-                                                />
-                                            </div>
-
-                                            <div className="col-span-2 mt-6">
-                                                <Input
-                                                    type="tel"
-                                                    placeholder="Contact Number"
-                                                    value={child.contactNumber}
-                                                    onChange={(event) =>
-                                                        handleChildAdultFieldChange(
-                                                            child.id,
-                                                            "contactNumber",
-                                                            event.target.value
-                                                        )
-                                                    }
-                                                    invisible
-                                                />
-                                            </div>
-                                        </div>
-
-                                        {/* Child Gender and Actions Row */}
-                                        <div className="flex items-center justify-between">
-                                            <div className="flex gap-x-4">
-                                                <RadioInput
-                                                    name={`Child_${child.id}`}
-                                                    options={[
-                                                        { id: `Male_${child.id}`, value: "Male", label: "Male" },
-                                                        { id: `Female_${child.id}`, value: "Female", label: "Female" },
-                                                        { id: `Other_${child.id}`, value: "Other", label: "Other" },
-                                                        { id: `N/A_${child.id}`, value: "N/A", label: "N/A" },
-                                                    ]}
-                                                    value={child.gender}
-                                                    onChange={(value) =>
-                                                        handleChildAdultFieldChange(child.id, "gender", value)
-                                                    }
-                                                    Classes="flex space-x-3"
-                                                    checked={child?.gender}
-                                                />
-                                            </div>
-                                            <button type="button" onClick={() => handleRemoveChild(child.id)}>
-                                                <TrashIcon className="h-5 w-5 cursor-pointer text-red-500" />
-                                            </button>
-                                        </div>
-
-                                        {/* Child Profile Image */}
-                                        <div className="mt-4">
-                                            <ChooseFile
-                                                label={`Child ${index + 1} Profile Image`}
-                                                onClickCross={() => handleRemoveChildProfileImage(child.id)}
-                                                placeholder
-                                                selectedFile={child.profileImage}
-                                                loading={childrenProfileLoading[child.id] || false}
-                                                dir
-                                                onChange={(event) => handleChildProfileImage(event, child.id)}
-                                                key={`child-profile-${child.id}-${child.profileImage ? "with-image" : "no-image"}`}
-                                                uni={`Child-${child.id}`}
-                                            />
-                                            {childrenProfileErrors[child.id] && (
-                                                <span className="mt-2 block text-xs text-red-500">
-                                                    {childrenProfileErrors[child.id]}
-                                                </span>
-                                            )}
-                                        </div>
-                                        <div className="w-3/12">
-                                            <Input
-                                                label="Wedding Hall Seat"
-                                                placeholder="Wedding Hall Seat"
-                                                value={child.weddingHallSeat}
-                                                onChange={(e) =>
-                                                    handleChildAdultFieldChange(
-                                                        child.id,
-                                                        "weddingHallSeat",
-                                                        e.target.value
-                                                    )
-                                                }
-                                            />
-                                        </div>
-
-                                        {/* Child Preferences Section */}
-                                        <div className="mt-4">
-                                            <div className="mb-3">
-                                                <div className="label text-secondary">
-                                                    Child {index + 1} Preferences
-                                                </div>
-                                            </div>
-                                            <div className="grid grid-cols-3 gap-x-5">
-                                                <Dropdown
-                                                    isSearchable
-                                                    options={primaryArray}
-                                                    title={t("contacts.primaryMealPreference")}
-                                                    placeholder="Select Primary Meal"
-                                                    value={child.meal_preference?.[0] || ""}
-                                                    onChange={(value) => handleChildMealChange(child.id, value, 0)}
-                                                    isMulti
-                                                />
-
-                                                <Dropdown
-                                                    isSearchable
-                                                    options={secondaryArray}
-                                                    title={t("contacts.secondaryMealPreference")}
-                                                    placeholder="Select Secondary Meal"
-                                                    value={child.meal_preference?.[1] || ""}
-                                                    onChange={(value) => handleChildMealChange(child.id, value, 1)}
-                                                    isMulti
-                                                />
-
-                                                <Dropdown
-                                                    isSearchable
-                                                    options={alcoholicArray}
-                                                    title={t("contacts.alcoholPreference")}
-                                                    placeholder="Select Alcohol Preference"
-                                                    value={child.meal_preference?.[2] || ""}
-                                                    onChange={(value) => handleChildMealChange(child.id, value, 2)}
-                                                    isMulti
-                                                />
-                                            </div>
-                                        </div>
-                                    </div>
-                                ))}
-
-                                {/* Medicine Section for Existing Children */}
-                                {children?.map((child, index) => (
-                                    <div
-                                        key={`child-medicine-${child.id}`}
-                                        className="mt-5 space-y-4 rounded-lg border bg-blue-50 p-4"
-                                    >
-                                        <h3 className="text-sm font-medium text-gray-700">
-                                            Medicine for Child {index + 1}
-                                        </h3>
-
-                                        <div className="mt-5 grid grid-cols-12 gap-2">
-                                            <div className="col-span-8">
-                                                <button
-                                                    type="button"
-                                                    className="rounded-lg bg-secondary px-4 py-2 text-white"
-                                                    onClick={() => handleAddChildMedicine(child.id)}
-                                                >
-                                                    Add Medicine for Child {index + 1}
-                                                </button>
-                                            </div>
-                                        </div>
-
-                                        {/* Only show medicine fields if there are medicines */}
-                                        {child.medicines &&
-                                            child.medicines.length > 0 &&
-                                            child.medicines.map((medicine, medIndex) => (
-                                                <div key={medicine.id} className="mb-4 mt-5">
-                                                    <div className="mb-3 flex items-center justify-between">
-                                                        <h4 className="text-sm font-medium text-gray-700">
-                                                            Child {index + 1} Medicine {medIndex + 1}
-                                                        </h4>
-                                                        <button
-                                                            type="button"
-                                                            className="mt-4"
-                                                            onClick={() =>
-                                                                handleRemoveChildMedicine(child.id, medicine.id)
-                                                            }
-                                                        >
-                                                            <TrashIcon className="h-5 w-5 cursor-pointer text-red-500" />
-                                                        </button>
-                                                    </div>
-
-                                                    <div className="grid grid-cols-4 gap-7 md:grid-cols-2 lg:grid-cols-4">
-                                                        <Input
-                                                            type="text"
-                                                            label="Medicine Name *"
-                                                            placeholder="Enter medicine name"
-                                                            value={medicine.name}
-                                                            onChange={(e) =>
-                                                                handleChildMedicineChange(
-                                                                    child.id,
-                                                                    medicine.id,
-                                                                    "name",
-                                                                    e.target.value
-                                                                )
-                                                            }
-                                                        />
-
-                                                        <Input
-                                                            type="text"
-                                                            label="Problem/Ailment *"
-                                                            placeholder="Enter problem or ailment"
-                                                            value={medicine.ailment}
-                                                            onChange={(e) =>
-                                                                handleChildMedicineChange(
-                                                                    child.id,
-                                                                    medicine.id,
-                                                                    "ailment",
-                                                                    e.target.value
-                                                                )
-                                                            }
-                                                        />
-
-                                                        <Input
-                                                            type="text"
-                                                            label="Medicine Type"
-                                                            placeholder="e.g., Tablet, Capsule, Syrup"
-                                                            value={medicine.type}
-                                                            onChange={(e) =>
-                                                                handleChildMedicineChange(
-                                                                    child.id,
-                                                                    medicine.id,
-                                                                    "type",
-                                                                    e.target.value
-                                                                )
-                                                            }
-                                                        />
-
-                                                        <Input
-                                                            type="text"
-                                                            label="Medication Type"
-                                                            placeholder="e.g., Once daily, Twice daily"
-                                                            value={medicine.usage}
-                                                            onChange={(e) =>
-                                                                handleChildMedicineChange(
-                                                                    child.id,
-                                                                    medicine.id,
-                                                                    "usage",
-                                                                    e.target.value
-                                                                )
-                                                            }
-                                                        />
-                                                    </div>
-
-                                                    <div className="mt-4">
-                                                        <Input
-                                                            textarea
-                                                            label="Special Instructions"
-                                                            placeholder="Enter special instructions"
-                                                            value={medicine.special_instructions}
-                                                            onChange={(e) =>
-                                                                handleChildMedicineChange(
-                                                                    child.id,
-                                                                    medicine.id,
-                                                                    "special_instructions",
-                                                                    e.target.value
-                                                                )
-                                                            }
-                                                            rows={3}
-                                                        />
-                                                    </div>
-                                                    {/* Show validation error if any */}
-                                                    {childrenMedicineValidationErrors[child.id]?.[medicine.id] && (
-                                                        <div className="mb-3 rounded-md bg-red-50 p-3">
-                                                            <p className="text-sm text-red-600">
-                                                                {
-                                                                    childrenMedicineValidationErrors[child.id][
-                                                                        medicine.id
-                                                                    ]
-                                                                }
-                                                            </p>
-                                                        </div>
-                                                    )}
-                                                </div>
-                                            ))}
-
-                                        {/* Show message when no medicines added */}
-                                        {(!child.medicines || child.medicines.length === 0) && (
-                                            <div className="mt-5 text-center text-gray-500">
-                                                <p className="text-sm">
-                                                    No medicines added for Child {index + 1} yet. Click "Add Medicine
-                                                    for Child {index + 1}" to get started.
-                                                </p>
-                                            </div>
-                                        )}
-                                    </div>
-                                ))}
-
-                                {/* NEW: New Child Form - Only shows when showNewChildForm is true */}
-                                {showNewChildForm && (
-                                    <div className="mt-5 space-y-4 rounded-lg border border-dashed bg-blue-50 p-4">
-                                        <h3 className="text-sm font-medium text-gray-700">Add New Child</h3>
-                                        <div className="grid gap-x-4 xl:grid-cols-8 3xl:grid-cols-12">
-                                            <div className="col-span-2">
-                                                <Input
-                                                    label="Salutation"
-                                                    placeholder="Mr./Mrs./Ms./Dr."
-                                                    labelOnTop
-                                                    value={newChild.salutation}
-                                                    onChange={(event) =>
-                                                        handleInputChange("salutation", event.target.value)
-                                                    }
-                                                    isRequired
-                                                    error={errors.salutation}
-                                                />
-                                            </div>
-
-                                            <div className="col-span-2">
-                                                <Input
-                                                    label="First Name"
-                                                    placeholder="First Name"
-                                                    labelOnTop
-                                                    value={newChild.name}
-                                                    isRequired
-                                                    error={errors.name}
-                                                    onChange={(event) => handleInputChange("name", event.target.value)}
-                                                />
-                                            </div>
-
-                                            <div className="col-span-2">
-                                                <Input
-                                                    label="Middle Name"
-                                                    placeholder="Middle Name"
-                                                    labelOnTop
-                                                    value={newChild.middleName}
-                                                    onChange={(event) =>
-                                                        handleInputChange("middleName", event.target.value)
-                                                    }
-                                                />
-                                            </div>
-
-                                            <div className="col-span-2">
-                                                <Input
-                                                    label="Last Name"
-                                                    placeholder="Last Name"
-                                                    labelOnTop
-                                                    value={newChild.lastName}
-                                                    isRequired
-                                                    error={errors.lastName}
-                                                    onChange={(event) =>
-                                                        handleInputChange("lastName", event.target.value)
-                                                    }
-                                                />
-                                            </div>
-
-                                            <div className="col-span-2 mt-6">
-                                                <Dropdown
-                                                    isSearchable
-                                                    options={countriesCodeData?.countries.map((country) => ({
-                                                        label: `+${country.callingCodes[0]} ${country.name}`,
-                                                        value: `+${country.callingCodes[0]} ${country.name}`,
-                                                    }))}
-                                                    placeholder="Country Code"
-                                                    value={newChild.countryCode}
-                                                    onChange={(event) => handleInputChange("countryCode", event)}
-                                                    invisible
-                                                    isRequired
-                                                    withError={errors.countryCode}
-                                                />
-                                            </div>
-
-                                            <div className="col-span-2 mt-6">
-                                                <Input
-                                                    type="tel"
-                                                    placeholder="Contact Number"
-                                                    value={newChild.contactNumber}
-                                                    onChange={(event) =>
-                                                        handleInputChange("contactNumber", event.target.value)
-                                                    }
-                                                    invisible
-                                                    isRequired
-                                                    error={errors.contactNumber}
-                                                />
-                                            </div>
-                                        </div>
-
-                                        {/* New Child Gender */}
-                                        <div>
-                                            {errors.gender && <p className="text-sm text-red-500">{errors.gender}</p>}
-                                            <div className="flex gap-x-4">
-                                                <RadioInput
-                                                    name="NewChild"
-                                                    options={[
-                                                        { id: "Male_NewChild", value: "Male", label: "Male" },
-                                                        { id: "Female_NewChild", value: "Female", label: "Female" },
-                                                        { id: "Other_NewChild", value: "Other", label: "Other" },
-                                                        { id: "N/A_NewChild", value: "N/A", label: "N/A" },
-                                                    ]}
-                                                    value={newChild.gender}
-                                                    onChange={(value) => handleInputChange("gender", value)}
-                                                    Classes="flex space-x-3"
-                                                    checked={newChild?.gender}
-                                                />
-                                            </div>
-                                        </div>
-
-                                        {/* New Child Profile Image */}
-                                        <div className="mt-4">
-                                            <ChooseFile
-                                                label="New Child Profile Image"
-                                                onClickCross={() => handleRemoveChildProfileImage(null, true)}
-                                                placeholder
-                                                selectedFile={newChild.profileImage}
-                                                loading={childrenProfileLoading.newChild || false}
-                                                dir
-                                                onChange={(event) => handleChildProfileImage(event, null, true)}
-                                                key={`new-child-profile-${newChild.profileImage ? "with-image" : "no-image"}`}
-                                                uni="NewChild"
-                                            />
-                                            {childrenProfileErrors.newChild && (
-                                                <span className="mt-2 block text-xs text-red-500">
-                                                    {childrenProfileErrors.newChild}
-                                                </span>
-                                            )}
-                                        </div>
-                                        <div className="w-3/12">
-                                            <Input
-                                                label="Wedding Hall Seat"
-                                                placeholder="Wedding Hall Seat"
-                                                value={newChild.weddingHallSeat}
-                                                onChange={(e) => handleInputChange("weddingHallSeat", e.target.value)}
-                                            />
-                                        </div>
-                                        {/* New Child Preferences Section */}
-                                        <div className="mt-4">
-                                            <div className="mb-3">
-                                                <div className="label text-secondary">New Child Preferences</div>
-                                            </div>
-                                            <div className="grid grid-cols-3 gap-x-5">
-                                                <Dropdown
-                                                    isSearchable
-                                                    options={primaryArray}
-                                                    title={t("contacts.primaryMealPreference")}
-                                                    placeholder="Select Primary Meal"
-                                                    value={newChild.meal_preference?.[0] || ""}
-                                                    onChange={(value) => handleNewChildMealChange(value, 0)}
-                                                    isMulti
-                                                />
-
-                                                <Dropdown
-                                                    isSearchable
-                                                    options={secondaryArray}
-                                                    title={t("contacts.secondaryMealPreference")}
-                                                    placeholder="Select Secondary Meal"
-                                                    value={newChild.meal_preference?.[1] || ""}
-                                                    onChange={(value) => handleNewChildMealChange(value, 1)}
-                                                    isMulti
-                                                />
-
-                                                <Dropdown
-                                                    isSearchable
-                                                    options={alcoholicArray}
-                                                    title={t("contacts.alcoholPreference")}
-                                                    placeholder="Select Alcohol Preference"
-                                                    value={newChild.meal_preference?.[2] || ""}
-                                                    onChange={(value) => handleNewChildMealChange(value, 2)}
-                                                    isMulti
-                                                />
-                                            </div>
-                                        </div>
-
-                                        {/* Auto-add indicator */}
-                                        {isChildFormComplete() && (
-                                            <div className="rounded bg-green-100 p-2 text-sm text-green-600">
-                                                ✓ Child will be added automatically when you finish filling the form
-                                            </div>
-                                        )}
-
-                                        {/* New Child Medicine Section */}
-                                        <div className="mt-6">
-                                            <div className="mt-5 grid grid-cols-12 gap-2">
-                                                <div className="col-span-8">
-                                                    <button
-                                                        type="button"
-                                                        className="rounded-lg bg-secondary px-4 py-2 text-white"
-                                                        onClick={handleAddNewChildMedicine}
-                                                    >
-                                                        Add Medicine for New Child
-                                                    </button>
-                                                </div>
-                                            </div>
-
-                                            {/* Only show medicine fields if there are medicines */}
-                                            {newChild.medicines &&
-                                                newChild.medicines.length > 0 &&
-                                                newChild.medicines.map((medicine, index) => (
-                                                    <div key={medicine.id} className="mb-4 mt-5">
-                                                        <div className="mb-3 flex items-center justify-between">
-                                                            <h4 className="text-sm font-medium text-gray-700">
-                                                                New Child Medicine {index + 1}
-                                                            </h4>
-                                                            <button
-                                                                type="button"
-                                                                className="mt-4"
-                                                                onClick={() =>
-                                                                    handleRemoveNewChildMedicine(medicine.id)
-                                                                }
-                                                            >
-                                                                <TrashIcon className="h-5 w-5 cursor-pointer text-red-500" />
-                                                            </button>
-                                                        </div>
-
-                                                        <div className="grid grid-cols-4 gap-7 md:grid-cols-2 lg:grid-cols-4">
-                                                            <Input
-                                                                type="text"
-                                                                label="Medicine Name *"
-                                                                placeholder="Enter medicine name"
-                                                                value={medicine.name}
-                                                                onChange={(e) =>
-                                                                    handleNewChildMedicineChange(
-                                                                        medicine.id,
-                                                                        "name",
-                                                                        e.target.value
-                                                                    )
-                                                                }
-                                                            />
-
-                                                            <Input
-                                                                type="text"
-                                                                label="Problem/Ailment *"
-                                                                placeholder="Enter problem or ailment"
-                                                                value={medicine.ailment}
-                                                                onChange={(e) =>
-                                                                    handleNewChildMedicineChange(
-                                                                        medicine.id,
-                                                                        "ailment",
-                                                                        e.target.value
-                                                                    )
-                                                                }
-                                                            />
-
-                                                            <Input
-                                                                type="text"
-                                                                label="Medicine Type"
-                                                                placeholder="e.g., Tablet, Capsule, Syrup"
-                                                                value={medicine.type}
-                                                                onChange={(e) =>
-                                                                    handleNewChildMedicineChange(
-                                                                        medicine.id,
-                                                                        "type",
-                                                                        e.target.value
-                                                                    )
-                                                                }
-                                                            />
-
-                                                            <Input
-                                                                type="text"
-                                                                label="Medication Type"
-                                                                placeholder="e.g., Once daily, Twice daily"
-                                                                value={medicine.usage}
-                                                                onChange={(e) =>
-                                                                    handleNewChildMedicineChange(
-                                                                        medicine.id,
-                                                                        "usage",
-                                                                        e.target.value
-                                                                    )
-                                                                }
-                                                            />
-                                                        </div>
-
-                                                        <div className="mt-4">
-                                                            <Input
-                                                                textarea
-                                                                label="Special Instructions"
-                                                                placeholder="Enter special instructions"
-                                                                value={medicine.special_instructions}
-                                                                onChange={(e) =>
-                                                                    handleNewChildMedicineChange(
-                                                                        medicine.id,
-                                                                        "special_instructions",
-                                                                        e.target.value
-                                                                    )
-                                                                }
-                                                                rows={3}
-                                                            />
-                                                        </div>
-                                                        {/* Show validation error if any */}
-                                                        {newChildMedicineValidationErrors[medicine.id] && (
-                                                            <div className="mb-3 rounded-md bg-red-50 p-3">
-                                                                <p className="text-sm text-red-600">
-                                                                    {newChildMedicineValidationErrors[medicine.id]}
-                                                                </p>
-                                                            </div>
-                                                        )}
-                                                    </div>
-                                                ))}
-
-                                            {/* Show message when no medicines added */}
-                                            {(!newChild.medicines || newChild.medicines.length === 0) && (
-                                                <div className="mt-5 text-center text-gray-500">
-                                                    <p className="text-sm">
-                                                        No medicines added for new child yet. Click "Add Medicine for
-                                                        New Child" to get started.
-                                                    </p>
-                                                </div>
-                                            )}
-                                        </div>
-                                    </div>
-                                )}
-                            </div>
-                        </>
-                    )}
-
-                    <div ref={fieldRefs.contacts} className="space-y-4">
-
-                      {contacts.map((contact, index) => (
-                        <div
-                          key={contact.id}
-                          className="grid w-full grid-cols-[2fr_2fr_3fr_60px] items-end gap-3"
+                        {/* ACTION BUTTON */}
+                        <div className="flex justify-center pb-1">
+                          {index === 0 ? (
+                            <button
+                              type="button"
+                              onClick={handleAddEmailField}
+                              title="Add Email"
+                              className="flex h-9 w-9 items-center justify-center rounded-full bg-secondary text-white hover:bg-secondary/90"
+                            >
+                              +
+                            </button>
+                          ) : (
+                            <button
+                              type="button"
+                              onClick={() => handleRemoveEmail(emailItem.id)}
+                              title="Remove Email"
+                            >
+                              <TrashIcon className="h-5 w-5 text-red-500 hover:text-red-600" />
+                            </button>
+                          )}
+                        </div>
+                      </div>
+                    ))}
+
+                  </div>
+                  </>
+                  )}
+                </div>
+                <div className="card mt-6">
+                  <div className="mb-5 flex cursor-pointer items-center justify-between"  onClick={() => setIsQrCodesOpen(!isQrCodesOpen)}>
+                    <div className="label text-secondary">{t("QR Codes")}</div>
+                    <span className="flex h-9 w-9 items-center justify-center rounded-full bg-secondary text-white hover:bg-secondary/90">
+                    {isQrCodesOpen ? "−" : "+"}
+                    </span>
+                  </div>
+                  {isQrCodesOpen && (
+                  <div className="flex flex-wrap items-center justify-between gap-4">
+
+                    {/* LEFT: Label + QR tags */}
+                    <div className="flex flex-wrap items-center gap-2">
+                      {qrCodeOptions.map((qr) => (
+                        <span
+                          key={qr.value}
+                          className="rounded-full bg-gray-100 px-3 py-1 text-sm font-medium text-gray-800"
                         >
-                          {/* CONTACT TYPE */}
-                          <Dropdown
-                            title={`Contact ${index + 1}`}
-                            placeholder="Type"
-                            value={contact.contactType}
-                            onChange={(value) =>
-                              handleInputChangePhone(contact.id, "contactType", value)
-                            }
-                            isRequired={isSubmitted && !contact.contactType}
-                            withError={isSubmitted && !contact.contactType && "Required"}
-                            options={[
-                              { label: "Home", value: "Home" },
-                              { label: "Mobile", value: "Mobile" },
-                              { label: "Land line", value: "Land line" },
-                              { label: "Work", value: "Work" },
-                              { label: "Fax", value: "Fax" },
-                              { label: "Other", value: "Other" },
-                            ]}
-                          />
-
-                          {/* COUNTRY CODE */}
-                          <Dropdown
-                            isSearchable
-                            placeholder="Country Code"
-                            value={contact.countryCode}
-                            onChange={(value) =>
-                              handleInputChangePhone(contact.id, "countryCode", value)
-                            }
-                            isRequired={isSubmitted && !contact.countryCode}
-                            withError={isSubmitted && !contact.countryCode}
-                            options={countriesCodeData?.countries.map((country) => ({
-                              label: `+${country.callingCodes[0]} ${country.name}`,
-                              value: `+${country.callingCodes[0]}`,
-                            }))}
-                            invisible
-                          />
-
-                          {/* CONTACT NUMBER */}
-                          <Input
-                            type="tel"
-                            placeholder="Contact Number"
-                            value={contact.contactNumber}
-                            onChange={(e) =>
-                              handleInputChangePhone(contact.id, "contactNumber", e.target.value)
-                            }
-                            isRequired={isSubmitted && !contact.contactNumber}
-                            error={isSubmitted && !contact.contactNumber ? "Required" : ""}
-                            invisible
-                          />
-
-                          {/* ACTION BUTTON */}
-                          <div className="flex justify-center pb-1">
-                            {index === 0 ? (
-                              <button
-                                type="button"
-                                onClick={handleAddContactField}
-                                className="flex h-9 w-9 items-center justify-center rounded-full bg-secondary text-white hover:bg-secondary/90"
-                                title="Add Contact"
-                              >
-                                +
-                              </button>
-                            ) : (
-                              <button
-                                type="button"
-                                onClick={() => handleRemoveContact(contact.id)}
-                                title="Remove Contact"
-                              >
-                                <TrashIcon className="h-5 w-5 text-red-500 hover:text-red-600" />
-                              </button>
-                            )}
-                          </div>
-                        </div>
+                          {qr.label}
+                        </span>
                       ))}
-
                     </div>
-                    <div className="space-y-4">
-                      {emails.map((emailItem, index) => (
-                        <div
-                          key={emailItem.id}
-                          className="grid w-full grid-cols-[2fr_4fr_60px] items-end gap-3"
+
+                    {/* RIGHT: Button */}
+                    <Button
+                      title="Allot QR Codes"
+                      type="button"
+                      onClick={() => setShowAllotQRModal(true)}
+                      buttonColor="bg-purple-600"
+                      disabled={!currentSubscriberData?.AutoID}
+                    />
+
+                  </div>
+                  )}
+                </div>
+                <div className="card mt-6">
+                  <div className="mb-5 flex cursor-pointer items-center justify-between"  onClick={() => setIsMaritalStatusOpen(!isMaritalStatusOpen)}>
+                    <div className="label text-secondary">{t("Marital Status")}</div>
+                    <span className="flex h-9 w-9 items-center justify-center rounded-full bg-secondary text-white hover:bg-secondary/90">
+                    {isMaritalStatusOpen ? "−" : "+"}
+                    </span>
+                  </div>
+                  {isMaritalStatusOpen && (
+	                <>
+                  <div className="my-5">
+                      <div className="label mb-2">{t("contacts.maritalStatus")}</div>
+
+                      <RadioInput
+                          name="Marital"
+                          options={[
+                              {
+                                  id: "Single",
+                                  value: "Single",
+                                  label: t("contacts.single"),
+                              },
+                              { id: "Married", value: "Married", label: t("contacts.married") },
+                          ]}
+                          Classes="flex"
+                          labelClasses="ml-3"
+                          onChange={(value) => setMartialStatus(value)}
+                          checked={martialStatus}
+                      />
+                  </div>
+
+                  {martialStatus === "Married" && (
+                      <>
+                          <div className="mb-3 w-3/12">
+                              <Input
+                                  type="date"
+                                  label="Anniversary Date"
+                                  placeholder="Date"
+                                  value={anniversaryDate}
+                                  onChange={(e) => {
+                                      setAnniversaryDate(e.target.value);
+                                  }}
+                              />
+                          </div>
+
+                          {/* UPDATED: Enhanced Spouse Section with Middle Name */}
+                          <div className="mb-5 grid grid-cols-12 gap-7">
+                              <h2 className="label">Spouse</h2>
+                              <div className="col-span-12 -mt-3 rounded-lg border border-dashed bg-yellow-50 p-4">
+                                  <h3 className="pb-3 text-sm font-medium text-gray-700">Add Spouse</h3>
+
+                                  <div className="grid grid-cols-12 gap-x-4">
+                                      <div className="col-span-2">
+                                          <Input
+                                              label=" Salutation"
+                                              placeholder="Mr./Mrs./Ms./Dr."
+                                              value={spouse.salutation}
+                                              onChange={(e) => setSpouse({ ...spouse, salutation: e.target.value })}
+                                          />
+                                      </div>
+
+                                      <div className="col-span-2">
+                                          <Input
+                                              label=" First Name"
+                                              placeholder="First Name"
+                                              value={spouse.name}
+                                              onChange={(e) => setSpouse({ ...spouse, name: e.target.value })}
+                                          />
+                                      </div>
+
+                                      <div className="col-span-2">
+                                          <Input
+                                              label=" Middle Name"
+                                              placeholder="Middle Name"
+                                              value={spouse.middleName}
+                                              onChange={(e) => setSpouse({ ...spouse, middleName: e.target.value })}
+                                          />
+                                      </div>
+
+                                      <div className="col-span-2">
+                                          <Input
+                                              label=" Last Name"
+                                              placeholder="Last Name"
+                                              value={spouse.lastName}
+                                              onChange={(e) => setSpouse({ ...spouse, lastName: e.target.value })}
+                                          />
+                                      </div>
+
+                                      <div className="col-span-2 mt-6">
+                                          <Dropdown
+                                              isSearchable
+                                              options={countriesCodeData?.countries.map((country) => ({
+                                                  label: `+${country.callingCodes[0]} ${country.name}`,
+                                                  value: `+${country.callingCodes[0]} ${country.name}`,
+                                              }))}
+                                              placeholder="Country Code"
+                                              value={spouse.countryCode}
+                                              onChange={(e) => setSpouse({ ...spouse, countryCode: e })}
+                                              invisible
+                                          />
+                                      </div>
+
+                                      <div className="col-span-2 mt-6">
+                                          <Input
+                                              type="tel"
+                                              placeholder="Contact Number"
+                                              value={spouse.contactNumber}
+                                              onChange={(e) =>
+                                                  setSpouse({ ...spouse, contactNumber: e.target.value })
+                                              }
+                                              invisible
+                                          />
+                                      </div>
+                                  </div>
+
+                                  {/* Spouse Gender Selection */}
+                                  <div className="mt-4">
+                                      <div className="label mb-2">Spouse Gender</div>
+                                      <RadioInput
+                                          name="SpouseGender"
+                                          options={[
+                                              { id: "spouse_male", value: "Male", label: "Male" },
+                                              { id: "spouse_female", value: "Female", label: "Female" },
+                                              { id: "spouse_other", value: "Other", label: "Other" },
+                                              { id: "spouse_na", value: "N/A", label: "N/A" },
+                                          ]}
+                                          Classes="flex space-x-3"
+                                          onChange={(value) => setSpouse({ ...spouse, gender: value })}
+                                          checked={spouse?.gender}
+                                      />
+                                  </div>
+
+                                  {/* Spouse Profile Image */}
+                                  <div className="mt-4">
+                                      <ChooseFile
+                                          label=" Profile Image"
+                                          onClickCross={handleRemoveSpouseProfileImage}
+                                          placeholder
+                                          selectedFile={spouse.profileImage}
+                                          loading={spouseProfileLoading}
+                                          dir
+                                          onChange={(event) => handleSpouseProfileImage(event)}
+                                          key={`spouse-profile-${spouse.profileImage ? "with-image" : "no-image"}`}
+                                          uni="Spouse"
+                                      />
+                                      {spouseProfileError && (
+                                          <span className="mt-2 block text-xs text-red-500">
+                                              {spouseProfileError}
+                                          </span>
+                                      )}
+                                  </div>
+                                  <div className="w-3/12">
+                                      <Input
+                                          label="Wedding Hall Seat"
+                                          placeholder="Wedding Hall Seat"
+                                          value={spouse.weddingHallSeat}
+                                          onChange={(e) => setSpouse({ ...spouse, weddingHallSeat: e.target.value })}
+                                      />
+                                  </div>
+                                  {/* Spouse Preferences Section */}
+                                  <div className="mt-6">
+                                      <div className="mb-3">
+                                          <div className="label text-secondary">Spouse Preferences</div>
+                                      </div>
+                                      <div className="grid grid-cols-3 gap-x-5">
+                                          <Dropdown
+                                              isSearchable
+                                              options={primaryArray}
+                                              title={t("contacts.primaryMealPreference")}
+                                              placeholder="Select Primary Meal"
+                                              value={spouse.meal_preference?.[0] || ""}
+                                              onChange={(value) => handleSpouseMealChange(value, 0)}
+                                              isMulti
+                                          />
+
+                                          <Dropdown
+                                              isSearchable
+                                              options={secondaryArray}
+                                              title={t("contacts.secondaryMealPreference")}
+                                              placeholder="Select Secondary Meal"
+                                              value={spouse.meal_preference?.[1] || ""}
+                                              onChange={(value) => handleSpouseMealChange(value, 1)}
+                                              isMulti
+                                          />
+
+                                          <Dropdown
+                                              isSearchable
+                                              options={alcoholicArray}
+                                              title={t("contacts.alcoholPreference")}
+                                              placeholder="Select Alcohol Preference"
+                                              value={spouse.meal_preference?.[2] || ""}
+                                              onChange={(value) => handleSpouseMealChange(value, 2)}
+                                              isMulti
+                                          />
+                                      </div>
+                                  </div>
+
+                                  {/* Auto-add indicator for spouse */}
+                                  {showSpouseIndicator && (
+                                      <div className="mt-4 rounded bg-yellow-100 p-2 text-sm text-yellow-700">
+                                          ✓ Spouse information is complete and will be saved with the contact
+                                      </div>
+                                  )}
+
+                                  {/* Spouse Medicine Section */}
+                                  <div className="mt-6">
+                                      <div className="mt-5 grid grid-cols-12 gap-2">
+                                          <div className="col-span-8">
+                                              <button
+                                                  type="button"
+                                                  className="rounded-lg bg-secondary px-4 py-2 text-white"
+                                                  onClick={handleAddSpouseMedicine}
+                                              >
+                                                  Add Medicine for Spouse
+                                              </button>
+                                          </div>
+                                      </div>
+
+                                      {/* Only show medicine fields if there are medicines */}
+                                      {spouse.medicines &&
+                                          spouse.medicines.length > 0 &&
+                                          spouse.medicines.map((medicine, index) => (
+                                              <div key={medicine.id} className="mb-4 mt-5">
+                                                  <div className="mb-3 flex items-center justify-between">
+                                                      <h4 className="text-sm font-medium text-gray-700">
+                                                          Spouse Medicine {index + 1}
+                                                      </h4>
+                                                      <button
+                                                          type="button"
+                                                          className="mt-4"
+                                                          onClick={() => handleRemoveSpouseMedicine(medicine.id)}
+                                                      >
+                                                          <TrashIcon className="h-5 w-5 cursor-pointer text-red-500" />
+                                                      </button>
+                                                  </div>
+
+                                                  <div className="grid grid-cols-4 gap-7 md:grid-cols-2 lg:grid-cols-4">
+                                                      <Input
+                                                          type="text"
+                                                          label="Medicine Name *"
+                                                          placeholder="Enter medicine name"
+                                                          value={medicine.name}
+                                                          onChange={(e) =>
+                                                              handleSpouseMedicineChange(
+                                                                  medicine.id,
+                                                                  "name",
+                                                                  e.target.value
+                                                              )
+                                                          }
+                                                      />
+
+                                                      <Input
+                                                          type="text"
+                                                          label="Problem/Ailment *"
+                                                          placeholder="Enter problem or ailment"
+                                                          value={medicine.ailment}
+                                                          onChange={(e) =>
+                                                              handleSpouseMedicineChange(
+                                                                  medicine.id,
+                                                                  "ailment",
+                                                                  e.target.value
+                                                              )
+                                                          }
+                                                      />
+
+                                                      <Input
+                                                          type="text"
+                                                          label="Medicine Type"
+                                                          placeholder="e.g., Tablet, Capsule, Syrup"
+                                                          value={medicine.type}
+                                                          onChange={(e) =>
+                                                              handleSpouseMedicineChange(
+                                                                  medicine.id,
+                                                                  "type",
+                                                                  e.target.value
+                                                              )
+                                                          }
+                                                      />
+
+                                                      <Input
+                                                          type="text"
+                                                          label="Medication Type"
+                                                          placeholder="e.g., Once daily, Twice daily"
+                                                          value={medicine.usage}
+                                                          onChange={(e) =>
+                                                              handleSpouseMedicineChange(
+                                                                  medicine.id,
+                                                                  "usage",
+                                                                  e.target.value
+                                                              )
+                                                          }
+                                                      />
+                                                  </div>
+
+                                                  <div className="mt-4">
+                                                      <Input
+                                                          textarea
+                                                          label="Special Instructions"
+                                                          placeholder="Enter special instructions"
+                                                          value={medicine.special_instructions}
+                                                          onChange={(e) =>
+                                                              handleSpouseMedicineChange(
+                                                                  medicine.id,
+                                                                  "special_instructions",
+                                                                  e.target.value
+                                                              )
+                                                          }
+                                                          rows={3}
+                                                      />
+                                                  </div>
+                                                  {/* Show validation error if any */}
+                                                  {spouseMedicineValidationErrors[medicine.id] && (
+                                                      <div className="mb-3 rounded-md bg-red-50 p-3">
+                                                          <p className="text-sm text-red-600">
+                                                              {spouseMedicineValidationErrors[medicine.id]}
+                                                          </p>
+                                                      </div>
+                                                  )}
+                                              </div>
+                                          ))}
+
+                                      {/* Show message when no medicines added */}
+                                      {(!spouse.medicines || spouse.medicines.length === 0) && (
+                                          <div className="mt-5 text-center text-gray-500">
+                                              <p className="text-sm">
+                                                  No medicines added for spouse yet. Click "Add Medicine for Spouse"
+                                                  to get started.
+                                              </p>
+                                          </div>
+                                      )}
+                                  </div>
+                              </div>
+                          </div>
+
+                          {/* UPDATED: Enhanced Children Section with Middle Name */}
+                          <div>
+                              <div className="mb-4 flex items-center gap-x-10">
+                                  {/* <h2 className="label"></h2> */}
+                                  <div className="mb-5 ltr:text-left rtl:text-right">
+                                      <div className="flex items-center justify-between">
+                                          <div className="label mb-2 text-secondary text-lg font-semibold text-gray-800">Children</div>
+                                      </div>
+                                  </div>
+                                  {/* Plus button to add new child form block */}
+                                  <button
+                                      type="button"
+                                      onClick={handleAddNewChildForm}
+                                      className="flex items-center gap-2 text-green-600 hover:text-green-700"
+                                  >
+                                      <PlusCircleIcon className="h-6 w-6" />
+                                      <span className="text-sm">Add Child</span>
+                                  </button>
+                              </div>
+
+                              {/* Existing Children */}
+                              {children?.map((child, index) => (
+                                  <div
+                                      key={`child-${child.id}`}
+                                      className="mt-5 space-y-4 rounded-lg border bg-gray-50 p-4"
+                                  >
+                                      <div className="grid gap-x-4 xl:grid-cols-8 3xl:grid-cols-12">
+                                          <div className="col-span-2">
+                                              <Input
+                                                  label="Salutation"
+                                                  placeholder="Mr./Mrs./Ms./Dr."
+                                                  labelOnTop
+                                                  value={child.salutation || ""}
+                                                  onChange={(event) =>
+                                                      handleChildAdultFieldChange(
+                                                          child.id,
+                                                          "salutation",
+                                                          event.target.value
+                                                      )
+                                                  }
+                                              />
+                                          </div>
+
+                                          <div className="col-span-2">
+                                              <Input
+                                                  label={`First Name`}
+                                                  placeholder="First Name"
+                                                  labelOnTop
+                                                  value={child.name}
+                                                  onChange={(event) =>
+                                                      handleChildAdultFieldChange(
+                                                          child.id,
+                                                          "name",
+                                                          event.target.value
+                                                      )
+                                                  }
+                                              />
+                                          </div>
+
+                                          <div className="col-span-2">
+                                              <Input
+                                                  label="Middle Name"
+                                                  placeholder="Middle Name"
+                                                  labelOnTop
+                                                  value={child.middleName || ""}
+                                                  onChange={(event) =>
+                                                      handleChildAdultFieldChange(
+                                                          child.id,
+                                                          "middleName",
+                                                          event.target.value
+                                                      )
+                                                  }
+                                              />
+                                          </div>
+
+                                          <div className="col-span-2">
+                                              <Input
+                                                  label="Last Name"
+                                                  placeholder="Last Name"
+                                                  labelOnTop
+                                                  value={child.lastName || ""}
+                                                  onChange={(event) =>
+                                                      handleChildAdultFieldChange(
+                                                          child.id,
+                                                          "lastName",
+                                                          event.target.value
+                                                      )
+                                                  }
+                                              />
+                                          </div>
+
+                                          <div className="col-span-2 mt-6">
+                                              <Dropdown
+                                                  isSearchable
+                                                  options={countriesCodeData?.countries.map((country) => ({
+                                                      label: `+${country.callingCodes[0]} ${country.name}`,
+                                                      value: `+${country.callingCodes[0]} ${country.name}`,
+                                                  }))}
+                                                  placeholder="Country Code"
+                                                  value={child.countryCode}
+                                                  onChange={(event) =>
+                                                      handleChildAdultFieldChange(child.id, "countryCode", event)
+                                                  }
+                                                  invisible
+                                              />
+                                          </div>
+
+                                          <div className="col-span-2 mt-6">
+                                              <Input
+                                                  type="tel"
+                                                  placeholder="Contact Number"
+                                                  value={child.contactNumber}
+                                                  onChange={(event) =>
+                                                      handleChildAdultFieldChange(
+                                                          child.id,
+                                                          "contactNumber",
+                                                          event.target.value
+                                                      )
+                                                  }
+                                                  invisible
+                                              />
+                                          </div>
+                                      </div>
+
+                                      {/* Child Gender and Actions Row */}
+                                      <div className="flex items-center justify-between">
+                                          <div className="flex gap-x-4">
+                                              <RadioInput
+                                                  name={`Child_${child.id}`}
+                                                  options={[
+                                                      { id: `Male_${child.id}`, value: "Male", label: "Male" },
+                                                      { id: `Female_${child.id}`, value: "Female", label: "Female" },
+                                                      { id: `Other_${child.id}`, value: "Other", label: "Other" },
+                                                      { id: `N/A_${child.id}`, value: "N/A", label: "N/A" },
+                                                  ]}
+                                                  value={child.gender}
+                                                  onChange={(value) =>
+                                                      handleChildAdultFieldChange(child.id, "gender", value)
+                                                  }
+                                                  Classes="flex space-x-3"
+                                                  checked={child?.gender}
+                                              />
+                                          </div>
+                                          <button type="button" onClick={() => handleRemoveChild(child.id)}>
+                                              <TrashIcon className="h-5 w-5 cursor-pointer text-red-500" />
+                                          </button>
+                                      </div>
+
+                                      {/* Child Profile Image */}
+                                      <div className="mt-4">
+                                          <ChooseFile
+                                              label={`Child ${index + 1} Profile Image`}
+                                              onClickCross={() => handleRemoveChildProfileImage(child.id)}
+                                              placeholder
+                                              selectedFile={child.profileImage}
+                                              loading={childrenProfileLoading[child.id] || false}
+                                              dir
+                                              onChange={(event) => handleChildProfileImage(event, child.id)}
+                                              key={`child-profile-${child.id}-${child.profileImage ? "with-image" : "no-image"}`}
+                                              uni={`Child-${child.id}`}
+                                          />
+                                          {childrenProfileErrors[child.id] && (
+                                              <span className="mt-2 block text-xs text-red-500">
+                                                  {childrenProfileErrors[child.id]}
+                                              </span>
+                                          )}
+                                      </div>
+                                      <div className="w-3/12">
+                                          <Input
+                                              label="Wedding Hall Seat"
+                                              placeholder="Wedding Hall Seat"
+                                              value={child.weddingHallSeat}
+                                              onChange={(e) =>
+                                                  handleChildAdultFieldChange(
+                                                      child.id,
+                                                      "weddingHallSeat",
+                                                      e.target.value
+                                                  )
+                                              }
+                                          />
+                                      </div>
+
+                                      {/* Child Preferences Section */}
+                                      <div className="mt-4">
+                                          <div className="mb-3">
+                                              <div className="label text-secondary">
+                                                  Child {index + 1} Preferences
+                                              </div>
+                                          </div>
+                                          <div className="grid grid-cols-3 gap-x-5">
+                                              <Dropdown
+                                                  isSearchable
+                                                  options={primaryArray}
+                                                  title={t("contacts.primaryMealPreference")}
+                                                  placeholder="Select Primary Meal"
+                                                  value={child.meal_preference?.[0] || ""}
+                                                  onChange={(value) => handleChildMealChange(child.id, value, 0)}
+                                                  isMulti
+                                              />
+
+                                              <Dropdown
+                                                  isSearchable
+                                                  options={secondaryArray}
+                                                  title={t("contacts.secondaryMealPreference")}
+                                                  placeholder="Select Secondary Meal"
+                                                  value={child.meal_preference?.[1] || ""}
+                                                  onChange={(value) => handleChildMealChange(child.id, value, 1)}
+                                                  isMulti
+                                              />
+
+                                              <Dropdown
+                                                  isSearchable
+                                                  options={alcoholicArray}
+                                                  title={t("contacts.alcoholPreference")}
+                                                  placeholder="Select Alcohol Preference"
+                                                  value={child.meal_preference?.[2] || ""}
+                                                  onChange={(value) => handleChildMealChange(child.id, value, 2)}
+                                                  isMulti
+                                              />
+                                          </div>
+                                      </div>
+                                  </div>
+                              ))}
+
+                              {/* Medicine Section for Existing Children */}
+                              {children?.map((child, index) => (
+                                  <div
+                                      key={`child-medicine-${child.id}`}
+                                      className="mt-5 space-y-4 rounded-lg border bg-blue-50 p-4"
+                                  >
+                                      <h3 className="text-sm font-medium text-gray-700">
+                                          Medicine for Child {index + 1}
+                                      </h3>
+
+                                      <div className="mt-5 grid grid-cols-12 gap-2">
+                                          <div className="col-span-8">
+                                              <button
+                                                  type="button"
+                                                  className="rounded-lg bg-secondary px-4 py-2 text-white"
+                                                  onClick={() => handleAddChildMedicine(child.id)}
+                                              >
+                                                  Add Medicine for Child {index + 1}
+                                              </button>
+                                          </div>
+                                      </div>
+
+                                      {/* Only show medicine fields if there are medicines */}
+                                      {child.medicines &&
+                                          child.medicines.length > 0 &&
+                                          child.medicines.map((medicine, medIndex) => (
+                                              <div key={medicine.id} className="mb-4 mt-5">
+                                                  <div className="mb-3 flex items-center justify-between">
+                                                      <h4 className="text-sm font-medium text-gray-700">
+                                                          Child {index + 1} Medicine {medIndex + 1}
+                                                      </h4>
+                                                      <button
+                                                          type="button"
+                                                          className="mt-4"
+                                                          onClick={() =>
+                                                              handleRemoveChildMedicine(child.id, medicine.id)
+                                                          }
+                                                      >
+                                                          <TrashIcon className="h-5 w-5 cursor-pointer text-red-500" />
+                                                      </button>
+                                                  </div>
+
+                                                  <div className="grid grid-cols-4 gap-7 md:grid-cols-2 lg:grid-cols-4">
+                                                      <Input
+                                                          type="text"
+                                                          label="Medicine Name *"
+                                                          placeholder="Enter medicine name"
+                                                          value={medicine.name}
+                                                          onChange={(e) =>
+                                                              handleChildMedicineChange(
+                                                                  child.id,
+                                                                  medicine.id,
+                                                                  "name",
+                                                                  e.target.value
+                                                              )
+                                                          }
+                                                      />
+
+                                                      <Input
+                                                          type="text"
+                                                          label="Problem/Ailment *"
+                                                          placeholder="Enter problem or ailment"
+                                                          value={medicine.ailment}
+                                                          onChange={(e) =>
+                                                              handleChildMedicineChange(
+                                                                  child.id,
+                                                                  medicine.id,
+                                                                  "ailment",
+                                                                  e.target.value
+                                                              )
+                                                          }
+                                                      />
+
+                                                      <Input
+                                                          type="text"
+                                                          label="Medicine Type"
+                                                          placeholder="e.g., Tablet, Capsule, Syrup"
+                                                          value={medicine.type}
+                                                          onChange={(e) =>
+                                                              handleChildMedicineChange(
+                                                                  child.id,
+                                                                  medicine.id,
+                                                                  "type",
+                                                                  e.target.value
+                                                              )
+                                                          }
+                                                      />
+
+                                                      <Input
+                                                          type="text"
+                                                          label="Medication Type"
+                                                          placeholder="e.g., Once daily, Twice daily"
+                                                          value={medicine.usage}
+                                                          onChange={(e) =>
+                                                              handleChildMedicineChange(
+                                                                  child.id,
+                                                                  medicine.id,
+                                                                  "usage",
+                                                                  e.target.value
+                                                              )
+                                                          }
+                                                      />
+                                                  </div>
+
+                                                  <div className="mt-4">
+                                                      <Input
+                                                          textarea
+                                                          label="Special Instructions"
+                                                          placeholder="Enter special instructions"
+                                                          value={medicine.special_instructions}
+                                                          onChange={(e) =>
+                                                              handleChildMedicineChange(
+                                                                  child.id,
+                                                                  medicine.id,
+                                                                  "special_instructions",
+                                                                  e.target.value
+                                                              )
+                                                          }
+                                                          rows={3}
+                                                      />
+                                                  </div>
+                                                  {/* Show validation error if any */}
+                                                  {childrenMedicineValidationErrors[child.id]?.[medicine.id] && (
+                                                      <div className="mb-3 rounded-md bg-red-50 p-3">
+                                                          <p className="text-sm text-red-600">
+                                                              {
+                                                                  childrenMedicineValidationErrors[child.id][
+                                                                      medicine.id
+                                                                  ]
+                                                              }
+                                                          </p>
+                                                      </div>
+                                                  )}
+                                              </div>
+                                          ))}
+
+                                      {/* Show message when no medicines added */}
+                                      {(!child.medicines || child.medicines.length === 0) && (
+                                          <div className="mt-5 text-center text-gray-500">
+                                              <p className="text-sm">
+                                                  No medicines added for Child {index + 1} yet. Click "Add Medicine
+                                                  for Child {index + 1}" to get started.
+                                              </p>
+                                          </div>
+                                      )}
+                                  </div>
+                              ))}
+
+                              {/* NEW: New Child Form - Only shows when showNewChildForm is true */}
+                              {showNewChildForm && (
+                                  <div className="mt-5 space-y-4 rounded-lg border border-dashed bg-blue-50 p-4">
+                                      <h3 className="text-sm font-medium text-gray-700">Add New Child</h3>
+                                      <div className="grid gap-x-4 xl:grid-cols-8 3xl:grid-cols-12">
+                                          <div className="col-span-2">
+                                              <Input
+                                                  label="Salutation"
+                                                  placeholder="Mr./Mrs./Ms./Dr."
+                                                  labelOnTop
+                                                  value={newChild.salutation}
+                                                  onChange={(event) =>
+                                                      handleInputChange("salutation", event.target.value)
+                                                  }
+                                                  isRequired
+                                                  error={errors.salutation}
+                                              />
+                                          </div>
+
+                                          <div className="col-span-2">
+                                              <Input
+                                                  label="First Name"
+                                                  placeholder="First Name"
+                                                  labelOnTop
+                                                  value={newChild.name}
+                                                  isRequired
+                                                  error={errors.name}
+                                                  onChange={(event) => handleInputChange("name", event.target.value)}
+                                              />
+                                          </div>
+
+                                          <div className="col-span-2">
+                                              <Input
+                                                  label="Middle Name"
+                                                  placeholder="Middle Name"
+                                                  labelOnTop
+                                                  value={newChild.middleName}
+                                                  onChange={(event) =>
+                                                      handleInputChange("middleName", event.target.value)
+                                                  }
+                                              />
+                                          </div>
+
+                                          <div className="col-span-2">
+                                              <Input
+                                                  label="Last Name"
+                                                  placeholder="Last Name"
+                                                  labelOnTop
+                                                  value={newChild.lastName}
+                                                  isRequired
+                                                  error={errors.lastName}
+                                                  onChange={(event) =>
+                                                      handleInputChange("lastName", event.target.value)
+                                                  }
+                                              />
+                                          </div>
+
+                                          <div className="col-span-2 mt-6">
+                                              <Dropdown
+                                                  isSearchable
+                                                  options={countriesCodeData?.countries.map((country) => ({
+                                                      label: `+${country.callingCodes[0]} ${country.name}`,
+                                                      value: `+${country.callingCodes[0]} ${country.name}`,
+                                                  }))}
+                                                  placeholder="Country Code"
+                                                  value={newChild.countryCode}
+                                                  onChange={(event) => handleInputChange("countryCode", event)}
+                                                  invisible
+                                                  isRequired
+                                                  withError={errors.countryCode}
+                                              />
+                                          </div>
+
+                                          <div className="col-span-2 mt-6">
+                                              <Input
+                                                  type="tel"
+                                                  placeholder="Contact Number"
+                                                  value={newChild.contactNumber}
+                                                  onChange={(event) =>
+                                                      handleInputChange("contactNumber", event.target.value)
+                                                  }
+                                                  invisible
+                                                  isRequired
+                                                  error={errors.contactNumber}
+                                              />
+                                          </div>
+                                      </div>
+
+                                      {/* New Child Gender */}
+                                      <div>
+                                          {errors.gender && <p className="text-sm text-red-500">{errors.gender}</p>}
+                                          <div className="flex gap-x-4">
+                                              <RadioInput
+                                                  name="NewChild"
+                                                  options={[
+                                                      { id: "Male_NewChild", value: "Male", label: "Male" },
+                                                      { id: "Female_NewChild", value: "Female", label: "Female" },
+                                                      { id: "Other_NewChild", value: "Other", label: "Other" },
+                                                      { id: "N/A_NewChild", value: "N/A", label: "N/A" },
+                                                  ]}
+                                                  value={newChild.gender}
+                                                  onChange={(value) => handleInputChange("gender", value)}
+                                                  Classes="flex space-x-3"
+                                                  checked={newChild?.gender}
+                                              />
+                                          </div>
+                                      </div>
+
+                                      {/* New Child Profile Image */}
+                                      <div className="mt-4">
+                                          <ChooseFile
+                                              label="New Child Profile Image"
+                                              onClickCross={() => handleRemoveChildProfileImage(null, true)}
+                                              placeholder
+                                              selectedFile={newChild.profileImage}
+                                              loading={childrenProfileLoading.newChild || false}
+                                              dir
+                                              onChange={(event) => handleChildProfileImage(event, null, true)}
+                                              key={`new-child-profile-${newChild.profileImage ? "with-image" : "no-image"}`}
+                                              uni="NewChild"
+                                          />
+                                          {childrenProfileErrors.newChild && (
+                                              <span className="mt-2 block text-xs text-red-500">
+                                                  {childrenProfileErrors.newChild}
+                                              </span>
+                                          )}
+                                      </div>
+                                      <div className="w-3/12">
+                                          <Input
+                                              label="Wedding Hall Seat"
+                                              placeholder="Wedding Hall Seat"
+                                              value={newChild.weddingHallSeat}
+                                              onChange={(e) => handleInputChange("weddingHallSeat", e.target.value)}
+                                          />
+                                      </div>
+                                      {/* New Child Preferences Section */}
+                                      <div className="mt-4">
+                                          <div className="mb-3">
+                                              <div className="label text-secondary">New Child Preferences</div>
+                                          </div>
+                                          <div className="grid grid-cols-3 gap-x-5">
+                                              <Dropdown
+                                                  isSearchable
+                                                  options={primaryArray}
+                                                  title={t("contacts.primaryMealPreference")}
+                                                  placeholder="Select Primary Meal"
+                                                  value={newChild.meal_preference?.[0] || ""}
+                                                  onChange={(value) => handleNewChildMealChange(value, 0)}
+                                                  isMulti
+                                              />
+
+                                              <Dropdown
+                                                  isSearchable
+                                                  options={secondaryArray}
+                                                  title={t("contacts.secondaryMealPreference")}
+                                                  placeholder="Select Secondary Meal"
+                                                  value={newChild.meal_preference?.[1] || ""}
+                                                  onChange={(value) => handleNewChildMealChange(value, 1)}
+                                                  isMulti
+                                              />
+
+                                              <Dropdown
+                                                  isSearchable
+                                                  options={alcoholicArray}
+                                                  title={t("contacts.alcoholPreference")}
+                                                  placeholder="Select Alcohol Preference"
+                                                  value={newChild.meal_preference?.[2] || ""}
+                                                  onChange={(value) => handleNewChildMealChange(value, 2)}
+                                                  isMulti
+                                              />
+                                          </div>
+                                      </div>
+
+                                      {/* Auto-add indicator */}
+                                      {isChildFormComplete() && (
+                                          <div className="rounded bg-green-100 p-2 text-sm text-green-600">
+                                              ✓ Child will be added automatically when you finish filling the form
+                                          </div>
+                                      )}
+
+                                      {/* New Child Medicine Section */}
+                                      <div className="mt-6">
+                                          <div className="mt-5 grid grid-cols-12 gap-2">
+                                              <div className="col-span-8">
+                                                  <button
+                                                      type="button"
+                                                      className="rounded-lg bg-secondary px-4 py-2 text-white"
+                                                      onClick={handleAddNewChildMedicine}
+                                                  >
+                                                      Add Medicine for New Child
+                                                  </button>
+                                              </div>
+                                          </div>
+
+                                          {/* Only show medicine fields if there are medicines */}
+                                          {newChild.medicines &&
+                                              newChild.medicines.length > 0 &&
+                                              newChild.medicines.map((medicine, index) => (
+                                                  <div key={medicine.id} className="mb-4 mt-5">
+                                                      <div className="mb-3 flex items-center justify-between">
+                                                          <h4 className="text-sm font-medium text-gray-700">
+                                                              New Child Medicine {index + 1}
+                                                          </h4>
+                                                          <button
+                                                              type="button"
+                                                              className="mt-4"
+                                                              onClick={() =>
+                                                                  handleRemoveNewChildMedicine(medicine.id)
+                                                              }
+                                                          >
+                                                              <TrashIcon className="h-5 w-5 cursor-pointer text-red-500" />
+                                                          </button>
+                                                      </div>
+
+                                                      <div className="grid grid-cols-4 gap-7 md:grid-cols-2 lg:grid-cols-4">
+                                                          <Input
+                                                              type="text"
+                                                              label="Medicine Name *"
+                                                              placeholder="Enter medicine name"
+                                                              value={medicine.name}
+                                                              onChange={(e) =>
+                                                                  handleNewChildMedicineChange(
+                                                                      medicine.id,
+                                                                      "name",
+                                                                      e.target.value
+                                                                  )
+                                                              }
+                                                          />
+
+                                                          <Input
+                                                              type="text"
+                                                              label="Problem/Ailment *"
+                                                              placeholder="Enter problem or ailment"
+                                                              value={medicine.ailment}
+                                                              onChange={(e) =>
+                                                                  handleNewChildMedicineChange(
+                                                                      medicine.id,
+                                                                      "ailment",
+                                                                      e.target.value
+                                                                  )
+                                                              }
+                                                          />
+
+                                                          <Input
+                                                              type="text"
+                                                              label="Medicine Type"
+                                                              placeholder="e.g., Tablet, Capsule, Syrup"
+                                                              value={medicine.type}
+                                                              onChange={(e) =>
+                                                                  handleNewChildMedicineChange(
+                                                                      medicine.id,
+                                                                      "type",
+                                                                      e.target.value
+                                                                  )
+                                                              }
+                                                          />
+
+                                                          <Input
+                                                              type="text"
+                                                              label="Medication Type"
+                                                              placeholder="e.g., Once daily, Twice daily"
+                                                              value={medicine.usage}
+                                                              onChange={(e) =>
+                                                                  handleNewChildMedicineChange(
+                                                                      medicine.id,
+                                                                      "usage",
+                                                                      e.target.value
+                                                                  )
+                                                              }
+                                                          />
+                                                      </div>
+
+                                                      <div className="mt-4">
+                                                          <Input
+                                                              textarea
+                                                              label="Special Instructions"
+                                                              placeholder="Enter special instructions"
+                                                              value={medicine.special_instructions}
+                                                              onChange={(e) =>
+                                                                  handleNewChildMedicineChange(
+                                                                      medicine.id,
+                                                                      "special_instructions",
+                                                                      e.target.value
+                                                                  )
+                                                              }
+                                                              rows={3}
+                                                          />
+                                                      </div>
+                                                      {/* Show validation error if any */}
+                                                      {newChildMedicineValidationErrors[medicine.id] && (
+                                                          <div className="mb-3 rounded-md bg-red-50 p-3">
+                                                              <p className="text-sm text-red-600">
+                                                                  {newChildMedicineValidationErrors[medicine.id]}
+                                                              </p>
+                                                          </div>
+                                                      )}
+                                                  </div>
+                                              ))}
+
+                                          {/* Show message when no medicines added */}
+                                          {(!newChild.medicines || newChild.medicines.length === 0) && (
+                                              <div className="mt-5 text-center text-gray-500">
+                                                  <p className="text-sm">
+                                                      No medicines added for new child yet. Click "Add Medicine for
+                                                      New Child" to get started.
+                                                  </p>
+                                              </div>
+                                          )}
+                                      </div>
+                                  </div>
+                              )}
+                          </div>
+                      </>
+                  )}
+                  </>
+                )}
+                </div>
+                
+                <div className="card mt-6 rounded-2xl bg-white p-6 shadow">
+
+                  {/* HEADER */}
+                  <div className="mb-5 flex cursor-pointer items-center justify-between"  onClick={() => setIsMedicinesOpen(!isMedicinesOpen)}>
+                    <div className="label text-secondary">{t("Medicines")}</div>
+                    <span className="flex h-9 w-9 items-center justify-center rounded-full bg-secondary text-white hover:bg-secondary/90">
+                    {isMedicinesOpen ? "−" : "+"}
+                    </span>
+                  </div>
+
+                  {isMedicinesOpen && (
+                  <>
+                  <div className="mb-5 flex justify-end">
+                    <button
+                      type="button"
+                      onClick={handleAddMedicine}
+                      className="rounded-lg bg-secondary px-4 py-2 text-white hover:bg-secondary/90"
+                    >
+                      + Add Medicine
+                    </button>
+                  </div>
+
+                  {/* MEDICINE LIST */}
+                  {medicines.map((medicine, index) => (
+                    <div
+                      key={medicine.id}
+                      className="mb-6 rounded-xl border p-5"
+                    >
+
+                      {/* TITLE + DELETE */}
+                      <div className="mb-4 flex items-center justify-between">
+                        <h4 className="text-sm font-medium text-gray-700">
+                          Medicine {index + 1}
+                        </h4>
+
+                        <button
+                          type="button"
+                          onClick={() => handleRemoveMedicine(medicine.id)}
                         >
-                          {/* EMAIL TYPE */}
-                          <Dropdown
-                            title={`Email ${index + 1}`}
-                            placeholder="Type"
-                            value={emailTypeOptions.find(
-                              (opt) => opt.value === emailItem.emailType
-                            )}
-                            onChange={(value) =>
-                              handleInputChangeEmail(emailItem.id, "emailType", value.value)
-                            }
-                            options={emailTypeOptions}
-                          />
+                          <TrashIcon className="h-5 w-5 text-red-500 hover:text-red-600" />
+                        </button>
+                      </div>
 
-                          {/* EMAIL ADDRESS */}
+                      {/* FORM GRID */}
+                      <div className="grid grid-cols-1 gap-5 md:grid-cols-2 lg:grid-cols-4">
+                        <Input
+                          label="Medicine Name *"
+                          placeholder="Enter medicine name"
+                          value={medicine.name}
+                          onChange={(e) =>
+                            handleMedicineChange(medicine.id, "name", e.target.value)
+                          }
+                        />
+
+                        <Input
+                          label="Problem / Ailment *"
+                          placeholder="Enter problem"
+                          value={medicine.ailment}
+                          onChange={(e) =>
+                            handleMedicineChange(medicine.id, "ailment", e.target.value)
+                          }
+                        />
+
+                        <Input
+                          label="Medicine Type"
+                          placeholder="Tablet, Capsule, Syrup"
+                          value={medicine.type}
+                          onChange={(e) =>
+                            handleMedicineChange(medicine.id, "type", e.target.value)
+                          }
+                        />
+
+                        <Input
+                          label="Medication Schedule"
+                          placeholder="Once daily, Twice daily"
+                          value={medicine.usage}
+                          onChange={(e) =>
+                            handleMedicineChange(medicine.id, "usage", e.target.value)
+                          }
+                        />
+                      </div>
+
+                      {/* INSTRUCTIONS */}
+                      <div className="mt-4">
+                        <Input
+                          textarea
+                          rows={3}
+                          label="Special Instructions"
+                          placeholder="Enter instructions"
+                          value={medicine.special_instructions}
+                          onChange={(e) =>
+                            handleMedicineChange(
+                              medicine.id,
+                              "special_instructions",
+                              e.target.value
+                            )
+                          }
+                        />
+                      </div>
+
+                      {/* VALIDATION ERROR */}
+                      {medicineValidationErrors[medicine.id] && (
+                        <div className="mt-3 rounded-md bg-red-50 p-3">
+                          <p className="text-sm text-red-600">
+                            {medicineValidationErrors[medicine.id]}
+                          </p>
+                        </div>
+                      )}
+                    </div>
+                  ))}
+                  </>
+                  )}
+                </div>
+
+                
+                <div className="card mt-6">
+                  <div className="mb-5 flex cursor-pointer items-center justify-between"  onClick={() => setIsAddressOpen(!isAddressOpen)}>
+                    <div className="label text-secondary">{t("contacts.residenceAddress")}</div>
+                    <span className="flex h-9 w-9 items-center justify-center rounded-full bg-secondary text-white hover:bg-secondary/90">
+                    {isAddressOpen ? "−" : "+"}
+                    </span>
+                  </div>
+                  {isAddressOpen && (
+	                  <>
+                  <Input
+                      label={t("contacts.address")}
+                      placeholder="Address"
+                      textarea
+                      value={address}
+                      rows={2}
+                      onChange={(e) => setAddress(e.target.value)}
+                  />
+
+                  <div className="mt-5 grid grid-cols-4 gap-7 md:grid-cols-2 xl:grid-cols-4">
+                      <div ref={fieldRefs.city}>
                           <Input
-                            type="email"
-                            placeholder="Email Address"
-                            value={emailItem.emailAddress}
-                            onChange={(e) =>
-                              handleInputChangeEmail(emailItem.id, "emailAddress", e.target.value)
-                            }
-                            isRequired
-                            invisible
+                              label={t("contacts.city")}
+                              placeholder="City"
+                              labelOnTop
+                              value={city}
+                              onChange={(e) => setCity(e.target.value)}
                           />
-
-                          {/* ACTION BUTTON */}
-                          <div className="flex justify-center pb-1">
-                            {index === 0 ? (
-                              <button
-                                type="button"
-                                onClick={handleAddEmailField}
-                                title="Add Email"
-                                className="flex h-9 w-9 items-center justify-center rounded-full bg-secondary text-white hover:bg-secondary/90"
-                              >
-                                +
-                              </button>
-                            ) : (
-                              <button
-                                type="button"
-                                onClick={() => handleRemoveEmail(emailItem.id)}
-                                title="Remove Email"
-                              >
-                                <TrashIcon className="h-5 w-5 text-red-500 hover:text-red-600" />
-                              </button>
-                            )}
-                          </div>
-                        </div>
-                      ))}
-
-                    </div>
-
+                      </div>
+                      <div ref={fieldRefs.state}>
+                          <Input
+                              label={t("contacts.state")}
+                              placeholder="State"
+                              labelOnTop
+                              value={state}
+                              onChange={(e) => setState(e.target.value)}
+                          />
+                      </div>
+                      <Input
+                          type="number"
+                          label={t("contacts.pin")}
+                          placeholder="PIN"
+                          labelOnTop
+                          value={pin}
+                          onChange={(e) => setPin(e.target.value)}
+                      />
+                      <div ref={fieldRefs.country}>
+                          <Dropdown
+                              isSearchable
+                              options={countriesData.countries.map((country) => ({
+                                  label: country.name,
+                                  Value: country.name,
+                              }))}
+                              title={t("contacts.country")}
+                              placeholder="Select Country"
+                              value={country}
+                              onChange={(value) => setCountry(value)}
+                          />
+                      </div>
                   </div>
-                  <div className="card mt-6">
-                    <div className="mb-5 ltr:text-left rtl:text-right">
-                        <div>
-                            <div className="label mb-2 text-secondary">{t("contacts.residenceAddress")}</div>
-                        </div>
-                    </div>
-                    <Input
-                        label={t("contacts.address")}
-                        placeholder="Address"
-                        textarea
-                        value={address}
-                        rows={2}
-                        onChange={(e) => setAddress(e.target.value)}
-                    />
 
-                    <div className="mt-5 grid grid-cols-4 gap-7 md:grid-cols-2 xl:grid-cols-4">
-                        <div ref={fieldRefs.city}>
-                            <Input
-                                label={t("contacts.city")}
-                                placeholder="City"
-                                labelOnTop
-                                value={city}
-                                onChange={(e) => setCity(e.target.value)}
-                            />
-                        </div>
-                        <div ref={fieldRefs.state}>
-                            <Input
-                                label={t("contacts.state")}
-                                placeholder="State"
-                                labelOnTop
-                                value={state}
-                                onChange={(e) => setState(e.target.value)}
-                            />
-                        </div>
-                        <Input
-                            type="number"
-                            label={t("contacts.pin")}
-                            placeholder="PIN"
-                            labelOnTop
-                            value={pin}
-                            onChange={(e) => setPin(e.target.value)}
-                        />
-                        <div ref={fieldRefs.country}>
-                            <Dropdown
-                                isSearchable
-                                options={countriesData.countries.map((country) => ({
-                                    label: country.name,
-                                    Value: country.name,
-                                }))}
-                                title={t("contacts.country")}
-                                placeholder="Select Country"
-                                value={country}
-                                onChange={(value) => setCountry(value)}
-                            />
-                        </div>
-                    </div>
-
-                    <div className="mb-5 mt-5 ltr:text-left rtl:text-right">
-                        <div>
-                            <div className="label mb-2 text-secondary">{t("contacts.workAddress")}</div>
-                        </div>
-                    </div>
-
-                    <div className="mb-5 mt-5 grid grid-cols-4 gap-7 md:grid-cols-2 xl:grid-cols-4">
-                        <Input
-                            label={t("contacts.companyName")}
-                            placeholder="Company Name"
-                            labelOnTop
-                            value={companyName}
-                            onChange={(e) => setCompanyName(e.target.value)}
-                        />
-                        <Input
-                            label={t("contacts.city")}
-                            placeholder="City"
-                            labelOnTop
-                            value={workCity}
-                            onChange={(e) => setWorkCity(e.target.value)}
-                        />
-                        <Input
-                            label={t("contacts.state")}
-                            placeholder="State"
-                            labelOnTop
-                            value={workState}
-                            onChange={(e) => setWorkState(e.target.value)}
-                        />
-                        <Input
-                            type="number"
-                            label={t("contacts.pin")}
-                            placeholder="PIN"
-                            labelOnTop
-                            value={workPin}
-                            onChange={(e) => setWorkPin(e.target.value)}
-                        />
-
-                        <Dropdown
-                            isSearchable
-                            options={countriesData.countries.map((country) => ({
-                                label: country.name,
-                                Value: country.name,
-                            }))}
-                            title={t("contacts.country")}
-                            placeholder="Select Country"
-                            value={workCountry}
-                            onChange={(value) => setWorkCountry(value)}
-                        />
-                    </div>
-
-                    <Input
-                        label={t("contacts.address")}
-                        placeholder="Address"
-                        textarea
-                        value={workAddress}
-                        rows={2}
-                        onChange={(e) => setWorkAddress(e.target.value)}
-                    />
+                  <div className="mb-5 mt-5 ltr:text-left rtl:text-right">
+                      <div>
+                          <div className="label mb-2 text-secondary">{t("contacts.workAddress")}</div>
+                      </div>
                   </div>
-                  <div className="card mt-6">
-                    <div className="mb-5 ltr:text-left rtl:text-right">
-                        <div>
-                            <div className="label mb-2 text-secondary">{t("contacts.preferences")}</div>
-                        </div>
-                    </div>
-                    <div className="my-5 grid grid-cols-3 gap-x-5">
-                        <Dropdown
-                            isSearchable
-                            options={primaryArray}
-                            title={t("contacts.primaryMealPreference")}
-                            placeholder="Select Primary Meal"
-                            value={selectedMealIds[0] || ""}
-                            onChange={(value) => handleMealChange(value, 0)}
-                            isMulti
-                        />
 
-                        <Dropdown
-                            isSearchable
-                            options={secondaryArray}
-                            title={t("contacts.secondaryMealPreference")}
-                            placeholder="Select Secondary Meal"
-                            value={selectedMealIds[1] || ""}
-                            onChange={(value) => handleMealChange(value, 1)}
-                            isMulti
-                        />
+                  <div className="mb-5 mt-5 grid grid-cols-4 gap-7 md:grid-cols-2 xl:grid-cols-4">
+                      <Input
+                          label={t("contacts.companyName")}
+                          placeholder="Company Name"
+                          labelOnTop
+                          value={companyName}
+                          onChange={(e) => setCompanyName(e.target.value)}
+                      />
+                      <Input
+                          label={t("contacts.city")}
+                          placeholder="City"
+                          labelOnTop
+                          value={workCity}
+                          onChange={(e) => setWorkCity(e.target.value)}
+                      />
+                      <Input
+                          label={t("contacts.state")}
+                          placeholder="State"
+                          labelOnTop
+                          value={workState}
+                          onChange={(e) => setWorkState(e.target.value)}
+                      />
+                      <Input
+                          type="number"
+                          label={t("contacts.pin")}
+                          placeholder="PIN"
+                          labelOnTop
+                          value={workPin}
+                          onChange={(e) => setWorkPin(e.target.value)}
+                      />
 
-                        <Dropdown
-                            isSearchable
-                            options={alcoholicArray}
-                            title={t("contacts.alcoholPreference")}
-                            placeholder="Select Alcohol Preference"
-                            value={selectedMealIds[2] || ""}
-                            onChange={(value) => handleMealChange(value, 2)}
-                            isMulti
-                        />
-                    </div>
+                      <Dropdown
+                          isSearchable
+                          options={countriesData.countries.map((country) => ({
+                              label: country.name,
+                              Value: country.name,
+                          }))}
+                          title={t("contacts.country")}
+                          placeholder="Select Country"
+                          value={workCountry}
+                          onChange={(value) => setWorkCountry(value)}
+                      />
                   </div>
-                  <div className="card mt-6">
-                    <div className="mb-5 ltr:text-left rtl:text-right">
-                        <div>
-                            <div className="label mb-2 text-secondary">{t("headings.otherInfo")}</div>
-                        </div>
+
+                  <Input
+                      label={t("contacts.address")}
+                      placeholder="Address"
+                      textarea
+                      value={workAddress}
+                      rows={2}
+                      onChange={(e) => setWorkAddress(e.target.value)}
+                  />
+                  </>
+                  )}
+                </div>
+                <div className="card mt-6">
+                  <div className="mb-5 flex cursor-pointer items-center justify-between"  onClick={() => setIsPreferenceOpen(!isPreferenceOpen)}>
+                    <div className="label text-secondary">{t("contacts.preferences")}</div>
+                    <span className="flex h-9 w-9 items-center justify-center rounded-full bg-secondary text-white hover:bg-secondary/90">
+                      {isPreferenceOpen ? "−" : "+"}
+                    </span>
+                  </div>
+                  {isPreferenceOpen && (
+                  <div className="my-5 grid grid-cols-3 gap-x-5">
+                      <Dropdown
+                          isSearchable
+                          options={primaryArray}
+                          title={t("contacts.primaryMealPreference")}
+                          placeholder="Select Primary Meal"
+                          value={selectedMealIds[0] || ""}
+                          onChange={(value) => handleMealChange(value, 0)}
+                          isMulti
+                      />
+
+                      <Dropdown
+                          isSearchable
+                          options={secondaryArray}
+                          title={t("contacts.secondaryMealPreference")}
+                          placeholder="Select Secondary Meal"
+                          value={selectedMealIds[1] || ""}
+                          onChange={(value) => handleMealChange(value, 1)}
+                          isMulti
+                      />
+
+                      <Dropdown
+                          isSearchable
+                          options={alcoholicArray}
+                          title={t("contacts.alcoholPreference")}
+                          placeholder="Select Alcohol Preference"
+                          value={selectedMealIds[2] || ""}
+                          onChange={(value) => handleMealChange(value, 2)}
+                          isMulti
+                      />
+                  </div>
+                  )}
+                </div>
+                <div className="card mt-6">
+                  <div
+                    className="mb-5 flex cursor-pointer items-center justify-between"
+                    onClick={() => setIsOtherInfoOpen(!isOtherInfoOpen)}
+                  >
+                    <div className="label text-secondary">
+                      {t("headings.otherInfo")}
                     </div>
 
-                    <div className="flex items-center">
-                        <div className="label pr-20 ltr:text-left rtl:text-right">{t("contacts.specialNeeds")}</div>
+                    <span className="flex h-9 w-9 items-center justify-center rounded-full bg-secondary text-white hover:bg-secondary/90">
+                      {isOtherInfoOpen ? "−" : "+"}
+                    </span>
+                  </div>
 
-                        <input
-                            name="Gender"
-                            options={[
-                                {
-                                    id: "Wheel Chair",
-                                    value: "Wheel Chair",
-                                    label: "Wheel Chair",
-                                },
-                            ]}
-                            Classes="flex"
-                            type="checkbox"
-                            value={specialNeed}
-                            onChange={(e) => setSpecialNeed(e.target.checked)}
-                            checked={specialNeed}
-                        />
+                  {isOtherInfoOpen && (
+                  <>
+                  <div className="flex items-center">
+                      <div className="label pr-20 ltr:text-left rtl:text-right">{t("contacts.specialNeeds")}</div>
 
-                        <div className="label pl-2 ltr:text-left rtl:text-right">{t("contacts.wheelChair")}</div>
-                    </div>
+                      <input
+                          name="Gender"
+                          options={[
+                              {
+                                  id: "Wheel Chair",
+                                  value: "Wheel Chair",
+                                  label: "Wheel Chair",
+                              },
+                          ]}
+                          Classes="flex"
+                          type="checkbox"
+                          value={specialNeed}
+                          onChange={(e) => setSpecialNeed(e.target.checked)}
+                          checked={specialNeed}
+                      />
 
-                    <div className="my-5">
-                        <div>
-                            <ChooseFile
-                                uni="Identify"
-                                label={t("contacts.IdentityProofFile")}
-                                onClickCross={handleCrossClick}
-                                placeholder
-                                multi
-                                selectedFile={identityFile}
-                                loading={fileLoading}
-                                onChange={handleFileChangeIdentify}
-                            />
-                        </div>
-                    </div>
+                      <div className="label pl-2 ltr:text-left rtl:text-right">{t("contacts.wheelChair")}</div>
+                  </div>
 
-                    <Input
-                        label={t("headings.notes")}
-                        placeholder="Note"
-                        textarea
-                        rows={3}
-                        value={note}
-                        onChange={(e) => setNote(e.target.value)}
-                    />
+                  <div className="my-5">
+                      <div>
+                          <ChooseFile
+                              uni="Identify"
+                              label={t("contacts.IdentityProofFile")}
+                              onClickCross={handleCrossClick}
+                              placeholder
+                              multi
+                              selectedFile={identityFile}
+                              loading={fileLoading}
+                              onChange={handleFileChangeIdentify}
+                          />
+                      </div>
+                  </div>
 
-                    <span className="text-xs font-medium text-red-500"> {message.text}</span>
+                  <Input
+                      label={t("headings.notes")}
+                      placeholder="Note"
+                      textarea
+                      rows={3}
+                      value={note}
+                      onChange={(e) => setNote(e.target.value)}
+                  />
 
-                    <div className="my-4 flex justify-end space-x-5">
-                        {data ? (
-                            <Button
-                                icon={updateLoading ? "" : <CheckIcon />}
-                                title={updateLoading ? <Spinner /> : t("contacts.saveContact")}
-                                onClick={updateContact}
-                            />
-                        ) : (
-                            <Button
-                                icon={addLoading ? "" : <CheckIcon />}
-                                title={addLoading ? <Spinner /> : t("contacts.saveContact")}
-                                onClick={AddNewContact}
-                            />
-                        )}
-                        <Button
-                            icon={<XMarkIcon />}
-                            title="Cancel"
-                            buttonColor="bg-red-500"
-                            onClick={() => navigate(CONTACTS)}
-                        />
-                    </div>
+                  <span className="text-xs font-medium text-red-500"> {message.text}</span>
+
+                  
+                  </>
+                  )}
+                </div>
+                <div className="my-4 flex justify-end space-x-5">
+                      {data ? (
+                          <Button
+                              icon={updateLoading ? "" : <CheckIcon />}
+                              title={updateLoading ? <Spinner /> : t("contacts.saveContact")}
+                              onClick={updateContact}
+                          />
+                      ) : (
+                          <Button
+                              icon={addLoading ? "" : <CheckIcon />}
+                              title={addLoading ? <Spinner /> : t("contacts.saveContact")}
+                              onClick={AddNewContact}
+                          />
+                      )}
+                      <Button
+                          icon={<XMarkIcon />}
+                          title="Cancel"
+                          buttonColor="bg-red-500"
+                          onClick={() => navigate(CONTACTS)}
+                      />
                 </div>
             </form>
 
