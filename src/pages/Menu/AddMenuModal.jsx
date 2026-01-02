@@ -2,7 +2,7 @@ import React from "react";
 import Input from "../../components/common/Input";
 import Button from "../../components/common/Button";
 import ApiServices from "../../api/services";
-import { Fragment, useState, useEffect } from "react";
+import { Fragment, useState, useEffect, useCallback} from "react";
 import { Dialog, Transition } from "@headlessui/react";
 import DateAndTime from "../../components/common/DateAndTime";
 import { XMarkIcon, CheckIcon } from "@heroicons/react/24/solid";
@@ -16,6 +16,11 @@ import Dropdown from "../../components/common/Dropdown";
 import Spinner from "../../components/common/Spinner";
 import { useTranslation } from "react-i18next";
 import * as XLSX from "xlsx";
+import Tesseract from "tesseract.js";
+import mammoth from "mammoth";
+import { useDropzone } from "react-dropzone";
+import { pdfjs } from "react-pdf";
+pdfjs.GlobalWorkerOptions.workerSrc = "/pdf.worker.min.js";
 
 const AddMenuModal = ({ label, isOpen, setIsOpen, refreshData, data, setModalData, preselectedItems }) => {
   const { t } = useTranslation("common");
@@ -64,6 +69,9 @@ const AddMenuModal = ({ label, isOpen, setIsOpen, refreshData, data, setModalDat
   // State for Trending Menu
   const [trendingMenu, setTrendingMenu] = useState([]);
   const [trendingLoading, setTrendingLoading] = useState(false);
+
+  const [selectedFilePath, setSelectedFilePath] = useState(null);
+  const [selectedFilePathError, setSelectedFilePathError] = useState(null);
 
   const handleInputChange = (e, index, field) => {
     setItems((prevItems) => {
@@ -555,7 +563,175 @@ const AddMenuModal = ({ label, isOpen, setIsOpen, refreshData, data, setModalDat
     const fileId = "1736237139.MenuItemsImport.xlsx";
     window.location.href = `${mediaUrl + fileId}`;
   };
+  /* ================= DROPZONE ================= */
+  const onDrop = useCallback((acceptedFiles) => {
+    if (acceptedFiles && acceptedFiles.length > 0) {
+        const file = acceptedFiles[0];
+        setSelectedFilePath(file);
+        setSelectedFilePathError(null);
 
+        // 🔥 OCR / PDF / Excel / Word processing
+        handleFile(file);
+    }
+    }, []);
+  const { getRootProps, getInputProps, isDragActive } = useDropzone({
+    onDrop,
+    accept: {
+        "image/*": [".jpg", ".jpeg", ".png"],
+        "application/pdf": [".pdf"],
+        "application/vnd.ms-excel": [".xls"],
+        "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet": [".xlsx"],
+        "application/msword": [".doc"],
+        "application/vnd.openxmlformats-officedocument.wordprocessingml.document": [".docx"],
+    },
+    multiple: false,
+    });
+
+  const handleFile = async (file) => {
+      if (!file) return;
+  
+      //setLoading(true);
+      //setText("");
+  
+      const ext = file.name.split(".").pop().toLowerCase();
+      //console.log(ext);
+      try {
+          if (["jpg", "jpeg", "png"].includes(ext)) {
+            const result = await Tesseract.recognize(file, "eng");
+            // console.log(result.data.text);
+            const jsonData = convertMenuPdfTextToJson(result.data.text);
+            setItems(jsonData);
+          } else if (ext === "pdf") {
+            const arrayBuffer = await file.arrayBuffer();
+            const pdf = await pdfjs.getDocument({
+              data: arrayBuffer,
+            }).promise;
+            let pdfText = "";
+            
+            
+            for (let i = 1; i <= pdf.numPages; i++) {
+              const page = await pdf.getPage(i);
+              const content = await page.getTextContent();
+              pdfText += content.items
+                .map(item => item.str)
+                .join(" ")
+                .replace(/\s+/g, " ")
+                + "\n";
+            }
+            const menuJson = convertMenuPdfTextToJson(pdfText);
+            console.log(menuJson);
+            setItems(menuJson);
+          } else if (["xls", "xlsx"].includes(ext)) {
+            const data = await file.arrayBuffer();
+            const workbook = XLSX.read(data);
+            const sheet = workbook.Sheets[workbook.SheetNames[0]];
+            
+            // Map the Excel data to your items structure
+            const jsonData = XLSX.utils.sheet_to_json(sheet);
+            // console.log(jsonData);
+            const newItems = jsonData.map((row, index) => {
+              return {
+                item: row.name || row.item || "",
+                type: row.type || "",
+                quantity: row.qty || row.quantity || "",
+                description: row.notes || row.description || "",
+                img: null,
+                id: "",
+              };
+            });
+            // console.log(newItems);
+
+            // Update state with the new items
+            if (newItems.length > 0) {
+              setItems(newItems);
+              console.log("Imported items:", newItems);
+            } else {
+              console.warn("No valid data found in the Excel file");
+            }
+  
+          } else if (["doc", "docx"].includes(ext)) {
+            console.log(ext);
+            const data = await file.arrayBuffer();
+            const result = await mammoth.extractRawText({ arrayBuffer: data });
+            // setText(result.value);
+            const jsonData = convertMenuPdfTextToJson(result.value);
+            setItems(jsonData);
+          } else {
+          alert("Unsupported file type");
+          }
+      } catch (err) {
+          //console.error(err);
+          alert("Failed to read file");
+      } finally {
+          //setLoading(false);
+      }
+    };
+    const convertMenuPdfTextToJson = (text) => {
+  // Normalize spacing
+  const tokens = text
+    .replace(/\s+/g, " ")
+    .trim()
+    .split(" ");
+
+  const result = [];
+  let i = 0;
+
+  while (i < tokens.length) {
+    let nameTokens = [];
+    let notesTokens = [];
+    let qty = null;
+    let type = "";
+    let img = null;
+    let id = "";
+
+    // 1️⃣ NAME (until we hit a number)
+    while (i < tokens.length && !/^\d+$/.test(tokens[i])) {
+      nameTokens.push(tokens[i]);
+      i++;
+    }
+
+    // Fix broken name (P izza → Pizza)
+    let name = nameTokens.join("").replace(/([a-z])([A-Z])/g, "$1 $2");
+
+    // 2️⃣ QUANTITY
+    if (i < tokens.length && /^\d+$/.test(tokens[i])) {
+      qty = Number(tokens[i]);
+      i++;
+    }
+
+    // 3️⃣ NOTES (until Food / Drink)
+    while (i < tokens.length && !/^(Food|Drink)$/i.test(tokens[i])) {
+      notesTokens.push(tokens[i]);
+      i++;
+    }
+
+    // Fix broken notes (Chee se → Cheese, Cold D rink → Cold Drink)
+    let notes = notesTokens.join(" ").replace(/\s+/g, " ");
+
+    // 4️⃣ TYPE
+    if (i < tokens.length && /^(Food|Drink)$/i.test(tokens[i])) {
+      type = tokens[i];
+      i++;
+    }
+    //  item: row.name || row.item || "",
+    // type: row.type || "",
+    // quantity: row.qty || row.quantity || "",
+    // description: row.notes || row.description || "",
+    // img: null,
+    // id: "",
+    result.push({
+      item: name.charAt(0).toUpperCase() + name.slice(1),
+      quantity: qty,
+      description: notes,
+      type: type,
+      img: null,
+      id: ""
+    });
+  }
+
+  return result;
+};
+const gridCols = "grid grid-cols-[2fr_1fr_1fr_2fr_2fr_40px] gap-3 items-center";
   return (
     <>
       <Transition appear show={isOpen} as={Fragment}>
@@ -583,7 +759,7 @@ const AddMenuModal = ({ label, isOpen, setIsOpen, refreshData, data, setModalDat
                 leaveFrom="opacity-100 scale-100"
                 leaveTo="opacity-0 scale-75"
               >
-                <Dialog.Panel className="w-full overflow-hidden rounded-2xl bg-white p-8 shadow-xl transition-all md:max-w-3xl xl:max-w-5xl">
+                <Dialog.Panel className="w-full overflow-hidden rounded-xxl bg-white p-8 shadow-xl transition-all md:max-w-7xl xl:max-w-9xl">
                   <div className="mb-5 flex items-center justify-between">
                     <Dialog.Title as="h3" className="font-poppins text-lg font-semibold leading-7 text-secondary-color">
                       {data === null ? t("menu.addMenu") : t("menu.updateMenu")}
@@ -751,7 +927,7 @@ const AddMenuModal = ({ label, isOpen, setIsOpen, refreshData, data, setModalDat
                       <div className="my-5 ltr:text-left rtl:text-right">
                         <div className="label mb-2">{t("menu.menuItemsFile")}</div>
                         <div className="w-6/12">
-                          <ChooseFile
+                          {/* <ChooseFile
                             label="Menu File"
                             placeholderText="Choose File"
                             accept=".xlsx,.csv,text/csv,application/vnd.ms-excel,application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
@@ -759,7 +935,40 @@ const AddMenuModal = ({ label, isOpen, setIsOpen, refreshData, data, setModalDat
                             onChange={handleFileChangeMenu}
                             selectedFile={itemFile}
                             onClickCross={() => setItemFile(null)}
-                          />
+                          /> */}
+                          <div
+                              {...getRootProps()}
+                              className="border-2 border-dashed border-gray-300 rounded-lg p-6 text-center cursor-pointer mt-5"
+                            >
+                              <input {...getInputProps()} />
+
+                              {isDragActive ? (
+                                <p className="text-sm text-blue-500">Drop the file here...</p>
+                              ) : (
+                                <p className="text-sm text-gray-500">
+                                  Drag & drop file here, or click to browse
+                                </p>
+                              )}
+
+                              {itemFile && (
+                                <div className="flex justify-between items-center mt-2">
+                                  <p className="text-xs text-green-600">
+                                    Selected File: {itemFile.name}
+                                  </p>
+                                  <button
+                                    type="button"
+                                    onClick={(e) => {
+                                      e.stopPropagation();
+                                      setItemFile(null);
+                                    }}
+                                    className="text-red-500 text-xs ml-2"
+                                  >
+                                    ✕
+                                  </button>
+                                </div>
+                              )}
+                            </div>
+
                         </div>
                       </div>
 
@@ -770,11 +979,18 @@ const AddMenuModal = ({ label, isOpen, setIsOpen, refreshData, data, setModalDat
                       {fileError && <span className="mt-5 block text-xs text-red-500"> {fileError}</span>}
 
                       <div className="mt-3 ltr:text-left rtl:text-right">
-                        <div className="label">{t("menu.menuItems")}</div>
+                        <div className="label ">{t("menu.menuItems")}</div>
 
                         <div>
+                          <div className={`${gridCols} mb-2 mt-3 font-semibold text-sm text-gray-700`}>
+                              <div>Item<span className="text-red-500">*</span></div>
+                              <div>Type</div>
+                              <div>Quantity<span className="text-red-500">*</span></div>
+                              <div>Description</div>
+                              <div>Image</div>
+                          </div>
                           {items.map((item, index) => (
-                            <div key={index} className="mb-2 flex w-full items-center space-x-3">
+                            <div key={index} className={`${gridCols} mb-2`}>
                               <Input
                                 placeholder="Item"
                                 error={!!item.id ? "" : itemFile ? false : errors[index]?.item}
@@ -804,6 +1020,9 @@ const AddMenuModal = ({ label, isOpen, setIsOpen, refreshData, data, setModalDat
                                 error={itemFile ? false : errors[index]?.description}
                                 value={item?.description}
                                 onChange={(e) => handleInputChange(e, index, "description")}
+                                textarea
+                                rows="1"
+                                
                               />
                               {item?.id === "" ? (
                                 <>
@@ -816,6 +1035,7 @@ const AddMenuModal = ({ label, isOpen, setIsOpen, refreshData, data, setModalDat
                                     uni={`fileInput-${index}`}
                                     noText
                                     style
+                                    width = "w-40"
                                   />
                                 </>
                               ) : (
