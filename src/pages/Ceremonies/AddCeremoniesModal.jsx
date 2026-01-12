@@ -335,6 +335,7 @@ const AddCeremoniesModal = ({ isOpen, setIsOpen, data, refreshData, setModalData
   }, [event]);
 
   console.log({ aaaaaaaaaa: eventDetail });
+  console.log({ DateTime : moment.unix(eventDetail?.end_date).format("YYYY-MM-DDTHH:mm") });
 
   return (
     <>

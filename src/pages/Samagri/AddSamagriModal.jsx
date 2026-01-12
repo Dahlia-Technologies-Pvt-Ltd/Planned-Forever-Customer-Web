@@ -2,7 +2,7 @@ import React from "react";
 import ApiServices from "../../api/services";
 import Input from "../../components/common/Input";
 import Button from "../../components/common/Button";
-import { Fragment, useState, useEffect } from "react";
+import { Fragment, useState, useEffect, useCallback } from "react";
 import { Dialog, Transition } from "@headlessui/react";
 import Dropdown from "../../components/common/Dropdown";
 import { useThemeContext } from "../../context/GlobalContext";
@@ -18,8 +18,18 @@ import { Link, useNavigate } from "react-router-dom";
 import { useTranslation } from "react-i18next";
 import { t } from "i18next";
 
+
+
+import * as XLSX from "xlsx";
+import Tesseract from "tesseract.js";
+import mammoth from "mammoth";
+import { useDropzone } from "react-dropzone";
+import { pdfjs } from "react-pdf";
+pdfjs.GlobalWorkerOptions.workerSrc = "/pdf.worker.min.js";
+
 const AddSamagriModal = ({ isOpen, setIsOpen, data, setModalData, refreshData, rData }) => {
   const { t: commonT } = useTranslation("common");
+  const [itemFile, setItemFile] = useState(null);
 
   // Context
   const {
@@ -59,6 +69,11 @@ const AddSamagriModal = ({ isOpen, setIsOpen, data, setModalData, refreshData, r
   const [ceremonyDateError, setCeremonyDateError] = useState("");
   const [addSamagriError, setAddSamagriError] = useState("");
   const [errors, setErrors] = useState([{ item: "", quantity: "", unit: "", purchase: "" }]);
+
+  const downloadFile = () => {
+      const fileId = "1736237561.SamagriItemsImport.xlsx";
+      window.location.href = `${mediaUrl + fileId}`;
+    };
 
   const navigate = useNavigate();
 
@@ -115,7 +130,7 @@ const AddSamagriModal = ({ isOpen, setIsOpen, data, setModalData, refreshData, r
   //   setErrors(updatedErrors);
   // };
 
-  console.log({ items });
+  // console.log({ items });
 
   const handleDeleteItem = (index) => {
     const updatedItems = items.filter((_, idx) => idx !== index);
@@ -124,7 +139,7 @@ const AddSamagriModal = ({ isOpen, setIsOpen, data, setModalData, refreshData, r
     setErrors(updatedErrors);
   };
 
-  console.log({ rData });
+  // console.log({ rData });
 
   // Handle form validation
   const isValidForm = () => {
@@ -203,7 +218,7 @@ const AddSamagriModal = ({ isOpen, setIsOpen, data, setModalData, refreshData, r
     return isValidData;
   };
 
-  console.log("nnnmmmmbbb", { rData });
+  // console.log("nnnmmmmbbb", { rData });
 
   // Handle Submit
   const handleSubmit = async (e) => {
@@ -310,7 +325,7 @@ const AddSamagriModal = ({ isOpen, setIsOpen, data, setModalData, refreshData, r
     setBtnLoading(false);
   };
 
-  console.log({ data });
+  // console.log({ data });
 
   // Use Effects
   useEffect(() => {
@@ -373,7 +388,149 @@ const AddSamagriModal = ({ isOpen, setIsOpen, data, setModalData, refreshData, r
     }
   };
 
-  console.log({ samagri, a: user?.value, handoverDate });
+  // console.log({ samagri, a: user?.value, handoverDate });
+
+
+const handleFile = async (file) => {
+  if (!file) return;
+
+  //setLoading(true);
+  //setText("");
+
+  const ext = file.name.split(".").pop().toLowerCase();
+  //console.log(ext);
+  try {
+      if (["jpg", "jpeg", "png"].includes(ext)) {
+        const result = await Tesseract.recognize(file, "eng");
+        const jsonData = convertMenuPdfTextToJson(result.data.text);
+        setItems(jsonData);
+      } else if (ext === "pdf") {
+        const arrayBuffer = await file.arrayBuffer();
+        const pdf = await pdfjs.getDocument({
+          data: arrayBuffer,
+        }).promise;
+        let pdfText = "";
+        
+        
+        for (let i = 1; i <= pdf.numPages; i++) {
+          const page = await pdf.getPage(i);
+          const content = await page.getTextContent();
+          pdfText += content.items
+            .map(item => item.str)
+            .join(" ")
+            .replace(/\s+/g, " ")
+            + "\n";
+        }
+        const menuJson = convertMenuPdfTextToJson(pdfText);
+        // console.log(menuJson);
+        setItems(menuJson);
+      } else if (["xls", "xlsx"].includes(ext)) {
+        const data = await file.arrayBuffer();
+        const workbook = XLSX.read(data);
+        const sheet = workbook.Sheets[workbook.SheetNames[0]];
+        
+        // Map the Excel data to your items structure
+        const jsonData = XLSX.utils.sheet_to_json(sheet);
+        const newItems = jsonData.map((row, index) => {
+          return {
+            item: row.Item,
+            quantity: row.Quantity,
+            unit: row.Units,
+            img: null,
+            purchase: '',
+          };
+        });
+
+        // Update state with the new items
+        if (newItems.length > 0) {
+          setItems(newItems);
+          console.log("Imported items:", newItems);
+        } else {
+          console.warn("No valid data found in the Excel file");
+        }
+
+      } else if (["doc", "docx"].includes(ext)) {
+        // console.log(ext);
+        const data = await file.arrayBuffer();
+        const result = await mammoth.extractRawText({ arrayBuffer: data });
+        // setText(result.value);
+        const jsonData = convertMenuPdfTextToJson(result.value);
+        setItems(jsonData);
+      } else {
+      alert("Unsupported file type");
+      }
+  } catch (err) {
+      //console.error(err);
+      alert("Failed to read file");
+  } finally {
+      //setLoading(false);
+  }
+};
+const convertMenuPdfTextToJson = (text) => {
+  if (!text) return [];
+
+  // Normalize spacing
+  const tokens = text
+    .replace(/\s+/g, " ")
+    .trim()
+    .split(" ");
+
+  // Remove header tokens
+  const cleanTokens = tokens.filter(
+    t => !/^(item|quantity|units)$/i.test(t)
+  );
+
+  const result = [];
+  let i = 0;
+
+  while (i < cleanTokens.length) {
+    const item = cleanTokens[i]; // Item name
+    const quantity = Number(cleanTokens[i + 1]); // Quantity
+    const unit = cleanTokens[i + 2]; // Unit
+
+    if (!item || isNaN(quantity) || !unit) break;
+
+    result.push({
+      item,
+      quantity,
+      unit,
+      img: null,
+      purchase: ""
+    });
+
+    i += 3; // move to next row
+  }
+
+  return result;
+};
+
+
+
+/* ================= DROPZONE ================= */
+const [selectedFilePath, setSelectedFilePath] = useState(null);
+const [selectedFilePathError, setSelectedFilePathError] = useState(null);
+const onDrop = useCallback((acceptedFiles) => {
+  if (acceptedFiles && acceptedFiles.length > 0) {
+      const file = acceptedFiles[0];
+      setSelectedFilePath(file);
+      setSelectedFilePathError(null);
+
+      // 🔥 OCR / PDF / Excel / Word processing
+      handleFile(file);
+  }
+}, []);
+const { getRootProps, getInputProps, isDragActive } = useDropzone({
+  onDrop,
+  accept: {
+      "image/*": [".jpg", ".jpeg", ".png"],
+      "application/pdf": [".pdf"],
+      "application/vnd.ms-excel": [".xls"],
+      "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet": [".xlsx"],
+      "application/msword": [".doc"],
+      "application/vnd.openxmlformats-officedocument.wordprocessingml.document": [".docx"],
+  },
+  multiple: false,
+});
 
   return (
     <>
@@ -402,7 +559,7 @@ const AddSamagriModal = ({ isOpen, setIsOpen, data, setModalData, refreshData, r
                 leaveFrom="opacity-100 scale-100"
                 leaveTo="opacity-0 scale-75"
               >
-                <Dialog.Panel className="w-full max-w-4xl overflow-hidden rounded-2xl bg-white p-8 shadow-xl transition-all">
+                <Dialog.Panel className="w-full max-w-5xl overflow-hidden rounded-2xl bg-white p-8 shadow-xl transition-all">
                   <div className="mb-10 flex items-center justify-between">
                     <Dialog.Title as="h3" className="font-poppins text-lg font-semibold leading-7 text-secondary-color">
                       {data === null ? t("samagri.addNewSamagri") : t("samagri.updateSamagri")}
@@ -425,19 +582,7 @@ const AddSamagriModal = ({ isOpen, setIsOpen, data, setModalData, refreshData, r
                           }}
                           disabled={rData === null && data?.recommend_trending_ceremony === "recommended" ? true : false}
                         />
-                        {/* <Dropdown
-                          isRequired
-                          title="Events"
-                          placeholder="Events"
-                          withError={eventError}
-                          options={allEvents}
-                          value={event}
-                          onChange={(e) => {
-                            setEvent(e);
-                            setEventError("");
-                            setCeremonyName(null);
-                          }}
-                        /> */}
+                      
 
                         <Dropdown
                           title={t("samagri.ceremonyName")}
@@ -453,26 +598,16 @@ const AddSamagriModal = ({ isOpen, setIsOpen, data, setModalData, refreshData, r
                         />
 
                         <Dropdown
-                          // Handover
                           title={t("samagri.handoverName")}
                           placeholder={t("samagri.handoverName")}
                           options={allUsers}
-                          // withError={collabratorsError}
                           value={user}
                           onChange={(e) => {
                             setUser(e);
-                            // setCollabratorsError("");
                           }}
                         />
 
-                        {/* <DateAndTime
-                          isRequired
-                          setError={setCeremonyDateError}
-                          dateAndTime={handoverDate}
-                          setDateAndTime={setHandoverDate}
-                          error={ceremonyDateError}
-                          label="Handover Data & Time"
-                        /> */}
+                       
 
                         <Input
                           isRequired
@@ -485,16 +620,59 @@ const AddSamagriModal = ({ isOpen, setIsOpen, data, setModalData, refreshData, r
                             setHandoverDate(e.target.value);
                             setCeremonyDateError("");
                           }}
-                          // min={moment.unix(eventDetail?.start_date).format("YYYY-MM-DDTHH:mm")}
-                          // max={ moment.unix(eventDetail?.end_date).format("YYYY-MM-DDTHH:mm")}
+                         
                         />
 
                         <div className="ltr:text-left rtl:text-right">
                           <div className="label">Samagri Items</div>
+                          <div className="w-full flex items-start gap-4">
+                            {/* Upload box */}
+                            <div
+                              {...getRootProps()}
+                              className="border-2 border-dashed border-gray-300 rounded-lg p-6 text-center cursor-pointer mt-5 max-w-xl flex-1"
+                            >
+                              <input {...getInputProps()} />
+
+                              {isDragActive ? (
+                                <p className="text-sm text-blue-500">Drop the file here...</p>
+                              ) : (
+                                <p className="text-sm text-gray-500">
+                                  Drag & drop file here, or click to browse
+                                </p>
+                              )}
+
+                              {itemFile && (
+                                <div className="flex justify-between items-center mt-2">
+                                  <p className="text-xs text-green-600">
+                                    Selected File: {itemFile.name}
+                                  </p>
+                                  <button
+                                    type="button"
+                                    onClick={(e) => {
+                                      e.stopPropagation();
+                                      setItemFile(null);
+                                    }}
+                                    className="text-red-500 text-xs ml-2"
+                                  >
+                                    ✕
+                                  </button>
+                                </div>
+                              )}
+                            </div>
+
+                            {/* Download button */}
+                            <div className="mt-8 flex justify-end items-center">
+                              <Button
+                                type="button"
+                                onClick={downloadFile}
+                                title={t("menu.downloadSampleFile")}
+                              />
+                            </div>
+                          </div>
 
                           <div>
                             {items.map((item, index) => (
-                              <div key={index} className="mb-2 mt-3 flex w-full flex-wrap items-center gap-y-3 space-x-3">
+                              <div key={index} className="mb-2 mt-3 flex w-full flex-wrap items-center gap-y-3 space-x-2">
                                 <Input
                                   placeholder={t("samagri.item")}
                                   label={`${index === 0 ? t("samagri.item") : ""}`}
@@ -524,7 +702,7 @@ const AddSamagriModal = ({ isOpen, setIsOpen, data, setModalData, refreshData, r
                                   isRequired={index === 0 ? true : false}
                                 />
 
-                                <div className="relative flex h-16 items-center justify-between gap-x-1 rounded-10 border border-dashed p-2">
+                                <div className="relative mt-8 flex h-12 items-center justify-between gap-x-1 rounded-10 border border-dashed p-2">
                                   <label
                                     for={`fileInput-${index}`}
                                     className="bg-secondary-color-400 text-8 w-20 cursor-pointer rounded-md border border-secondary p-2 text-center font-medium text-secondary md:text-10 lg:w-24"
@@ -562,7 +740,7 @@ const AddSamagriModal = ({ isOpen, setIsOpen, data, setModalData, refreshData, r
                                 )}
                                 {index > 0 && (
                                   <MinusCircleIcon
-                                    className="ml-1.5 inline-block h-10 w-10 cursor-pointer text-red-500"
+                                    className="ml-1.5 inline-block h-10 w-10 mt-7 cursor-pointer text-red-500"
                                     onClick={() => handleDeleteItem(index)}
                                   />
                                 )}
