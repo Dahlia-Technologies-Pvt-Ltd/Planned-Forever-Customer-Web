@@ -10,6 +10,7 @@ import { useThemeContext } from "../../context/GlobalContext";
 import { XMarkIcon, CheckIcon } from "@heroicons/react/24/solid";
 import { toUTCUnixTimestamp } from "../../utilities/HelperFunctions";
 import { useTranslation } from "react-i18next";
+import QuickImportArrivalModal from "./QuickImportArrivalModal";
 
 const AddDepartureModal = ({ isOpen, setIsOpen, data, refreshData, setModalData }) => {
   const { t } = useTranslation("common");
@@ -60,6 +61,7 @@ const AddDepartureModal = ({ isOpen, setIsOpen, data, refreshData, setModalData 
   const [allocateFromDateError, setAllocateFromDateError] = useState("");
 
   const [serverError, setServerError] = useState("");
+  const [openQuickImport, setOpenQuickImport] = useState(false);
 
   // Validation
   const isValidForm = () => {
@@ -226,6 +228,7 @@ const AddDepartureModal = ({ isOpen, setIsOpen, data, refreshData, setModalData 
 
   // Close Modal
   const closeModal = () => {
+    if (openQuickImport) return;
     setIsOpen(false);
     clearAllData();
     setModalData(null);
@@ -294,7 +297,18 @@ const AddDepartureModal = ({ isOpen, setIsOpen, data, refreshData, setModalData 
                     <Dialog.Title as="h3" className="font-poppins text-lg font-semibold leading-7 text-secondary-color">
                       {data === null ? t("departure.addDeparture") : t("departure.updateDeparture")}
                     </Dialog.Title>
-                    <XMarkIcon onClick={closeModal} className="h-8 w-8 cursor-pointer text-info-color" />
+                    <div className="flex gap-3">
+                    <Button
+                      title="Quick Import"
+                      type="button"
+                      onClick={() => setOpenQuickImport(true)}
+                    />
+                    <XMarkIcon
+                      className="h-6 w-6 cursor-pointer"
+                      onClick={closeModal}
+                    />
+                  </div>
+                    {/* <XMarkIcon onClick={closeModal} className="h-8 w-8 cursor-pointer text-info-color" /> */}
                   </div>
 
                   <form onSubmit={handleSubmit}>
@@ -498,6 +512,11 @@ const AddDepartureModal = ({ isOpen, setIsOpen, data, refreshData, setModalData 
           </div>
         </Dialog>
       </Transition>
+      <QuickImportArrivalModal
+        openQuickImport={openQuickImport}
+        setOpenQuickImport={setOpenQuickImport}
+        refreshData={refreshData}
+      />
     </>
   );
 };
