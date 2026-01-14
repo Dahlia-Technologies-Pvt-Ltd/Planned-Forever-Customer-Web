@@ -11,10 +11,11 @@ import Tesseract from "tesseract.js";
 import * as XLSX from "xlsx";
 import mammoth from "mammoth";
 import { pdfjs } from "react-pdf";
+import moment from 'moment';
 
 pdfjs.GlobalWorkerOptions.workerSrc = "/pdf.worker.min.js";
 
-const QuickImportArrivalModal = ({ openQuickImport, setOpenQuickImport, refreshData }) => {
+const QuickImportArrivalModal = ({ openQuickImport, setOpenQuickImport, refreshData, onSend }) => {
   const { t } = useTranslation("common");
 
   const [loading, setLoading] = useState(false);
@@ -22,6 +23,16 @@ const QuickImportArrivalModal = ({ openQuickImport, setOpenQuickImport, refreshD
   const [selectedFilePath, setSelectedFilePath] = useState(null);
   const [selectedFilePathError, setSelectedFilePathError] = useState(null);
   const [errorMessage, setErrorMessage] = useState("");
+
+  const [arrivalDateAndTime, setArrivalDateAndTime] = useState("");
+  const [arrivingFrom, setArrivingFrom] = useState("");
+  const [arrivingAt, setArrivingAt] = useState("");
+  const [arrivalFlightTrainNo, setArrivalFlightTrainNo] = useState("");
+
+  const sendToParent = () => {
+    onSend(arrivingFrom, arrivingAt, arrivalDateAndTime, arrivalFlightTrainNo); // 👈 separate values
+    handleClose();
+  };
 
   const {
     eventSelect,
@@ -40,11 +51,18 @@ const QuickImportArrivalModal = ({ openQuickImport, setOpenQuickImport, refreshD
     try {
       if (["jpg", "jpeg", "png"].includes(ext)) {
         const result = await Tesseract.recognize(file, "eng");
-        // console.log(result.data.text);
         if (result?.data?.text) {
-          setContacts(readTicketText(result.data.text));
-          // console.log('aaaaaaaaaaaaaaaaaaaaaaaaaaaaa');
-          // console.log(JSON.stringify(contacts, null, 2));
+          const pdfData = readTicketText(result.data.text);
+          setArrivingFrom(pdfData[0].from);
+          setArrivalFlightTrainNo( pdfData[0].flightNumber);
+          setArrivingAt(pdfData[0].to);
+          const dateTimeStr = `${pdfData[0].date.trim()} ${pdfData[0].departureTime.trim()}`;
+          const m = moment(dateTimeStr, 'DD MMM YYYY HH:mm', true);
+          if (m.isValid()) {
+            setArrivalDateAndTime(m.format('YYYY-MM-DD HH:mm'));
+          } else {
+            console.error('Invalid date:', dateTimeStr);
+          }
         }
       } else if (ext === "pdf") {
         const pdf = await pdfjs
@@ -58,17 +76,18 @@ const QuickImportArrivalModal = ({ openQuickImport, setOpenQuickImport, refreshD
           const content = await page.getTextContent();
           pdfText += content.items.map((i) => i.str).join(" ") + "\n";
         }
-        // console.log('aaaaaaaaaaaaa'+pdfText);
-        setContacts(readTicketText(pdfText));
-      } else if (["xls", "xlsx"].includes(ext)) {
-        const workbook = XLSX.read(await file.arrayBuffer());
-        const sheet = workbook.Sheets[workbook.SheetNames[0]];
-        setContacts(XLSX.utils.sheet_to_json(sheet));
-      } else if (["doc", "docx"].includes(ext)) {
-        const result = await mammoth.extractRawText({
-          arrayBuffer: await file.arrayBuffer(),
-        });
-        // setContacts(convertBoardingPassToArrayObjects(result.value));
+        const pdfData = readTicketText(pdfText);
+        setArrivingFrom(pdfData[0].from);
+        setArrivalFlightTrainNo( pdfData[0].flightNumber);
+        setArrivingAt(pdfData[0].to);
+        const dateTimeStr = `${pdfData[0].date.trim()} ${pdfData[0].departureTime.trim()}`;
+        const m = moment(dateTimeStr, 'DD MMM YYYY HH:mm', true);
+        if (m.isValid()) {
+          setArrivalDateAndTime(m.format('YYYY-MM-DD HH:mm'));
+        } else {
+          console.error('Invalid date:', dateTimeStr);
+        }
+
       } else {
         alert("Unsupported file type");
       }
@@ -175,7 +194,7 @@ function readTicketText(rawText) {
     result.push({
       type: "train",
       pnr: text.match(/PNR:\s*(\d+)/)?.[1] || "",
-      trainNumber: text.match(/Train No\.\/Name\s*([\w\/ ]+)/)?.[1] || "",
+      flightNumber: text.match(/Train No\.\/Name\s*([\w\/ ]+)/)?.[1] || "",
       from: text.match(/Boarding From\s*(.*?)\s*Departure/)?.[1] || "",
       to: text.match(/TO\s*(.*?)\s*Arrival/)?.[1] || "",
       departure: text.match(/Departure\*\s*([\d\-A-Za-z: ]+)/)?.[1] || "",
@@ -361,6 +380,7 @@ function extractTrainPassengers(text) {
                     title="Quick Import"
                     buttonColor="bg-blue-500"
                     loading={loading}
+                    onClick={sendToParent}
                   />
                 </div>
               </form>

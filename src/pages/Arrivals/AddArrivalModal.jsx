@@ -43,7 +43,8 @@ const AddArrivalModal = ({
   const [numberOfPeople, setNumberOfPeople] = useState("");
   const [notes, setNotes] = useState("");
   const [hasArrived, setHasArrived] = useState(false);
-
+  // arrivalDateAndTime,arrivingFrom,arrivingAt,arrivalFlightTrainNo
+  
   const [car, setCar] = useState(null);
   const [carAllocationType, setCarAllocationType] = useState(null);
   const [allocateFromDate, setAllocateFromDate] = useState("");
@@ -167,6 +168,13 @@ const AddArrivalModal = ({
       getCarListing();
     }
   }, [isOpen]);
+
+  const handleChildData = (form, to, deparaturedate,fligh_train_no) => {
+    setArrivingFrom(form);
+    setArrivingAt(to);
+    setArrivalDateAndTime(moment.unix(deparaturedate).format("YYYY-MM-DDTHH:mm"));
+    setArrivalFlightTrainNo(fligh_train_no);
+  };
 
   /* ================= RENDER ================= */
   return (
@@ -311,6 +319,7 @@ const AddArrivalModal = ({
         openQuickImport={openQuickImport}
         setOpenQuickImport={setOpenQuickImport}
         refreshData={refreshData}
+        onSend={handleChildData}
       />
     </>
   );
