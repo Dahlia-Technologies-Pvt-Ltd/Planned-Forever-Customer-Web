@@ -62,6 +62,14 @@ const AddDepartureModal = ({ isOpen, setIsOpen, data, refreshData, setModalData 
 
   const [serverError, setServerError] = useState("");
   const [openQuickImport, setOpenQuickImport] = useState(false);
+  // departingTo,departingPoint
+  const handleChildData = (form, to, deparaturedate,fligh_train_no) => {
+    setDepartingTo(form);
+    setDepartingPoint(to);
+    console.log(deparaturedate);
+    setDepartureDateAndtime(moment(deparaturedate, "YYYY-MM-DD HH:mm").format("YYYY-MM-DD HH:mm"));
+    setFlightTrainNo(fligh_train_no);
+  };
 
   // Validation
   const isValidForm = () => {
@@ -355,7 +363,7 @@ const AddDepartureModal = ({ isOpen, setIsOpen, data, refreshData, setModalData 
                             setDepartureDateAndtimeError("");
                           }}
                         />
-
+                        
                         <Input
                           isRequired
                           label={t("departure.departingFrom")}
@@ -516,6 +524,7 @@ const AddDepartureModal = ({ isOpen, setIsOpen, data, refreshData, setModalData 
         openQuickImport={openQuickImport}
         setOpenQuickImport={setOpenQuickImport}
         refreshData={refreshData}
+        onSend={handleChildData}
       />
     </>
   );

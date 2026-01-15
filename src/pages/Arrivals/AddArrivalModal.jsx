@@ -172,7 +172,7 @@ const AddArrivalModal = ({
   const handleChildData = (form, to, deparaturedate,fligh_train_no) => {
     setArrivingFrom(form);
     setArrivingAt(to);
-    setArrivalDateAndTime(moment.unix(deparaturedate).format("YYYY-MM-DDTHH:mm"));
+    setArrivalDateAndTime(moment(deparaturedate, "YYYY-MM-DD HH:mm").format("YYYY-MM-DD HH:mm"));
     setArrivalFlightTrainNo(fligh_train_no);
   };
 
