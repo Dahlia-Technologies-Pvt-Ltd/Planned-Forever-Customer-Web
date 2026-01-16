@@ -814,21 +814,21 @@ const Sidebar = () => {
 
             {/* {(userData?.role.display_name === "web_admin" || (userData?.role?.permissions && userData?.role?.permissions?.includes("Ticket Manager"))) && (
               <li>
-                <details class="group [&_summary::-webkit-details-marker]:hidden">
-                  <summary class="flex justify-between items-center px-5 py-2.5 text-sm font-medium rounded-lg cursor-pointer text-info-color hover:bg-gray-100 hover:text-gray-700 xl:rounded-br-10 xl:rounded-tr-10">
+                <details className="group [&_summary::-webkit-details-marker]:hidden">
+                  <summary className="flex justify-between items-center px-5 py-2.5 text-sm font-medium rounded-lg cursor-pointer text-info-color hover:bg-gray-100 hover:text-gray-700 xl:rounded-br-10 xl:rounded-tr-10">
                     <div className="flex gap-x-3.5">
                       <span className="shrink-0">
                         <CheckBadgeIcon className="w-5 h-5" />
                       </span>
-                      <span class="text-sm font-medium"> {isSidebarOpenWithTitle ? "Recommended" : ""} </span>
+                      <span className="text-sm font-medium"> {isSidebarOpenWithTitle ? "Recommended" : ""} </span>
                     </div>
 
-                    <span class="-ml-2 transition duration-300 shrink-0 group-open:-rotate-180">
+                    <span className="-ml-2 transition duration-300 shrink-0 group-open:-rotate-180">
                       <ChevronDownIcon className="w-4 h-4" />
                     </span>
                   </summary>
 
-                  <ul class={`${isSidebarOpenWithTitle ? "pr-4 pl-6" : "pl-3"} mt-2 space-y-1`}>
+                  <ul className={`${isSidebarOpenWithTitle ? "pr-4 pl-6" : "pl-3"} mt-2 space-y-1`}>
                     {sidebarSubmenuItems.map((menuItem, index) => (
                       <li key={index} onClick={isTablet ? toggleSidebar : null}>
                         <Link
@@ -851,21 +851,21 @@ const Sidebar = () => {
             {(userData?.role.display_name === "web_admin" ||
               (userData?.role?.permissions && userData?.role?.permissions?.includes("Recommended"))) && (
               <li>
-                <details class="group [&_summary::-webkit-details-marker]:hidden">
-                  <summary class="flex cursor-pointer items-center justify-between rounded-lg px-5 py-2.5 text-sm font-medium text-info-color hover:bg-gray-100 hover:text-gray-700 xl:rounded-br-10 xl:rounded-tr-10">
+                <details className="group [&_summary::-webkit-details-marker]:hidden">
+                  <summary className="flex cursor-pointer items-center justify-between rounded-lg px-5 py-2.5 text-sm font-medium text-info-color hover:bg-gray-100 hover:text-gray-700 xl:rounded-br-10 xl:rounded-tr-10">
                     <div className="flex gap-x-3.5">
                       <span className="shrink-0">
                         <WrenchScrewdriverIcon className="h-5 w-5" />
                       </span>
-                      <span class="text-sm font-medium"> {isSidebarOpenWithTitle ? t("pageTitles.ticket-manager") : ""} </span>
+                      <span className="text-sm font-medium"> {isSidebarOpenWithTitle ? t("pageTitles.ticket-manager") : ""} </span>
                     </div>
 
-                    <span class="-ml-2 shrink-0 transition duration-300 group-open:-rotate-180">
+                    <span className="-ml-2 shrink-0 transition duration-300 group-open:-rotate-180">
                       <ChevronDownIcon className="h-4 w-4" />
                     </span>
                   </summary>
 
-                  <ul class={`${isSidebarOpenWithTitle ? "pl-6 pr-4" : "pl-3"} mt-2 space-y-1`}>
+                  <ul className={`${isSidebarOpenWithTitle ? "pl-6 pr-4" : "pl-3"} mt-2 space-y-1`}>
                     {sidebarTicketsSubmenuItems.map((menuItem, index) => (
                       <li key={index} onClick={isTablet ? toggleSidebar : null}>
                         <Link

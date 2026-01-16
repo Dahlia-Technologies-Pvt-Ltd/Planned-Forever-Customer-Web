@@ -563,126 +563,126 @@ const AddMenuModal = ({ label, isOpen, setIsOpen, refreshData, data, setModalDat
     const fileId = "1736237139.MenuItemsImport.xlsx";
     window.location.href = `${mediaUrl + fileId}`;
   };
-  /* ================= DROPZONE ================= */
-  const onDrop = useCallback((acceptedFiles) => {
-    if (acceptedFiles && acceptedFiles.length > 0) {
-        const file = acceptedFiles[0];
-        setSelectedFilePath(file);
-        setSelectedFilePathError(null);
+/* ================= DROPZONE ================= */
+const onDrop = useCallback((acceptedFiles) => {
+  if (acceptedFiles && acceptedFiles.length > 0) {
+      const file = acceptedFiles[0];
+      setSelectedFilePath(file);
+      setSelectedFilePathError(null);
 
-        // 🔥 OCR / PDF / Excel / Word processing
-        handleFile(file);
-    }
-    }, []);
-  const { getRootProps, getInputProps, isDragActive } = useDropzone({
-    onDrop,
-    accept: {
-        "image/*": [".jpg", ".jpeg", ".png"],
-        "application/pdf": [".pdf"],
-        "application/vnd.ms-excel": [".xls"],
-        "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet": [".xlsx"],
-        "application/msword": [".doc"],
-        "application/vnd.openxmlformats-officedocument.wordprocessingml.document": [".docx"],
-    },
-    multiple: false,
-    });
+      // 🔥 OCR / PDF / Excel / Word processing
+      handleFile(file);
+  }
+}, []);
+const { getRootProps, getInputProps, isDragActive } = useDropzone({
+  onDrop,
+  accept: {
+      "image/*": [".jpg", ".jpeg", ".png"],
+      "application/pdf": [".pdf"],
+      "application/vnd.ms-excel": [".xls"],
+      "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet": [".xlsx"],
+      "application/msword": [".doc"],
+      "application/vnd.openxmlformats-officedocument.wordprocessingml.document": [".docx"],
+  },
+  multiple: false,
+});
 
-  const handleFile = async (file) => {
-      if (!file) return;
-  
-      //setLoading(true);
-      //setText("");
-  
-      const ext = file.name.split(".").pop().toLowerCase();
-      //console.log(ext);
-      try {
-          if (["jpg", "jpeg", "png"].includes(ext)) {
-            const result = await Tesseract.recognize(file, "eng");
-            // console.log(result.data.text);
-            const jsonData = convertMenuPdfTextToJson(result.data.text);
-            setItems(jsonData);
-          } else if (ext === "pdf") {
-            const arrayBuffer = await file.arrayBuffer();
-            const pdf = await pdfjs.getDocument({
-              data: arrayBuffer,
-            }).promise;
-            let pdfText = "";
-            
-            
-            for (let i = 1; i <= pdf.numPages; i++) {
-              const page = await pdf.getPage(i);
-              const content = await page.getTextContent();
-              pdfText += content.items
-                .map(item => item.str)
-                .join(" ")
-                .replace(/\s+/g, " ")
-                + "\n";
-            }
-            const menuJson = convertMenuPdfTextToJson(pdfText);
-            console.log(menuJson);
-            setItems(menuJson);
-          } else if (["xls", "xlsx"].includes(ext)) {
-            const data = await file.arrayBuffer();
-            const workbook = XLSX.read(data);
-            const sheet = workbook.Sheets[workbook.SheetNames[0]];
-            
-            // Map the Excel data to your items structure
-            const jsonData = XLSX.utils.sheet_to_json(sheet);
-            // console.log(jsonData);
-            const newItems = jsonData.map((row, index) => {
-              return {
-                item: row.name || row.item || "",
-                type: row.type || "",
-                quantity: row.qty || row.quantity || "",
-                description: row.notes || row.description || "",
-                img: null,
-                id: "",
-              };
-            });
-            // console.log(newItems);
+const handleFile = async (file) => {
+  if (!file) return;
 
-            // Update state with the new items
-            if (newItems.length > 0) {
-              setItems(newItems);
-              console.log("Imported items:", newItems);
-            } else {
-              console.warn("No valid data found in the Excel file");
-            }
-  
-          } else if (["doc", "docx"].includes(ext)) {
-            console.log(ext);
-            const data = await file.arrayBuffer();
-            const result = await mammoth.extractRawText({ arrayBuffer: data });
-            // setText(result.value);
-            const jsonData = convertMenuPdfTextToJson(result.value);
-            setItems(jsonData);
-          } else {
-          alert("Unsupported file type");
-          }
-      } catch (err) {
-          //console.error(err);
-          alert("Failed to read file");
-      } finally {
-          //setLoading(false);
+  //setLoading(true);
+  //setText("");
+
+  const ext = file.name.split(".").pop().toLowerCase();
+  //console.log(ext);
+  try {
+      if (["jpg", "jpeg", "png"].includes(ext)) {
+        const result = await Tesseract.recognize(file, "eng");
+        // console.log(result.data.text);
+        const jsonData = convertMenuPdfTextToJson(result.data.text);
+        setItems(jsonData);
+      } else if (ext === "pdf") {
+        const arrayBuffer = await file.arrayBuffer();
+        const pdf = await pdfjs.getDocument({
+          data: arrayBuffer,
+        }).promise;
+        let pdfText = "";
+        
+        
+        for (let i = 1; i <= pdf.numPages; i++) {
+          const page = await pdf.getPage(i);
+          const content = await page.getTextContent();
+          pdfText += content.items
+            .map(item => item.str)
+            .join(" ")
+            .replace(/\s+/g, " ")
+            + "\n";
+        }
+        const menuJson = convertMenuPdfTextToJson(pdfText);
+        console.log(menuJson);
+        setItems(menuJson);
+      } else if (["xls", "xlsx"].includes(ext)) {
+        const data = await file.arrayBuffer();
+        const workbook = XLSX.read(data);
+        const sheet = workbook.Sheets[workbook.SheetNames[0]];
+        
+        // Map the Excel data to your items structure
+        const jsonData = XLSX.utils.sheet_to_json(sheet);
+        // console.log(jsonData);
+        const newItems = jsonData.map((row, index) => {
+          return {
+            item: row.name || row.item || "",
+            type: row.type || "",
+            quantity: row.qty || row.quantity || "",
+            description: row.notes || row.description || "",
+            img: null,
+            id: "",
+          };
+        });
+        // console.log(newItems);
+
+        // Update state with the new items
+        if (newItems.length > 0) {
+          setItems(newItems);
+          console.log("Imported items:", newItems);
+        } else {
+          console.warn("No valid data found in the Excel file");
+        }
+
+      } else if (["doc", "docx"].includes(ext)) {
+        console.log(ext);
+        const data = await file.arrayBuffer();
+        const result = await mammoth.extractRawText({ arrayBuffer: data });
+        // setText(result.value);
+        const jsonData = convertMenuPdfTextToJson(result.value);
+        setItems(jsonData);
+      } else {
+      alert("Unsupported file type");
       }
-    };
-    const convertMenuPdfTextToJson = (text) => {
-  // Normalize spacing
-  const tokens = text
-    .replace(/\s+/g, " ")
-    .trim()
-    .split(" ");
+  } catch (err) {
+      //console.error(err);
+      alert("Failed to read file");
+  } finally {
+      //setLoading(false);
+  }
+};
+const convertMenuPdfTextToJson = (text) => {
+    // Normalize spacing
+    const tokens = text
+      .replace(/\s+/g, " ")
+      .trim()
+      .split(" ");  
 
-  const result = [];
-  let i = 0;
+    const result = [];
+    let i = 0;
 
-  while (i < tokens.length) {
-    let nameTokens = [];
-    let notesTokens = [];
-    let qty = null;
-    let type = "";
-    let img = null;
-    let id = "";
+    while (i < tokens.length) {
+      let nameTokens = [];
+      let notesTokens = [];
+      let qty = null;
+      let type = "";
+      let img = null;
+      let id = "";
 
     // 1️⃣ NAME (until we hit a number)
     while (i < tokens.length && !/^\d+$/.test(tokens[i])) {

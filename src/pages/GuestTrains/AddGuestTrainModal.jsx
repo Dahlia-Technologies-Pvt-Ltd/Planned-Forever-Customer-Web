@@ -10,6 +10,7 @@ import { useThemeContext } from "../../context/GlobalContext";
 import { XMarkIcon, CheckIcon } from "@heroicons/react/24/solid";
 import { toUTCUnixTimestamp } from "../../utilities/HelperFunctions";
 import { useTranslation } from "react-i18next";
+import QuickImportTrainTickets from "./QuickImportTrainTickets";
 
 const AddGuestTrainModal = ({ isOpen, setIsOpen, data, refreshData, setModalData }) => {
   const { t } = useTranslation("common");
@@ -54,6 +55,15 @@ const AddGuestTrainModal = ({ isOpen, setIsOpen, data, refreshData, setModalData
   const [trainNoError, setTrainNoError] = useState("");
   const [boogieNoError, setBoogieNoError] = useState("");
   const [memberBookingError, setMemberBookingError] = useState("");
+  const [openQuickImport, setOpenQuickImport] = useState(false);
+
+  const handleChildData = (form, to, deparaturedate,fligh_train_no,arrivalDateTime) => {
+    setDepartureFrom(form);
+    setDepartureDateTime(moment(deparaturedate, "YYYY-MM-DD HH:mm").format("YYYY-MM-DD HH:mm"));
+    setArrivalDateTime(moment(arrivalDateTime, "YYYY-MM-DD HH:mm").format("YYYY-MM-DD HH:mm"));
+    setArrivingAt(to);
+    setTrainNo(fligh_train_no);
+  };
 
   // Get selected guest details and family members
   const handleGuestSelection = (selectedGuest, isUpdate = false, updateData = null) => {
@@ -302,6 +312,7 @@ const AddGuestTrainModal = ({ isOpen, setIsOpen, data, refreshData, setModalData
 
   // Close Modal
   const closeModal = () => {
+    if (openQuickImport) return;
     setIsOpen(false);
     clearAllData();
     setModalData(null);
@@ -374,7 +385,13 @@ const AddGuestTrainModal = ({ isOpen, setIsOpen, data, refreshData, setModalData
                     <Dialog.Title as="h3" className="font-poppins text-lg font-semibold leading-7 text-secondary-color">
                       {data === null ? t("guestTrain.addGuestTrain") : t("guestTrain.updateGuestTrain")}
                     </Dialog.Title>
-                    <XMarkIcon onClick={closeModal} className="h-8 w-8 cursor-pointer text-info-color" />
+                    <div className="flex gap-3">
+                      <Button title="Quick Import" type="button" 
+                      onClick={() => setOpenQuickImport(true)} 
+                      />
+                      <XMarkIcon onClick={closeModal} className="h-8 w-8 cursor-pointer text-info-color" />
+                    </div>
+                    {/* <XMarkIcon onClick={closeModal} className="h-8 w-8 cursor-pointer text-info-color" /> */}
                   </div>
 
                   <form onSubmit={handleSubmit}>
@@ -539,6 +556,12 @@ const AddGuestTrainModal = ({ isOpen, setIsOpen, data, refreshData, setModalData
           </div>
         </Dialog>
       </Transition>
+      <QuickImportTrainTickets
+        openQuickImport={openQuickImport}
+        setOpenQuickImport={setOpenQuickImport}
+        refreshData={refreshData}
+        onSend={handleChildData}
+      />
     </>
   );
 };
