@@ -24,7 +24,6 @@ import ImportGuestFlightModal from "./ImportGuestFlightModal";
 // Table Head
 const GuestFlights = () => {
   const { t } = useTranslation("common");
-
   const TABLE_HEAD = [
     t("guestFlight.guestName"),
     t("guestFlight.departureFrom"),
