@@ -35,8 +35,8 @@ const QuickImportContactModal = ({ isOpen, setIsOpen, refreshData }) => {
         if (["jpg", "jpeg", "png"].includes(ext)) {
           const result = await Tesseract.recognize(file, "eng");
           setText(result.data.text);
-          //console.log(result.data.text);
-          const jsonData = convertTextToJson(result.data.text);
+          // console.log(result.data.text);
+          const jsonData = convertTextToJsonExcludePdf(result.data.text);
           setContacts(jsonData);
           setOpenQuickImportDisplayText(true);
           setIsOpen(false);
@@ -67,7 +67,7 @@ const QuickImportContactModal = ({ isOpen, setIsOpen, refreshData }) => {
         const workbook = XLSX.read(data);
         const sheet = workbook.Sheets[workbook.SheetNames[0]];
         setText(XLSX.utils.sheet_to_json(sheet));
-        //console.log(XLSX.utils.sheet_to_json(sheet));return false;
+        console.log(XLSX.utils.sheet_to_json(sheet));
         setOpenQuickImportDisplayText(true); 
         setIsOpen(false);
         setContacts(XLSX.utils.sheet_to_json(sheet));
@@ -76,7 +76,7 @@ const QuickImportContactModal = ({ isOpen, setIsOpen, refreshData }) => {
           const data = await file.arrayBuffer();
           const result = await mammoth.extractRawText({ arrayBuffer: data });
           setText(result.value);
-          const jsonData = convertTextToJson(result.value);
+          const jsonData = convertTextToJsonExcludePdf(result.value);
           
           setContacts(jsonData);
           setOpenQuickImportDisplayText(true);
@@ -208,11 +208,81 @@ const QuickImportContactModal = ({ isOpen, setIsOpen, refreshData }) => {
   }, [isOpen]);
 
   const downloadFile = () => {
-    const fileId = "1759750584.sample_contact_import.xls";
+    const fileId = "1759755585.sample_quickcontact.xlsx";
       window.location.href = `${mediaUrl + fileId}`;
     };
 
   const convertTextToJson = (text, defaultCountry = "+91") => {
+    // Normalize whitespace
+    let cleaned = text.replace(/\s+/g, " ").trim();
+
+    // Remove header if present
+    cleaned = cleaned.replace(
+      /^contacts\s+list\s+salutation\s+first\s+name\s+middle\s+name\s+last\s+name\s+country\s+number\s+email/i,
+      ""
+    ).trim();
+
+    // Split by phone number (each row ends with 10-digit number + optional email)
+    const rows = cleaned.match(/.*?(\+?\d{1,3}\s?)?\d{10}\s*\S+@\S+\.\S+/g) || [];
+
+    return rows.map(row => {
+      // Extract email
+      const emailMatch = row.match(/\S+@\S+\.\S+/);
+      const email = emailMatch ? emailMatch[0] : "";
+
+      // Extract phone + country
+      const phoneMatch = row.match(/(\+?\d{1,3})?\s?(\d{10})/);
+      if (!phoneMatch) return null;
+
+      const country = phoneMatch[1]
+        ? phoneMatch[1].startsWith("+")
+          ? phoneMatch[1]
+          : "+" + phoneMatch[1]
+        : defaultCountry;
+
+      const number = phoneMatch[2];
+
+      // Remove email + phone from row
+      let namePart = row
+        .replace(email, "")
+        .replace(/(\+?\d{1,3})?\s?\d{10}/, "")
+        .trim();
+
+      let tokens = namePart.split(/\s+/);
+
+      // Salutation
+      let salutation = "";
+      if (/^(Mr\.|Ms\.|Mrs\.|Dr\.)$/i.test(tokens[0])) {
+        salutation = tokens.shift();
+      }
+
+      let first_name = "";
+      let middle_name = "";
+      let last_name = "";
+
+      if (tokens.length === 1) {
+        first_name = tokens[0];
+      } else if (tokens.length === 2) {
+        first_name = tokens[0];
+        last_name = tokens[1];
+      } else if (tokens.length > 2) {
+        first_name = tokens[0];
+        last_name = tokens[tokens.length - 1];
+        middle_name = tokens.slice(1, -1).join(" ");
+      }
+
+      return {
+        salutation,
+        first_name,
+        middle_name,
+        last_name,
+        country,
+        number,
+        email
+      };
+    }).filter(Boolean);
+  };
+const convertTextToJsonExcludePdf = (text, defaultCountry = "+91") => {
   const cleanedText = text.replace(/\s+/g, " ").trim();
 
   // Match blocks ending with a 10-digit number (with optional +country)
@@ -271,6 +341,9 @@ const QuickImportContactModal = ({ isOpen, setIsOpen, refreshData }) => {
     };
   });
 };
+
+
+
 
 
 
