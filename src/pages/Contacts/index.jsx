@@ -309,7 +309,7 @@ const Contact = () => {
                     <Button title={t("buttons.print")} buttonColor="border-primary  bg-primary " />
                   </Link>
                   <Button title={t("Download Contact Details Edit QR")} onClick={handleDownloadContactEditQr} />
-                  <Button title={t("Send Message")} onClick={() => {setAddNewSendMessageModal(true); setModalData(allContact);}} buttonColor="bg-green-600" />
+                  {/* <Button title={t("Send Message")} onClick={() => {setAddNewSendMessageModal(true); setModalData(allContact);}} buttonColor="bg-green-600" /> */}
                 </div>
                 <div className="relative flex items-center">
                   <div className="pointer-events-none absolute inset-y-0 left-0 z-20 flex items-center pl-4">

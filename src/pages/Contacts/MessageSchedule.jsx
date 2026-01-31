@@ -382,19 +382,6 @@ const MessageSchedule = ({ label, isOpen, setIsOpen, refreshData, data, setModal
 
   // Use Effects
 
-  // useEffect(() => {
-  //   if (data !== null) {
-  //     setEvent({ label: data?.event?.name, value: data?.event_id });
-  //     setSmsOption(data?.event_id ? "selectedContactsInvited" : "allContactsSelectedAbove");
-  //     setSendOption(data?.send_at ? "sendLater" : "sendNow");
-  //     setContactOption(data?.send_to?.length > 0 ? "selectedContacts" : "allContacts");
-  //     setSelectedContactsByGroup(data?.send_to);
-  //     setSmsTitle(data?.title);
-  //     setMessage(data?.message);
-  //     setSelectDateTime(moment.unix(data?.send_at).format("YYYY-MM-DD HH:mm"));
-  //   }
-  // }, [isOpen]);
-
   useEffect(() => {
     if (data !== null) {
       setEvent({ label: data?.event?.name, value: data?.event_id });
@@ -494,30 +481,7 @@ const MessageSchedule = ({ label, isOpen, setIsOpen, refreshData, data, setModal
                   {/* <form onSubmit={data === null ? handleSubmit : updateSubmit}> */}
                   <form onSubmit={handleSubmit}>
                     <div className="h-[400px]  overflow-y-auto p-2 md:h-[400px] lg:h-[400px] xl:h-[400px] 2xl:h-[400px]">
-                      {/* <Input
-                        isRequired
-                        label="Sms Title"
-                        placeholder="Sms Title"
-                        value={smsTitle}
-                        error={smsTitleError}
-                        onChange={(e) => {
-                          setSmsTitle(e.target.value);
-                          setSmsTitleError("");
-                        }}
-                      /> */}
-
-                      {/* <Dropdown
-                        isRequired
-                        title="Events"
-                        placeholder="Events"
-                        withError={eventError}
-                        options={allEvents}
-                        value={event}
-                        onChange={(e) => {
-                          setEvent(e);
-                          setEventError("");
-                        }}
-                      /> */}
+                      
 
                       <div className="my-5 w-full space-y-3">
                         <div className="label ltr:text-left rtl:text-right">
@@ -568,12 +532,13 @@ const MessageSchedule = ({ label, isOpen, setIsOpen, refreshData, data, setModal
                             {contactOptionError && <span className="text-xs text-red-500">* {contactOptionError}</span>}
                           </div>
                           <div className="ml-14 flex flex-col space-y-3">
+                            {console.log(groupOptions)}
                             {groupOptions?.map((item, index) => {
                               const { checked, indeterminate } = getGroupCheckboxState(item.value);
                               return (
                                 <div className="" key={item?.value}>
                                   <div className="flex items-center text-left">
-                                    <span className="text-sm font-medium">{index + 1})</span>
+                                    <span className="text-sm font-medium">({index + 1})</span>
                                     
                                     {/* Group Checkbox */}
                                     <input
@@ -643,20 +608,7 @@ const MessageSchedule = ({ label, isOpen, setIsOpen, refreshData, data, setModal
                           </label>
                         </div>
 
-                        {/* <div className="flex items-center">
-                          <input
-                            id="sendLater"
-                            type="radio"
-                            value="sendLater"
-                            name="send-radio"
-                            checked={sendOption === "sendLater"}
-                            onChange={() => handleSendOptionChange("sendLater")}
-                            className="h-4 w-4 border-gray-300 bg-gray-100 text-blue-600"
-                          />
-                          <label htmlFor="sendLater" className="ms-2 text-sm font-medium text-gray-900">
-                            {t("arrival.sendLater")}
-                          </label>
-                        </div> */}
+                        
                       </div>
 
                       {/* Send Sms Later */}

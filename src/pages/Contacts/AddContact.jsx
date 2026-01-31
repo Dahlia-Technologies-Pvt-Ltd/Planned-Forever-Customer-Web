@@ -696,9 +696,35 @@ const AddContact = () => {
     };
 
     // NEW: Plus button now only shows new child form block
+    // const handleAddNewChildForm = () => {
+    //     setShowNewChildForm(true);
+    //     setNewChild({
+    //         salutation: "",
+    //         name: "",
+    //         middleName: "",
+    //         lastName: "",
+    //         gender: "null",
+    //         countryCode: "",
+    //         contactNumber: "",
+    //         isAdult: false,
+    //         profileImage: null,
+    //         profileFile: null,
+    //         medicines: [],
+    //     });
+    //     setErrors({
+    //         salutation: "",
+    //         name: "",
+    //         lastName: "",
+    //         gender: "",
+    //         countryCode: "",
+    //         contactNumber: "",
+    //     });
+    // };
     const handleAddNewChildForm = () => {
-        setShowNewChildForm(true);
-        setNewChild({
+        setChildren((prev) => [
+            ...prev,
+            {
+            id: crypto.randomUUID(), // VERY important
             salutation: "",
             name: "",
             middleName: "",
@@ -710,16 +736,11 @@ const AddContact = () => {
             profileImage: null,
             profileFile: null,
             medicines: [],
-        });
-        setErrors({
-            salutation: "",
-            name: "",
-            lastName: "",
-            gender: "",
-            countryCode: "",
-            contactNumber: "",
-        });
-    };
+            },
+        ]);
+
+        setErrors({}); 
+        };
 
     const handleRemoveChild = (childId) => {
         setChildren((prevChildren) => prevChildren.filter((child) => child.id !== childId));
@@ -840,52 +861,7 @@ const AddContact = () => {
             });
     };
 
-    // Spouse Profile Image Handler
-    // const handleSpouseProfileImage = (event) => {
-    //   // Prevent event bubbling and ensure we're only handling spouse uploads
-    //   event.stopPropagation();
 
-    //   if (!event.target.files || event.target.files.length === 0) return;
-
-    //   const file = event.target.files[0];
-    //   console.log("Spouse profile image upload initiated");
-
-    //   const formData = new FormData();
-    //   formData.append("file", file);
-
-    //   setSpouseProfileLoading(true);
-    //   setSpouseProfileError("");
-
-    //   ApiServices.contact
-    //     .contactProfileUpload(formData)
-    //     .then((res) => {
-    //       const { data, message } = res;
-
-    //       if (res.code === 200) {
-    //         setSpouse({
-    //           salutation: spouse?.salutation || "",
-    //           name: spouse?.name || "",
-    //           middleName: spouse?.middleName || "",
-    //           lastName: spouse?.lastName || "",
-    //           gender: spouse?.gender || "",
-    //           countryCode: spouse?.countryCode || "",
-    //           contactNumber: spouse?.contactNumber || "",
-    //           profileImage: spouse?.profile_image || null,
-    //           profileFile: spouse?.profile_image || null,
-    //           meal_preference: spouse?.meal_preference?.flatMap((category) => category?.map((item) => item.value)) || [], // [primary, secondary, alcoholic]
-    //         });
-    //         setSpouseProfileLoading(false);
-    //         // Clear the input to allow re-selection of the same file
-    //         event.target.value = "";
-    //       }
-    //     })
-    //     .catch((err) => {
-    //       setSpouseProfileLoading(false);
-    //       setSpouseProfileError(err?.response?.data?.message || "Upload failed");
-    //       // Clear the input
-    //       event.target.value = "";
-    //     });
-    // };
 
     // ===============================
     // FULL WORKING SPOUSE IMAGE UPLOAD FUNCTION
@@ -1271,24 +1247,6 @@ const AddContact = () => {
 
         let AutoID, Token;
 
-        // Check if we need to register the subscriber first
-        // if (!currentSubscriberData?.AutoID) {
-        //   // User is not registered, call register API
-        //   const registrationResult = await handleRegisterSubscriber();
-
-        //   if (!registrationResult) {
-        //     // Registration failed, stop the process
-        //     return;
-        //   }
-
-        //   AutoID = registrationResult.AutoID;
-        //   Token = registrationResult.Token;
-        // } else {
-        //   // User is already registered, use existing data
-        //   AutoID = currentSubscriberData.AutoID;
-        //   Token = currentSubscriberData.Token;
-        // }
-
         // Separate regular children and adult children
         const regularChildren = children?.filter((child) => !child.isAdult);
         const adultChildren = children?.filter((child) => child.isAdult);
@@ -1438,8 +1396,9 @@ const AddContact = () => {
             }),
         };
 
-        // console.log("requested data--------------", requestData); return false;
-
+        // console.log("requested data--------------", requestData); 
+        // return false;
+        
         setAddLoading(true);
 
         // First API call to add the main contact
@@ -1699,14 +1658,7 @@ const AddContact = () => {
                   })
                 : [],
 
-            // contact_emails: Array.isArray(emails)
-            //   ? emails.map((item) => {
-            //       return {
-            //         type: item?.emailType?.value,
-            //         contact_email: item?.emailAddress,
-            //       };
-            //     })
-            //   : [],
+            
             contact_emails: Array.isArray(emails)
                 ? emails.map((item) => ({
                       type: item.emailType, // <-- now simple string
@@ -2008,13 +1960,7 @@ const AddContact = () => {
         getUserQrCodeCounts();
     }, [data]);
 
-    // Refresh QR codes when eventDetail changes
-    // useEffect(() => {
-    //   if (eventDetail) {
-    //     getQrCodesList();
-    //     getUserQrCodeCounts();
-    //   }
-    // }, [eventDetail, data]);
+    
 
     const handleRemoveProfileImage = () => {
         setProfileImage(null);
@@ -2509,6 +2455,35 @@ const AddContact = () => {
     const [isPersonalInfoOpen, setIsPersonalInfoOpen] = useState(true);
     const [isBasicInfoOpen, setIsBasicInfoOpen] = useState(true);
 
+    //contacts, emails
+    if(contacts.length == 0){ setContacts([{ id: Date.now(), contactType: "", countryCode: "", contactNumber: "" }]) }
+    if(emails.length == 0){ setEmails([{ id: Date.now(), emailType: "", emailAddress: "" }]) }
+
+    const generateEmail = (firstName) => {
+        if (!firstName) return "";
+        const cleanName = firstName.toLowerCase().replace(/\s+/g, "");
+        const random = Math.floor(1000 + Math.random() * 9000); // 4-digit number
+        return `${cleanName}${random}@yak.com`;
+    };
+
+    const handleAutoGenerateEmail = () => {
+        console.log(emails);
+        setEmails(prev =>
+            prev.map(emails => {
+            if (!emails.emailAddress || emails.emailAddress.trim() === "") {
+                return {
+                ...emails,
+                emailAddress: generateEmail(firstName),
+                emailType: 'Other',
+                };
+            }
+            return emails;
+            })
+        );
+    };
+
+    //console.log(spouse);
+
     return (
         <>
             <div
@@ -2764,7 +2739,8 @@ const AddContact = () => {
                           onChange={(value) =>
                             handleInputChangePhone(contact.id, "contactType", value)
                           }
-                          isRequired={isSubmitted && !contact.contactType}
+                        //   isRequired={isSubmitted && !contact.contactType}
+                          isRequired
                           withError={isSubmitted && !contact.contactType && "Required"}
                           options={[
                             { label: "Home", value: "Home" },
@@ -2831,7 +2807,13 @@ const AddContact = () => {
                     ))}
 
                   </div>
-                  <div className="space-y-4">
+                  <div className="space-y-4 mt-5">
+                    <Button
+                        title="Auto Generate Email"
+                        buttonColor="bg-blue-500"
+                        className="float-right"
+                        onClick={handleAutoGenerateEmail}
+                    />
                     {emails.map((emailItem, index) => (
                       <div
                         key={emailItem.id}
@@ -2848,6 +2830,7 @@ const AddContact = () => {
                             handleInputChangeEmail(emailItem.id, "emailType", value.value)
                           }
                           options={emailTypeOptions}
+                          isRequired
                         />
 
                         {/* EMAIL ADDRESS */}
