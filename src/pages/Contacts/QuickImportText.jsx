@@ -292,7 +292,7 @@ const QuickImportText = ({ isOpen, setIsOpen, refreshData }) => {
 
         <div className="overflow-y-auto fixed inset-0">
           <div className="flex justify-center items-center p-4 min-h-full text-center">
-            <Dialog.Panel className="p-8 w-full max-w-xl bg-white rounded-2xl shadow-xl">
+            <Dialog.Panel className="p-8 w-full max-w-4xl bg-white rounded-2xl shadow-xl">
               <div className="flex justify-between items-center mb-5">
                 <Dialog.Title className="text-lg font-semibold">
                   {t("contacts.addContacts")}

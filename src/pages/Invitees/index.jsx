@@ -29,7 +29,7 @@ const Invitees = () => {
 
   // Filter the eventDetails based on the selected event
   let selectedEventDetails = {};
-  selectedEventDetails = allEventsList.find((item) => item?.id === event.value) || {};
+  selectedEventDetails = allEventsList?.find((item) => item?.id === event.value) || {};
 
   // Event selection handler
   // const handleEventChange = (selectedEvent) => {

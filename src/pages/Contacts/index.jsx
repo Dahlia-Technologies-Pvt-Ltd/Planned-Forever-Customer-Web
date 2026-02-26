@@ -21,6 +21,7 @@ import { useTranslation } from "react-i18next";
 import Badge from "../../components/common/Badge";
 import { registerQrSubscriber, registerSubscriber } from "../../api/services/qr_codes";
 import QRCode from "qrcode"; // Add this import
+import MessageSchedule from "./MessageSchedule";
 
 const Contact = () => {
   const { t } = useTranslation("common");
@@ -56,10 +57,11 @@ const Contact = () => {
   const [registrationLoading, setRegistrationLoading] = useState(false);
   const [registrationError, setRegistrationError] = useState("");
   const [currentSubscriberData, setCurrentSubscriberData] = useState(null);
-
+  const [addNewSendMessageModal, setAddNewSendMessageModal] = useState(false);
+  const [modalData, setModalData] = useState(null);
   // Data
   const [allContact, setAllContact] = useState([]);
-  // Pagination
+  // Pagination 
   const [totalPages, setTotalPages] = useState(0);
   const [currentPage, setCurrentPage] = useState(1);
 
@@ -91,6 +93,7 @@ const Contact = () => {
         if (data?.code === 200) {
           setLoading(false);
           setAllContact(data.data.data);
+          setModalData(data.data.data);
           setCurrentPage(data?.data?.current_page);
           setTotalPages(Math.ceil(data?.data?.total / data?.data?.per_page));
         } else {
@@ -306,7 +309,7 @@ const Contact = () => {
                     <Button title={t("buttons.print")} buttonColor="border-primary  bg-primary " />
                   </Link>
                   <Button title={t("Download Contact Details Edit QR")} onClick={handleDownloadContactEditQr} />
-
+                  {/* <Button title={t("Send Message")} onClick={() => {setAddNewSendMessageModal(true); setModalData(allContact);}} buttonColor="bg-green-600" /> */}
                 </div>
                 <div className="relative flex items-center">
                   <div className="pointer-events-none absolute inset-y-0 left-0 z-20 flex items-center pl-4">
@@ -572,7 +575,13 @@ const Contact = () => {
         setIsOpen={(open) => setOpenQuickContactModal((prev) => ({ ...prev, open }))}
         handleSubmit={quickContact}
       />
-
+      <MessageSchedule
+        refreshData=""
+        isOpen={addNewSendMessageModal}
+        setIsOpen={() => setAddNewSendMessageModal(false)}
+        setModalData={setModalData}
+        data={modalData}
+      />
       <ConfirmationModal
         message="Are you sure you want to register My Bag Tag for this contact?"
         isOpen={openRegisterModal.open}
