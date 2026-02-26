@@ -411,7 +411,13 @@ const InvitationCards = () => {
                       <h3 className="my-2 text-xs text-info-color">{t("invitationCard.invitationCardFile")}</h3>
                       <div className="h-full w-full">
                         {isImage ? (
-                          <img src={fileUrl} alt="media" className="h-80 w-80  object-cover" />
+                          <a href={fileUrl} target="_blank" rel="noopener noreferrer" className="flex h-30 w-30 flex-col items-center justify-center rounded-md bg-gray-200">
+                            <img 
+                              src={fileUrl} 
+                              alt="media" 
+                              className="h-80 w-80 object-cover rounded-lg"
+                            />
+                          </a>
                         ) : isVideo ? (
                           <video src={fileUrl} controls className="h-full w-full object-cover" />
                         ) : isPdf ? (

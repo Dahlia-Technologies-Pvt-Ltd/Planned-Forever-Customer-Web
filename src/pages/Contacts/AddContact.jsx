@@ -2715,7 +2715,7 @@ const AddContact = () => {
                   </>
                   )}
                 </div>
-                <div className="card mt-6">
+                <div className="card mt-6 w-full mb-5 h-96">
                   <div className="mb-5 flex cursor-pointer items-center justify-between"  onClick={() => setIsContactInfoOpen(!isContactInfoOpen)}>
                     <div className="label text-secondary">{t("Contact Information")}</div>
                     <span className="flex h-9 w-9 items-center justify-center rounded-full bg-secondary text-white hover:bg-secondary/90">
@@ -2729,7 +2729,7 @@ const AddContact = () => {
                     {contacts.map((contact, index) => (
                       <div
                         key={contact.id}
-                        className="grid w-full grid-cols-[2fr_2fr_3fr_60px] items-end gap-3"
+                        className="grid w-2/3 grid-cols-[2fr_2fr_3fr_60px] items-end gap-3"
                       >
                         {/* CONTACT TYPE */}
                         <Dropdown
@@ -2749,37 +2749,35 @@ const AddContact = () => {
                             { label: "Work", value: "Work" },
                             { label: "Fax", value: "Fax" },
                             { label: "Other", value: "Other" },
-                          ]}
+                          ]} 
                         />
-
-                        {/* COUNTRY CODE */}
-                        <Dropdown
-                          isSearchable
-                          placeholder="Country Code"
-                          value={contact.countryCode}
-                          onChange={(value) =>
-                            handleInputChangePhone(contact.id, "countryCode", value)
-                          }
+                        {/* COUNTRY CODE */} 
+                        <Dropdown 
+                          isSearchable 
+                          placeholder="Country Code" 
+                          value={contact.countryCode} 
+                          onChange={(value) => 
+                            handleInputChangePhone(contact.id, "countryCode", value) 
+                          } 
                           isRequired={isSubmitted && !contact.countryCode}
-                          withError={isSubmitted && !contact.countryCode}
-                          options={countriesCodeData?.countries.map((country) => ({
-                            label: `+${country.callingCodes[0]} ${country.name}`,
-                            value: `+${country.callingCodes[0]}`,
-                          }))}
-                          invisible
-                        />
-
+                          withError={isSubmitted && !contact.countryCode} 
+                          options={countriesCodeData?.countries.map((country) => ({ 
+                            label: `+${country.callingCodes[0]} ${country.name}`, 
+                            value: `+${country.callingCodes[0]}`, 
+                          }))} 
+                          invisible 
+                        />  
                         {/* CONTACT NUMBER */}
                         <Input
-                          type="tel"
+                          type="tel" 
                           placeholder="Contact Number"
-                          value={contact.contactNumber}
-                          onChange={(e) =>
-                            handleInputChangePhone(contact.id, "contactNumber", e.target.value)
-                          }
-                          isRequired={isSubmitted && !contact.contactNumber}
-                          error={isSubmitted && !contact.contactNumber ? "Required" : ""}
-                          invisible
+                          value={contact.contactNumber} 
+                          onChange={(e) => 
+                            handleInputChangePhone(contact.id, "contactNumber", e.target.value) 
+                          } 
+                          isRequired={isSubmitted && !contact.contactNumber} 
+                          error={isSubmitted && !contact.contactNumber ? "Required" : ""} 
+                          invisible 
                         />
 
                         {/* ACTION BUTTON */}
@@ -2807,17 +2805,12 @@ const AddContact = () => {
                     ))}
 
                   </div>
-                  <div className="space-y-4 mt-5">
-                    <Button
-                        title="Auto Generate Email"
-                        buttonColor="bg-blue-500"
-                        className="float-right"
-                        onClick={handleAutoGenerateEmail}
-                    />
+                  <div className="space-y-4 mt-10 ">
+                    
                     {emails.map((emailItem, index) => (
                       <div
                         key={emailItem.id}
-                        className="grid w-full grid-cols-[2fr_4fr_60px] items-end gap-3"
+                        className="grid w-2/3 grid-cols-[2fr_4fr_60px] items-end gap-3 mb-5"
                       >
                         {/* EMAIL TYPE */}
                         <Dropdown
@@ -2868,12 +2861,18 @@ const AddContact = () => {
                         </div>
                       </div>
                     ))}
+                    <Button
+                        title="Auto Generate Email"
+                        buttonColor="bg-blue-500"
+                        className="float-right mt-10"
+                        onClick={handleAutoGenerateEmail}
+                    />
 
                   </div>
                   </>
                   )}
                 </div>
-                <div className="card mt-6">
+                {/* <div className="card mt-6">
                   <div className="mb-5 flex cursor-pointer items-center justify-between"  onClick={() => setIsQrCodesOpen(!isQrCodesOpen)}>
                     <div className="label text-secondary">{t("QR Codes")}</div>
                     <span className="flex h-9 w-9 items-center justify-center rounded-full bg-secondary text-white hover:bg-secondary/90">
@@ -2883,7 +2882,7 @@ const AddContact = () => {
                   {isQrCodesOpen && (
                   <div className="flex flex-wrap items-center justify-between gap-4">
 
-                    {/* LEFT: Label + QR tags */}
+                    {/* LEFT: Label + QR tags }
                     <div className="flex flex-wrap items-center gap-2">
                       {qrCodeOptions.map((qr) => (
                         <span
@@ -2895,7 +2894,7 @@ const AddContact = () => {
                       ))}
                     </div>
 
-                    {/* RIGHT: Button */}
+                    {/* RIGHT: Button }
                     <Button
                       title="Allot QR Codes"
                       type="button"
@@ -2906,8 +2905,8 @@ const AddContact = () => {
 
                   </div>
                   )}
-                </div>
-                <div className="card mt-6">
+                </div> */}
+                <div className="card mt-6 w-full">
                   <div className="mb-5 flex cursor-pointer items-center justify-between"  onClick={() => setIsMaritalStatusOpen(!isMaritalStatusOpen)}>
                     <div className="label text-secondary">{t("Marital Status")}</div>
                     <span className="flex h-9 w-9 items-center justify-center rounded-full bg-secondary text-white hover:bg-secondary/90">

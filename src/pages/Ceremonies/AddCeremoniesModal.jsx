@@ -452,8 +452,13 @@ const AddCeremoniesModal = ({ isOpen, setIsOpen, data, refreshData, setModalData
                           value={startDateAndTime ? startDateAndTime : ""}
                           error={startDateAndTimeError}
                           onChange={(e) => {
-                            setStartDateAndTime(e.target.value);
+                            const value = e.target.value;
+                            setStartDateAndTime(value);
                             setStartDateAndTimeError("");
+
+                            if (endDateAndTime && new Date(value) >= new Date(endDateAndTime)) {
+                              setStartDateAndTimeError("Start date & time must be before end date & time");
+                            }
                           }}
                           min={moment.unix(eventDetail?.start_date).format("YYYY-MM-DDTHH:mm")}
                           max={moment.unix(eventDetail?.end_date).format("YYYY-MM-DDTHH:mm")}
@@ -469,8 +474,13 @@ const AddCeremoniesModal = ({ isOpen, setIsOpen, data, refreshData, setModalData
                           value={endDateAndTime}
                           error={endDateAndTimeError}
                           onChange={(e) => {
-                            setEndDateAndTime(e.target.value);
+                            const value = e.target.value;
+                            setEndDateAndTime(value);
                             setEndDateAndTimeError("");
+
+                            if (startDateAndTime && new Date(value) <= new Date(startDateAndTime)) {
+                              setEndDateAndTimeError("End date & time must be after start date & time");
+                            }
                           }}
                           min={startDateAndTime || ""}
                           max={moment.unix(eventDetail?.end_date).format("YYYY-MM-DDTHH:mm")}

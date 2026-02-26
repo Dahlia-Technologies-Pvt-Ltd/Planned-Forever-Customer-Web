@@ -809,8 +809,13 @@ const gridCols = "grid grid-cols-[2fr_1fr_1fr_2fr_2fr_40px] gap-3 items-center";
                           value={startTime}
                           error={startTimeError}
                           onChange={(e) => {
-                            setStartTime(e.target.value);
+                          const value = e.target.value;
+                            setStartTime(value);
                             setStartTimeError("");
+
+                            if (endTime && value >= endTime) {
+                              setStartTimeError("Start time must be smaller than end time");
+                            }
                           }}
                         />
                         <Input
@@ -821,8 +826,13 @@ const gridCols = "grid grid-cols-[2fr_1fr_1fr_2fr_2fr_40px] gap-3 items-center";
                           value={endTime}
                           error={endTimeError}
                           onChange={(e) => {
-                            setEndTime(e.target.value);
+                            const value = e.target.value;
+                            setEndTime(value);
                             setEndTimeError("");
+
+                            if (startTime && value <= startTime) {
+                              setEndTimeError("End time must be greater than start time");
+                            }
                           }}
                         />
                       </div>
