@@ -88,6 +88,7 @@ const ImportContactModal = ({ isOpen, setIsOpen, refreshData }) => {
         formData.append("event_id", eventSelect);
         formData.append("group_id", groupUnder?.value);
         formData.append("family_id", family?.value);
+        formData.append("no_of_members", 1);
         // formData.append("header", headerInclude?.value === "yes" ? 1 : 0);
 
         const response = await ApiServices.contact.ImportExcel(formData);
