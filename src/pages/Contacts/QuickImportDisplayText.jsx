@@ -107,16 +107,35 @@ const handleChange = (index, field, value) => {
   });
 };
 
+const handleDeleteRow = (index) => {
+  setContacts((prev) => prev.filter((_, contactIndex) => contactIndex !== index));
+  setErrors((prev) => {
+    const nextErrors = {};
+
+    Object.entries(prev).forEach(([key, value]) => {
+      const numericKey = Number(key);
+
+      if (numericKey < index) {
+        nextErrors[numericKey] = value;
+      } else if (numericKey > index) {
+        nextErrors[numericKey - 1] = value;
+      }
+    });
+
+    return nextErrors;
+  });
+};
+
 useEffect(() => {
-  if (contacts?.length) {
-    setContacts(prev =>
-      prev.map(c => ({
+  if (isOpen && contacts?.length) {
+    setContacts((prev) =>
+      prev.map((c) => ({
         ...c,
-        country: c.country || "+91"
-      }))
+        country: normalizeCountry(c.country) || "+91",
+      })),
     );
   }
-}, []);
+}, [isOpen]);
 
   const handleClose = () => {
     setErrorMessage("");
@@ -141,14 +160,15 @@ useEffect(() => {
         const payload = contacts.map(c => ({
             group: c.groups || contacts?.[0]?.groups || null,
             family: c.family || contacts?.[0]?.family || null,
-            country: c.country,
+            country: normalizeCountry(c.country) || "+91",
             salutation: c.salutation,
             first_name: c.first_name,
             middle_name: c.middle_name || null,
             last_name: c.last_name,
             email: c.email,
             number: c.number,
-            event_id:eventSelect
+            event_id:eventSelect,
+            no_of_members: 1,
         }));
 
         // console.log("Submitting:", payload);return false;
@@ -156,18 +176,23 @@ useEffect(() => {
         //console.log("data====", data);
         //console.log('data :',response.code);
         //return false;
-        if(response.code === 200)
+        if (response?.code === 200 || response?.status === 200)
         {
             setOpenQuickImportDisplayText(false);
+            setIsOpen(false);
             openSuccessModal({
                 title: "Success!",
-                message: response.message,
-                onClickDone: closeSuccessModel,
+                message: response?.message || "Contact imported successfully",
+                onClickDone: () => {
+                  closeSuccessModel();
+                  if (typeof refreshData === "function") {
+                    refreshData();
+                  }
+                },
             }); 
-            window.location.reload();
         } 
     } catch (err) {
-      setErrorMessage("Something went wrong");
+      setErrorMessage(err?.response?.data?.message || err?.message || "Something went wrong");
     } finally {
       setBtnLoading(false);
     }
@@ -319,7 +344,7 @@ useEffect(() => {
                 <div className="overflow-x-auto mb-4">
                     <div className="min-w-[950px]">
                     {/* HEADER */}
-                    <div className="grid grid-cols-[40px_120px_140px_120px_1fr_1fr_1fr_1fr] gap-2 text-sm font-semibold mb-2">
+                    <div className="grid grid-cols-[40px_120px_140px_120px_1fr_1fr_1fr_1fr_44px] gap-2 text-sm font-semibold mb-2">
                         <div>#</div>
                         <div>{t("contacts.countryCode")}<span className="text-red-500">*</span></div>
                         <div>{t("contacts.contactNumber")}<span className="text-red-500">*</span></div>
@@ -328,12 +353,13 @@ useEffect(() => {
                         <div>{t("contacts.middleName")}</div>
                         <div>{t("contacts.lastName")}<span className="text-red-500">*</span></div>
                         <div>{t("contacts.email")}<span className="text-red-500">*</span></div>
+                        <div>Action</div>
                     </div>
                     {/* ROWS */}
                         {contacts.map((c, i) => (
                             <div
                             key={i}
-                            className="grid grid-cols-[40px_120px_140px_120px_1fr_1fr_1fr_1fr] gap-2 mb-2 items-center"
+                            className="grid grid-cols-[40px_120px_140px_120px_1fr_1fr_1fr_1fr_44px] gap-2 mb-2 items-center"
                             >
                             <div>{i + 1}</div>
 
@@ -404,6 +430,15 @@ useEffect(() => {
                                     errors?.[i]?.email ? "border-red-500" : ""
                                     }`}
                             />
+
+                            <button
+                                type="button"
+                                onClick={() => handleDeleteRow(i)}
+                                className="flex justify-center items-center border border-red-200 rounded px-2 py-2 text-red-500 hover:bg-red-50"
+                                aria-label={`Delete row ${i + 1}`}
+                            >
+                                <XMarkIcon className="w-4 h-4" />
+                            </button>
                             
                             </div>
                         ))}

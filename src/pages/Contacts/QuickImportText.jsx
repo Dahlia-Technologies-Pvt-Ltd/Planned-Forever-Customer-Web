@@ -196,6 +196,7 @@ const QuickImportText = ({ isOpen, setIsOpen, refreshData }) => {
       formData.append("event_id", eventSelect);
       formData.append("group_id", groupUnder?.value);
       formData.append("family_id", family?.value);
+      formData.append("no_of_members", 1);
 
       const response = await ApiServices.contact.ImportExcel(formData);
 
@@ -284,6 +285,7 @@ const QuickImportText = ({ isOpen, setIsOpen, refreshData }) => {
 
 
 
+
   return (
     <>
     <Transition appear show={isOpen} as={Fragment}>
@@ -364,7 +366,7 @@ const QuickImportText = ({ isOpen, setIsOpen, refreshData }) => {
         </div>
       </Dialog>
     </Transition>
-    <QuickImportDisplayText isOpen={openQuickImportDisplayText} setOpenQuickImportDisplayText={setOpenQuickImportDisplayText} contacts={contacts} setContacts={setContacts} setIsOpen={setIsOpen}/>
+    <QuickImportDisplayText isOpen={openQuickImportDisplayText} setOpenQuickImportDisplayText={setOpenQuickImportDisplayText} refreshData={refreshData} contacts={contacts} setContacts={setContacts} setIsOpen={setIsOpen}/>
     </>
   );
 };
