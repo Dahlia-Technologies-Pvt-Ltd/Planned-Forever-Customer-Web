@@ -7,6 +7,11 @@ import { ArrowLeftIcon } from "@heroicons/react/24/solid";
 import { useThemeContext } from "../../context/GlobalContext";
 import { CheckIcon, XMarkIcon } from "@heroicons/react/24/outline";
 import { useTranslation } from "react-i18next";
+import {
+  buildUserTypePermissionPayload,
+  createUserTypePermissionState,
+  mergePermissionsIntoState,
+} from "../../utilities/userTypePermissions";
 
 const AddUserType = (props) => {
   const { t } = useTranslation("common");
@@ -25,179 +30,7 @@ const AddUserType = (props) => {
   const [userTypeError, setUserTypeError] = useState("");
   const [accessRightsError, setAccessRightsError] = useState("");
 
-  const [permissions, setPermissions] = useState([
-    {
-      name: "Dashboard",
-      permission: { View: false },
-    },
-    {
-      name: "Venues",
-      permission: { View: false, Create: false, Edit: false, Delete: false },
-    },
-    {
-      name: "Ceremonies",
-      permission: { View: false, Create: false, Edit: false, Delete: false },
-    },
-    {
-      name: "Menu",
-      permission: { View: false, Create: false, Edit: false, Delete: false },
-    },
-    {
-      name: "Contacts",
-      permission: { View: false, Create: false, Edit: false, Delete: false },
-    },
-    {
-      name: "Invitees",
-      permission: { View: false },
-    },
-    {
-      name: "Rsvp",
-      permission: { View: false },
-    },
-    {
-      name: "Gifts",
-      permission: { View: false, Create: false, Edit: false, Delete: false },
-    },
-    {
-      name: "Gift Allocation",
-      permission: { View: false },
-    },
-    {
-      name: "Received Gifts",
-      permission: { View: false, Create: false, Edit: false, Delete: false },
-    },
-    {
-      name: "Invitation Cards",
-      permission: { View: false, Create: false, Edit: false, Delete: false },
-    },
-    {
-      name: "Card Allocation",
-      permission: { View: false },
-    },
-    {
-      name: "Card Schedule",
-      permission: { View: false },
-    },
-    {
-      name: "Samagri",
-      permission: { View: false, Create: false, Edit: false, Delete: false },
-    },
-    {
-      name: "Vendors",
-      permission: { View: false, Create: false, Edit: false, Delete: false },
-    },
-    {
-      name: "Arrivals",
-      permission: { View: false, Create: false, Edit: false, Delete: false },
-    },
-    {
-      name: "Departures",
-      permission: { View: false, Create: false, Edit: false, Delete: false },
-    },
-    {
-      name: "Hotels",
-      permission: { View: false, Create: false, Edit: false, Delete: false },
-    },
-    {
-      name: "Hotel Rooms",
-      permission: { View: false, Create: false, Edit: false, Delete: false },
-    },
-    {
-      name: "Allocated Rooms",
-      permission: { View: false, Create: false, Edit: false, Delete: false },
-    },
-    {
-      name: "Cars",
-      permission: { View: false, Create: false, Edit: false, Delete: false },
-    },
-    {
-      name: "Car Allocation",
-      permission: { View: false, Create: false, Edit: false, Delete: false },
-    },
-    {
-      name: "Guest Flights",
-      permission: { View: false, Create: false, Edit: false, Delete: false },
-    },
-    {
-      name: "Guest Trains",
-      permission: { View: false, Create: false, Edit: false, Delete: false },
-    },
-    {
-      name: "Send SMS",
-      permission: { View: false },
-    },
-    {
-      name: "Schedule/Send SMS",
-      permission: { View: false, Create: false, Edit: false, Delete: false },
-    },
-    {
-      name: "Send Email",
-      permission: { View: false },
-    },
-    {
-      name: "Greetings",
-      permission: { View: false },
-    },
-    {
-      name: "Budget",
-      permission: { View: false },
-    },
-    {
-      name: "Calendar",
-      permission: { View: false },
-    },
-    {
-      name: "Tasks",
-      permission: { View: false, Create: false, Edit: false, Delete: false },
-    },
-    {
-      name: "Quick Contact",
-      permission: { View: false, Create: false, Edit: false, Delete: false },
-    },
-    {
-      name: "User Type",
-      permission: { View: false, Create: false, Edit: false, Delete: false },
-    },
-    {
-      name: "Users",
-      permission: { View: false, Create: false, Edit: false, Delete: false },
-    },
-    {
-      name: "My Profile",
-      permission: { View: false },
-    },
-    {
-      name: "Reports",
-      permission: { View: false },
-    },
-    {
-      name: "Export Data",
-      permission: { View: false },
-    },
-    {
-      name: "Service Requests",
-      permission: { View: false },
-    },
-    // {
-    //   name: "Nearby Attractions",
-    //   permission: { View: false, Create: false, Edit: false, Delete: false },
-    // },
-
-    {
-      name: "Live Event",
-      permission: { View: false },
-    },
-    {
-      name: "Panchang Caldendar",
-      permission: { View: false },
-    },
-
-    {
-      name: "Ticket Manager",
-      permission: { View: false },
-    },
-
-  ]);
+  const [permissions, setPermissions] = useState(createUserTypePermissionState);
 
   // Handle form validation
   const isValidForm = () => {
@@ -231,19 +64,14 @@ const AddUserType = (props) => {
         if (module.name === moduleName) {
           const updatedPermissions = { ...module.permission };
 
-          // Toggle the clicked permission
           updatedPermissions[permission] = !updatedPermissions[permission];
 
-          // If Create, Update, or Delete is checked, ensure View is checked
-          if (["Create", "Update", "Edit", "Delete"].includes(permission) && updatedPermissions[permission]) {
+          if (permission === "Edit" && updatedPermissions.Edit) {
             updatedPermissions["View"] = true;
           }
 
-          // If View is unchecked, uncheck all permissions
           if (permission === "View" && !updatedPermissions["View"]) {
-            Object.keys(updatedPermissions).forEach((key) => {
-              updatedPermissions[key] = false;
-            });
+            updatedPermissions.Edit = false;
           }
 
           return {
@@ -263,20 +91,13 @@ const AddUserType = (props) => {
       try {
         setBtnLoading(true);
 
-        // Prepare permissions payload
-        const permissionArray = permissions.flatMap((module) =>
-          Object.entries(module.permission)
-            .filter(([_, value]) => value) // Only include checked permissions
-            .map(([key]) => `${module.name.toLowerCase().replace(/\s+/g, "-")}-${key.toLowerCase()}`),
-        );
+        const permissionArray = buildUserTypePermissionPayload(permissions);
 
         let payload = {
           name: userType,
           permissions: permissionArray,
           event_id: eventSelect,
         };
-
-        console.log("Payload:", payload);
 
         let response;
         if (data === undefined) {
@@ -286,7 +107,6 @@ const AddUserType = (props) => {
           response = await ApiServices.userType.UpdateUserType(userId, payload);
         }
 
-        console.log({ response });
         if (response.status === 200) {
           openSuccessModal({
             title: t("messages.success"),
@@ -298,11 +118,10 @@ const AddUserType = (props) => {
           });
           setBtnLoading(false);
         } else {
-          console.error("Error response:", response);
           setBtnLoading(false);
         }
       } catch (err) {
-        console.error("Error:", err);
+        setErrorMessage(err?.response?.data?.message || err?.message);
         setBtnLoading(false);
       } finally {
         setBtnLoading(false);
@@ -322,34 +141,7 @@ const AddUserType = (props) => {
     if (data?.permissions) {
       setUserType(data?.display_name);
 
-      // Transform backend permissions into a structured object
-      const transformedPermissions = data.permissions.reduce((acc, item) => {
-        const parts = item.name.split("-"); // Split all parts
-        const action = parts.pop(); // Get last part as action
-        const module = parts // Join remaining parts with space and capitalize each word
-          .map((word) => word.charAt(0).toUpperCase() + word.slice(1))
-          .join(" ");
-
-        const actionKey = action.charAt(0).toUpperCase() + action.slice(1); // Capitalize action
-
-        if (!acc[module]) {
-          acc[module] = {};
-        }
-        acc[module][actionKey] = true; // Set permission to true
-
-        return acc;
-      }, {});
-
-      // Update state while preserving existing permissions structure
-      setPermissions((prevPermissions) =>
-        prevPermissions.map((module) => ({
-          ...module,
-          permission: {
-            ...module.permission, // Keep existing structure
-            ...(transformedPermissions[module.name] || {}), // Merge backend data (set to true)
-          },
-        })),
-      );
+      setPermissions((prevPermissions) => mergePermissionsIntoState(prevPermissions, data.permissions));
     }
   }, [data]);
 

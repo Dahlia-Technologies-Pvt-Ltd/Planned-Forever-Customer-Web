@@ -7,6 +7,7 @@ import ReactPaginate from "react-paginate";
 import Skeleton from "react-loading-skeleton";
 import Button from "@components/common/Button";
 import AddSamagriModal from "./AddSamagriModal";
+import ViewSamagriModal from "./ViewSamagriModal";
 import { useMediaQuery } from "react-responsive";
 import React, { useEffect, useState } from "react";
 import { SAMAGRI_PRINT, RECOMMENDED_SAMAGRI } from "../../routes/Names";
@@ -20,6 +21,7 @@ import moment from "moment";
 import { PhotoProvider, PhotoView } from "react-photo-view";
 import "react-photo-view/dist/react-photo-view.css";
 import { useTranslation } from "react-i18next";
+import { hasPermission } from "../../utilities/permissions";
 
 const Samagri = () => {
   // translation
@@ -30,7 +32,8 @@ const Samagri = () => {
   const TABLE_HEAD = [t("samagri.samagriFor"), t("samagri.ceremonyName")];
 
   // Context
-  const { eventSelect, loading, setLoading, setBtnLoading, openSuccessModal, closeSuccessModel, userData, selectedEventRights } = useThemeContext();
+  const { eventSelect, loading, setLoading, setBtnLoading, setErrorMessage, openSuccessModal, closeSuccessModel, userData, selectedEventRights } =
+    useThemeContext();
 
   // Use States
   const [searchText, setSearchText] = useState("");
@@ -47,11 +50,14 @@ const Samagri = () => {
 
   // Modal
   const [addNewModal, setAddNewModal] = useState(false);
+  const [viewModalOpen, setViewModalOpen] = useState(false);
   const [openDeleteModal, setOpenDeleteModal] = useState({ open: false, data: null });
 
   // Active Row
-  const handleRowClick = (id) => {
+  const handleRowClick = (id, row) => {
     setActiveRow(id);
+    setModalData(row);
+    setViewModalOpen(true);
   };
 
   // Detail of selected row
@@ -151,8 +157,28 @@ const Samagri = () => {
 
   const [openStatusModal, setOpenStatusModal] = useState({ open: false, data: null });
 
+  const isPurchased = (status) => status === 1 || status === "1" || status === true;
+
   const handleStatusChange = (item) => {
+    setErrorMessage("");
     setOpenStatusModal({ open: true, data: item });
+  };
+
+  const updateLocalSamagriItemStatus = (itemId, nextStatus) => {
+    const normalizedStatus = nextStatus ? 1 : 0;
+
+    setAllSamagriData((prev) =>
+      prev.map((samagri) => ({
+        ...samagri,
+        items: (samagri?.items || []).map((samagriItem) =>
+          samagriItem?.id === itemId ? { ...samagriItem, status: normalizedStatus } : samagriItem,
+        ),
+      })),
+    );
+
+    setOpenStatusModal((prev) =>
+      prev?.data?.id === itemId ? { ...prev, data: { ...prev.data, status: normalizedStatus } } : prev,
+    );
   };
 
   const confirmStatusChange = async () => {
@@ -168,24 +194,25 @@ const Samagri = () => {
 
       // "9dc0edc9-8a31-472e-8a18-857d712bb3b2"
 
-      console.log({ ff: openStatusModal?.data });
-
       const res = await ApiServices.samagri.updateSamagrListItem(openStatusModal.data.id);
       const { data, message } = res;
 
       if (data.code === 200) {
+        const nextPurchasedState = !isPurchased(openStatusModal?.data?.status);
+        updateLocalSamagriItemStatus(openStatusModal.data.id, nextPurchasedState);
         setBtnLoading(false);
         getSamagri();
         setOpenStatusModal({ open: false, data: null });
         openSuccessModal({
           title: "Success!",
-          message: "Samagri item status has been updated successfully",
+          message: `Samagri item has been marked as ${nextPurchasedState ? "purchased" : "not purchased"} successfully`,
           onClickDone: (close) => {
             closeSuccessModel();
           },
         });
       }
     } catch (err) {
+      setErrorMessage(err?.message || "Unable to update samagri item status. Please try again.");
     } finally {
       setBtnLoading(false);
     }
@@ -206,8 +233,14 @@ const Samagri = () => {
                       <Button title={t("samagri.recommendedSamagri")} buttonColor="border-primary  bg-primary px-4" />
                     </Link>
                   )}{" "}
-                  {(userData?.role?.display_name === "web_admin" || userData.role.permissions?.some((item) => item === "samagri-create")) && (
-                    <Button title={t("samagri.addNewSamagri")} onClick={() => setAddNewModal(true)} />
+                  {(hasPermission(userData, "samagri-create")) && (
+                    <Button
+                      title={t("samagri.addNewSamagri")}
+                      onClick={() => {
+                        setModalData(null);
+                        setAddNewModal(true);
+                      }}
+                    />
                   )}
                   <Link to={SAMAGRI_PRINT}>
                     <Button title={t("buttons.print")} buttonColor="border-primary  bg-primary " />
@@ -231,7 +264,7 @@ const Samagri = () => {
                       }
                     }}
                     onKeyPress={handleKeyPress}
-                    className="focus:border-primary-color-100 block h-11 w-52 rounded-10 border border-primary-light-color px-4 pl-11 text-sm text-primary-color focus:ring-primary-color 3xl:w-full"
+                    className="focus:border-primary-color-100 block h-11 w-52 rounded-10 border border-primary-light-color px-4 pl-11 text-base text-primary-color focus:ring-primary-color 3xl:w-full"
                   />
                 </div>
               </div>
@@ -260,7 +293,7 @@ const Samagri = () => {
                             requestSort(sortKey);
                           }}
                         >
-                          <p className="font-inter cursor-pointer whitespace-nowrap text-xs font-semibold leading-5 3xl:text-sm">
+                          <p className="font-inter cursor-pointer whitespace-nowrap text-sm font-semibold leading-5 3xl:text-base">
                             {head}
                             {sortConfig.key ===
                               (head === "Samagri For"
@@ -291,14 +324,14 @@ const Samagri = () => {
                         <tr
                           key={item?.id}
                           className={`cursor-pointer ${item?.id === activeRow ? "border-l-4 border-secondary bg-secondary/15" : "even:bg-gray-50"}`}
-                          onClick={() => handleRowClick(item?.id)}
+                          onClick={() => handleRowClick(item?.id, item)}
                         >
                           <td className="py-3 pl-6 pr-4">
-                            <p className="text-primary-color-200 text-xs font-normal 3xl:text-sm">{item?.title}</p>
+                            <p className="text-primary-color-200 text-sm font-normal 3xl:text-base">{item?.title}</p>
                           </td>
 
                           <td className="py-3 pl-4 pr-3 3xl:px-4">
-                            <p className="text-primary-color-200 text-xs font-normal 3xl:text-sm">{item?.ceremony?.name}</p>
+                            <p className="text-primary-color-200 text-sm font-normal 3xl:text-base">{item?.ceremony?.name}</p>
                           </td>
 
                           {/* <td className="py-3 pl-4 pr-3 3xl:px-4">
@@ -372,9 +405,9 @@ const Samagri = () => {
                       <div className="flex justify-between">
                         <h3 className="heading">{t("headings.details")}</h3>
                         <div className="flex items-center gap-x-3">
-                          {(userData?.role?.display_name === "web_admin" || userData.role.permissions?.some((item) => item === "samagri-edit")) && (
+                          {(hasPermission(userData, "samagri-edit")) && (
                             <button
-                              className="border-b border-secondary text-sm font-medium text-secondary"
+                              className="border-b border-secondary text-base font-medium text-secondary"
                               type="button"
                               onClick={() => {
                                 setAddNewModal(true);
@@ -384,10 +417,10 @@ const Samagri = () => {
                               {t("buttons.edit")}
                             </button>
                           )}
-                          {(userData?.role?.display_name === "web_admin" || userData.role.permissions?.some((item) => item === "samagri-delete")) && (
+                          {(hasPermission(userData, "samagri-delete")) && (
                             <button
                               onClick={() => setOpenDeleteModal({ open: true, data: detail })}
-                              className="border-b border-red-500 text-sm font-medium text-red-500"
+                              className="border-b border-red-500 text-base font-medium text-red-500"
                               type="button"
                             >
                               {t("buttons.delete")}
@@ -414,14 +447,14 @@ const Samagri = () => {
                       <TitleValue title={t("headings.notes")} value={detail?.description || "-"} />
                     </div>
                     <div className="">
-                      <h3 className="text-xs text-info-color">{t("samagri.samagriItems")}</h3>
+                      <h3 className="text-sm text-info-color">{t("samagri.samagriItems")}</h3>
                       <div className="mb-8 overflow-x-auto">
                         <table className="w-full text-left">
                           <thead>
                             <tr>
                               {TABLE_HEAD_Detail.map((head) => (
                                 <th key={head} className="border-b border-gray-100 bg-white py-4 pr-4">
-                                  <p className="font-inter cursor-pointer whitespace-nowrap text-xs font-semibold leading-5 3xl:text-sm">{head}</p>
+                                  <p className="font-inter cursor-pointer whitespace-nowrap text-sm font-semibold leading-5 3xl:text-base">{head}</p>
                                 </th>
                               ))}
                             </tr>
@@ -437,24 +470,24 @@ const Samagri = () => {
                               detail?.items?.map((samagri, index) => (
                                 <tr key={index} className="cursor-pointer">
                                   <td className="py-3 pr-4">
-                                    <p className="text-primary-color-200 text-xs font-normal 3xl:text-sm">{samagri?.name || "-"}</p>
+                                    <p className="text-primary-color-200 text-sm font-normal 3xl:text-base">{samagri?.name || "-"}</p>
                                   </td>
                                   <td className="py-3 pr-4">
-                                    <p className="text-primary-color-200 text-xs font-normal 3xl:text-sm">{samagri?.qty || "-"}</p>
+                                    <p className="text-primary-color-200 text-sm font-normal 3xl:text-base">{samagri?.qty || "-"}</p>
                                   </td>
                                   <td className="py-3 pr-4">
-                                    <p className="text-primary-color-200 text-xs font-normal 3xl:text-sm">{samagri?.unit || "-"}</p>
+                                    <p className="text-primary-color-200 text-sm font-normal 3xl:text-base">{samagri?.unit || "-"}</p>
                                   </td>
 
                                   <td className="py-3 pr-4">
                                     <Switch
-                                      checked={samagri?.status === 1}
+                                      checked={isPurchased(samagri?.status)}
                                       onChange={() => handleStatusChange(samagri)}
-                                      className={`group relative flex h-6 w-12 cursor-pointer rounded-full ${samagri?.status === 1 ? "bg-green-500" : "bg-black/30"} p-1 transition-colors duration-200 ease-in-out`}
+                                      className={`group relative flex h-6 w-12 cursor-pointer rounded-full ${isPurchased(samagri?.status) ? "bg-green-500" : "bg-black/30"} p-1 transition-colors duration-200 ease-in-out`}
                                     >
                                       <span
                                         aria-hidden="true"
-                                        className={`pointer-events-none inline-block h-4 w-4 rounded-full bg-white shadow-lg ring-0 transition duration-200 ease-in-out ${samagri?.status === 1 ? "translate-x-6" : "translate-x-0"}`}
+                                        className={`pointer-events-none inline-block h-4 w-4 rounded-full bg-white shadow-lg ring-0 transition duration-200 ease-in-out ${isPurchased(samagri?.status) ? "translate-x-6" : "translate-x-0"}`}
                                       />
                                     </Switch>
                                   </td>
@@ -510,6 +543,8 @@ const Samagri = () => {
         rData={null}
       />
 
+      <ViewSamagriModal isOpen={viewModalOpen} setIsOpen={setViewModalOpen} data={modalData} />
+
       {/* Delete */}
       <ConfirmationModal
         data={openDeleteModal.data}
@@ -524,7 +559,7 @@ const Samagri = () => {
         data={openStatusModal.data}
         isOpen={openStatusModal.open}
         handleSubmit={confirmStatusChange}
-        message={"Are you sure you want to purchase this samagri item?"}
+        message={`Are you sure you want to ${isPurchased(openStatusModal?.data?.status) ? "mark this samagri item as not purchased" : "purchase this samagri item"}?`}
         setIsOpen={(open) => setOpenStatusModal((prev) => ({ ...prev, open }))}
       />
     </>
@@ -532,3 +567,4 @@ const Samagri = () => {
 };
 
 export default Samagri;
+

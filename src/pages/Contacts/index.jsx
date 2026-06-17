@@ -3,17 +3,22 @@ import ReactPaginate from "react-paginate";
 import ApiServices from "../../api/services";
 import Skeleton from "react-loading-skeleton";
 import { useMediaQuery } from "react-responsive";
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useRef, useState } from "react";
 import Button from "../../components/common/Button";
 import { Link, useNavigate } from "react-router-dom";
-import ImportContactModal from "./ImportContactModal";
 import QuickImportContactModal from "./QuickImportContactModal"
 import { useThemeContext } from "../../context/GlobalContext";
 import { useSortableData } from "../../hooks/useSortableData";
 import { ADD_CONTACT, CONTACT_PRINT } from "../../routes/Names";
 import { emptyFolderAnimation } from "../../utilities/lottieAnimations";
 import ConfirmationModal from "../../components/common/ConfirmationModal";
-import { ChevronDownIcon, ChevronLeftIcon, ChevronRightIcon, ChevronUpIcon, MagnifyingGlassIcon } from "@heroicons/react/24/outline";
+import {
+  ChevronDownIcon,
+  ChevronLeftIcon,
+  ChevronRightIcon,
+  ChevronUpIcon,
+  MagnifyingGlassIcon,
+} from "@heroicons/react/24/outline";
 import { baseUrl, mediaUrl } from "../../utilities/config";
 import { Images } from "../../assets/Assets";
 import { Switch } from "@headlessui/react";
@@ -22,22 +27,21 @@ import Badge from "../../components/common/Badge";
 import { registerQrSubscriber, registerSubscriber } from "../../api/services/qr_codes";
 import QRCode from "qrcode"; // Add this import
 import MessageSchedule from "./MessageSchedule";
+import { hasPermission } from "../../utilities/permissions";
 
 const Contact = () => {
   const { t } = useTranslation("common");
 
   const TABLE_HEAD = [
-    t("contacts.name"),
-    t("contacts.family"),
-    t("contacts.members"),
-    t("contacts.groups"),
-    t("contacts.colorCode"),
-    t("contacts.contactNo"),
-    // t("contacts.email"),
-    // t("contacts.tagsAllocated"),
-    t("contacts.quickContact"),
-    "My Bag Tags",
-    t("headings.actions"),
+    { label: t("contacts.name"), sortKey: "first_name" },
+    { label: t("contacts.nickName"), sortKey: "nick_name" },
+    { label: t("contacts.members"), sortKey: "no_of_members" },
+    { label: t("contacts.groups"), sortKey: "group.name" },
+    { label: t("contacts.colorCode"), sortKey: "color_code.name" },
+    { label: t("contacts.contactNo"), sortKey: "contactNumbersContact" },
+    { label: t("contacts.quickContact"), sortKey: "quick_contact_status" },
+    { label: "My Bag Tags", sortKey: "auto_id" },
+    { label: t("headings.actions"), sortKey: null },
   ];
 
   // react router dom
@@ -49,7 +53,6 @@ const Contact = () => {
   // useStates
   const [activeRow, setActiveRow] = useState(null);
   const [searchText, setSearchText] = useState("");
-  const [addNewModal, setAddNewModal] = useState(false);
   const [quickImportModal, setquickImportModal] = useState(false);
   const [openDeleteModal, setOpenDeleteModal] = useState({ open: false, data: null });
   const [openQuickContactModal, setOpenQuickContactModal] = useState({ open: false, data: null });
@@ -64,6 +67,7 @@ const Contact = () => {
   // Pagination 
   const [totalPages, setTotalPages] = useState(0);
   const [currentPage, setCurrentPage] = useState(1);
+  const inFlightRequestKeyRef = useRef(null);
 
   // useMediaQuery for responsiveness
   const isLaptop = useMediaQuery({ minWidth: 1024 });
@@ -74,6 +78,22 @@ const Contact = () => {
 
   const { items, requestSort, sortConfig } = useSortableData(allContact);
 
+  const formatContactNumber = (contact) => {
+    if (!contact) return "-";
+
+    const countryCode = String(contact?.country_code || "")
+      .replace(/\bIndia\b/gi, "")
+      .trim();
+    const number = String(contact?.contact_number || "").trim();
+
+    return [countryCode, number].filter(Boolean).join(" ") || "-";
+  };
+
+  const formatContactName = (contact) =>
+    [contact?.salutation, contact?.first_name, contact?.middle_name, contact?.last_name]
+      .filter(Boolean)
+      .join(" ") || "-";
+
   // getContact API
   const getContacts = (emptySearch) => {
     let payload = {
@@ -82,6 +102,16 @@ const Contact = () => {
       records_no: itemsPerPage,
       event_id: eventSelect,
     };
+
+    if (!payload.event_id) return;
+
+    const requestKey = JSON.stringify(payload);
+
+    if (inFlightRequestKeyRef.current === requestKey) {
+      return;
+    }
+
+    inFlightRequestKeyRef.current = requestKey;
 
     setLoading(true);
 
@@ -94,7 +124,8 @@ const Contact = () => {
           setLoading(false);
           setAllContact(data.data.data);
           setModalData(data.data.data);
-          setCurrentPage(data?.data?.current_page);
+          const nextPage = Number(data?.data?.current_page || 1);
+          setCurrentPage((prev) => (Number(prev) === nextPage ? prev : nextPage));
           setTotalPages(Math.ceil(data?.data?.total / data?.data?.per_page));
         } else {
           setLoading(false);
@@ -102,6 +133,11 @@ const Contact = () => {
       })
       .catch((err) => {
         setLoading(false);
+      })
+      .finally(() => {
+        if (inFlightRequestKeyRef.current === requestKey) {
+          inFlightRequestKeyRef.current = null;
+        }
       });
   };
 
@@ -285,33 +321,19 @@ const Contact = () => {
   };
 
   useEffect(() => {
+    if (!eventSelect) return;
     getContacts();
-  }, [currentPage]);
+  }, [currentPage, eventSelect, itemsPerPage]);
 
   return (
     <>
       <div className="grid grid-cols-12 gap-5">
         <div className="col-span-12">
-          <div className="card min-h-[82vh]">
-            <div className="flex justify-between">
-              <h3 className="heading">Contact</h3>
-              <div className="flex w-full items-center justify-between">
-                <div className="flex items-center gap-x-3">
-                  {(userData?.role?.display_name === "web_admin" || userData.role.permissions?.some((item) => item === "contacts-create")) && (
-                    <>
-                      <Button title={t("contacts.addContact")} onClick={() => navigate(ADD_CONTACT)} />
-                      <Button title={t("contacts.importExcel")} buttonColor="bg-purple-600" onClick={() => setAddNewModal(true)} />
-                      <Button title={t("contacts.quickImport")} buttonColor="bg-blue-600" onClick={() => setquickImportModal(true)} />
-                    </>
-                  )}
-
-                  <Link to={CONTACT_PRINT}>
-                    <Button title={t("buttons.print")} buttonColor="border-primary  bg-primary " />
-                  </Link>
-                  <Button title={t("Download Contact Details Edit QR")} onClick={handleDownloadContactEditQr} />
-                  {/* <Button title={t("Send Message")} onClick={() => {setAddNewSendMessageModal(true); setModalData(allContact);}} buttonColor="bg-green-600" /> */}
-                </div>
-                <div className="relative flex items-center">
+          <div className="card flex min-h-[72vh] flex-col shadow-[0_12px_34px_rgba(15,23,42,0.14)]">
+            <div className="w-full">
+              <div className="flex w-full items-center justify-between gap-4">
+                <h2 className="shrink-0 text-xl font-semibold text-black">{t("contacts.contacts")}</h2>
+                <div className="relative ml-auto flex items-center">
                   <div className="pointer-events-none absolute inset-y-0 left-0 z-20 flex items-center pl-4">
                     <MagnifyingGlassIcon className="h-5 w-5 text-primary-light-color" />
                   </div>
@@ -328,66 +350,58 @@ const Contact = () => {
                         getContacts(true);
                       }
                     }}
-                    onKeyPress={handleKeyPress}
-                    className="focus:border-primary-color-100 block h-11 w-full rounded-10 border border-primary-light-color px-4 pl-11 text-sm text-primary-color focus:ring-primary-color"
+                    onKeyDown={handleKeyPress}
+                    className="focus:border-primary-color-100 block h-11 w-52 rounded-10 border border-primary-light-color px-4 pl-11 text-sm text-primary-color focus:ring-primary-color"
                   />
+                </div>
+              </div>
+
+              <div className="mt-4 flex w-full items-center justify-end gap-3">
+                <div className="flex items-center gap-3">
+                  {(hasPermission(userData, "contacts-create")) && (
+                    <>
+                      <Button title={t("contacts.addContact")} onClick={() => navigate(ADD_CONTACT)} />
+                      <Button
+                        title={t("buttons.import")}
+                        buttonColor="border border-[#f4a62a] bg-transparent"
+                        className="!text-[#d98200] hover:bg-[#fff8ec]"
+                        onClick={() => setquickImportModal(true)}
+                      />
+                    </>
+                  )}
+
+                  <Link to={CONTACT_PRINT}>
+                    <Button
+                      title={t("buttons.print")}
+                      buttonColor="border border-secondary bg-transparent"
+                      className="!text-secondary hover:bg-secondary/5"
+                    />
+                  </Link>
+                  {/* <Button title={t("Download Contact Details Edit QR")} onClick={handleDownloadContactEditQr} /> */}
+                  {/* <Button title={t("Send Message")} onClick={() => {setAddNewSendMessageModal(true); setModalData(allContact);}} buttonColor="bg-green-600" /> */}
                 </div>
               </div>
             </div>
 
-            <div className="mt-5">
-              <div className="-mx-6 mb-8 overflow-x-auto">
+            <div className="mt-5 flex min-h-0 flex-1 flex-col">
+              <div className="-mx-6 mb-8 flex-1 overflow-x-auto">
                 <table className="w-full text-left">
                   <thead>
                     <tr>
                       {TABLE_HEAD.map((head) => (
                         <th
-                          key={head}
-                          className={`border-b border-gray-100 bg-white p-4 first:pl-6 ${head === "Actions" ? "text-center" : "text-left"}`}
-                          onClick={() => {
-                            let sortKey;
-                            if (head === "Name") {
-                              sortKey = "first_name";
-                            } else if (head === "Family") {
-                              sortKey = "family.name";
-                            } else if (head === "Members") {
-                              sortKey = "no_of_members";
-                            } else if (head === "Groups") {
-                              sortKey = "group.name";
-                            } else if (head === "ContactNo") {
-                              sortKey = "contactNumbersContact";
-                            } else if (head === "Email") {
-                              sortKey = "emailsContact";
-                            } else if (head === "Quick Contact") {
-                              sortKey = "quick_contact_status";
-                            } else {
-                              sortKey = head.toLowerCase();
-                            }
-                            requestSort(sortKey);
-                          }}
+                          key={head.label}
+                          className={`border-b border-gray-100 bg-white p-4 first:pl-6 ${!head.sortKey ? "text-center" : "text-left"}`}
+                          onClick={() => head.sortKey && requestSort(head.sortKey)}
                         >
-                          <p className="font-inter cursor-pointer whitespace-nowrap text-xs font-semibold leading-5 3xl:text-sm">
-                            {head}
-                            {sortConfig.key ===
-                              (head === "Name"
-                                ? "first_name"
-                                : head === "Family"
-                                  ? "family.name"
-                                  : head === "Members"
-                                    ? "no_of_members"
-                                    : head === "Groups"
-                                      ? "group.name"
-                                      : head === "ContactNo"
-                                        ? "contactNumbersContact"
-                                        : head === "Email"
-                                          ? "emailsContact"
-                                          : head === "Quick Contact"
-                                            ? "quick_contact_status"
-                                            : head.toLowerCase()) && sortConfig.direction === "asc" ? (
-                              <>{head === "Actions" ? "" : <ChevronUpIcon className="inline-block h-4 w-3.5" />}</>
-                            ) : (
-                              <>{head === "Actions" ? "" : <ChevronDownIcon className="inline-block h-4 w-3.5" />}</>
-                            )}
+                          <p className="font-inter cursor-pointer whitespace-nowrap text-sm font-semibold leading-5 3xl:text-sm">
+                            {head.label}
+                            {head.sortKey &&
+                              (sortConfig.key === head.sortKey && sortConfig.direction === "asc" ? (
+                                <ChevronUpIcon className="inline-block h-4 w-3.5" />
+                              ) : (
+                                <ChevronDownIcon className="inline-block h-4 w-3.5" />
+                              ))}
                           </p>
                         </th>
                       ))}
@@ -413,15 +427,13 @@ const Contact = () => {
                               navigate("/contact-detail", { state: { item } });
                             }}
                           >
-                            <p className="flex items-center gap-x-3 text-xs font-normal text-primary-color 3xl:text-sm">
+                            <p className="flex items-center gap-x-3 text-sm font-normal text-primary-color 3xl:text-sm">
                               <img
                                 className="h-9 w-9 rounded-full object-cover"
                                 src={item?.profile_image ? mediaUrl + item?.profile_image : Images.PLACEHOLDER}
                                 alt="profile_img"
                               />
-                              <span>
-                                {item?.first_name} {item?.last_name}
-                              </span>
+                              <span>{formatContactName(item)}</span>
                             </p>
                           </td>
                           <td
@@ -430,7 +442,7 @@ const Contact = () => {
                               navigate("/contact-detail", { state: { item } });
                             }}
                           >
-                            <p className="text-xs font-normal text-primary-color 3xl:text-sm">{item?.family?.name || "-"}</p>
+                            <p className="text-sm font-normal text-primary-color 3xl:text-sm">{item?.nick_name || "-"}</p>
                           </td>
                           <td
                             className="py-3 pl-4 3xl:px-4"
@@ -438,7 +450,7 @@ const Contact = () => {
                               navigate("/contact-detail", { state: { item } });
                             }}
                           >
-                            <p className="pl-8 text-xs font-normal text-primary-color 3xl:text-sm">{item?.no_of_members}</p>
+                            <p className="pl-8 text-sm font-normal text-primary-color 3xl:text-sm">{item?.no_of_members}</p>
                           </td>
                           <td
                             className="py-3 pl-4 3xl:px-4"
@@ -446,7 +458,7 @@ const Contact = () => {
                               navigate("/contact-detail", { state: { item } });
                             }}
                           >
-                            <p className="text-xs font-normal text-primary-color 3xl:text-sm">{item?.group?.name || "-"}</p>
+                            <p className="text-sm font-normal text-primary-color 3xl:text-sm">{item?.group?.name || "-"}</p>
                           </td>
                           <td
                             className="py-3 pl-4 3xl:px-4"
@@ -454,7 +466,7 @@ const Contact = () => {
                               navigate("/contact-detail", { state: { item } });
                             }}
                           >
-                            <p className="text-xs font-normal text-primary-color 3xl:text-sm">{item?.color_code?.name || "-"}</p>
+                            <p className="text-sm font-normal text-primary-color 3xl:text-sm">{item?.color_code?.name || "-"}</p>
                           </td>
                           <td
                             className="py-3 pl-4 3xl:px-4"
@@ -462,7 +474,9 @@ const Contact = () => {
                               navigate("/contact-detail", { state: { item } });
                             }}
                           >
-                            <p className="text-xs font-normal text-primary-color 3xl:text-sm">{item?.contact_numbers[0]?.contact_number || "-"}</p>
+                            <p className="whitespace-nowrap text-sm font-normal text-primary-color 3xl:text-sm">
+                              {formatContactNumber(item?.contact_numbers?.[0])}
+                            </p>
                           </td>
                           <td className="py-3 pl-4 pr-3 3xl:px-4">
                             <div className="flex items-center gap-x-3 pl-8">
@@ -485,7 +499,7 @@ const Contact = () => {
                             />
                           </td>
                           <td className="py-3 pl-4 pr-3 3xl:px-4">
-                            <div className="flex items-center gap-x-3 pl-24">
+                            <div className="flex items-center justify-center gap-2">
                               {item.auto_id && item.qr_token ? (
                                 <></>
                               ) : (
@@ -500,20 +514,24 @@ const Contact = () => {
                                 </span>
                               )}
 
-                              {(userData?.role?.display_name === "web_admin" ||
-                                userData.role.permissions?.some((item) => item === "contacts-edit")) && (
+                              {(hasPermission(userData, "contacts-edit")) && (
                                 <span
-                                  onClick={() => handleEditClick(item)}
+                                  onClick={(e) => {
+                                    e.stopPropagation();
+                                    handleEditClick(item);
+                                  }}
                                   className="cursor-pointer text-xs font-normal text-secondary underline underline-offset-4 3xl:text-sm"
                                 >
                                   {t("buttons.edit")}
                                 </span>
                               )}
 
-                              {(userData?.role?.display_name === "web_admin" ||
-                                userData.role.permissions?.some((item) => item === "contacts-delete")) && (
+                              {(hasPermission(userData, "contacts-delete")) && (
                                 <span
-                                  onClick={() => setOpenDeleteModal({ open: true, data: item?.uuid })}
+                                  onClick={(e) => {
+                                    e.stopPropagation();
+                                    setOpenDeleteModal({ open: true, data: item?.uuid });
+                                  }}
                                   className="cursor-pointer text-xs font-normal text-red-500 underline underline-offset-4 3xl:text-sm"
                                 >
                                   {t("buttons.delete")}
@@ -526,7 +544,7 @@ const Contact = () => {
                     ) : (
                       // Render "No Data" message
                       <tr className="h-[400px]">
-                        <td colSpan="6">
+                        <td colSpan={TABLE_HEAD.length}>
                           <Lottie options={emptyFolderAnimation} width={200} height={200} />
                         </td>
                       </tr>
@@ -535,7 +553,7 @@ const Contact = () => {
                 </table>
               </div>
 
-              <div className="absolute bottom-4">
+              <div className="mt-auto pt-4">
                 <ReactPaginate
                   breakLabel="..."
                   pageRangeDisplayed={5}
@@ -559,7 +577,6 @@ const Contact = () => {
         </div>
       </div>
 
-      <ImportContactModal isOpen={addNewModal} setIsOpen={() => setAddNewModal(false)} refreshData={getContacts} />
       <QuickImportContactModal isOpen={quickImportModal} setIsOpen={() => setquickImportModal(false)} refreshData={getContacts} />
 
       <ConfirmationModal

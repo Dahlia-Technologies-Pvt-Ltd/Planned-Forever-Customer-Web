@@ -20,13 +20,13 @@ const Rsvp = () => {
   const { eventSelect, allEvents, allEventsList, setLoading, loading, getEventList } = useThemeContext();
 
   // useStates
-  const [event, setEvent] = useState("");
+  const [event, setEvent] = useState(null);
   const [statsCount, setStatsCount] = useState(null);
   const [allContactGroup, setAllContactGroup] = useState([]);
 
   // Filter the eventDetails based on the selected event
   let selectedEventDetails = {};
-  selectedEventDetails = allEventsList.find((item) => item.id === event.value) || {};
+  selectedEventDetails = allEventsList.find((item) => item.id === (event?.value || eventSelect)) || {};
 
   // Event selection handler
   // const handleEventChange = (selectedEvent) => {
@@ -37,9 +37,13 @@ const Rsvp = () => {
 
   // Get Event Stats by id
   const getEventStatsById = async (givenId) => {
+    if (!givenId) {
+      return;
+    }
+
     try {
       const payload = {};
-      const response = await ApiServices.events.getEventStatsById(eventSelect, payload);
+      const response = await ApiServices.events.getEventStatsById(givenId, payload);
 
       if (response.data.code === 200) {
         setStatsCount(response.data.data);
@@ -55,6 +59,10 @@ const Rsvp = () => {
 
   // Get Contact by group
   const getContactsByGroup = async () => {
+    if (!eventSelect) {
+      return;
+    }
+
     setLoading(true);
     try {
       const payload = {
@@ -75,9 +83,13 @@ const Rsvp = () => {
   };
 
   useEffect(() => {
-    getEventStatsById();
+    if (!eventSelect) {
+      return;
+    }
+
+    getEventStatsById(eventSelect);
     getContactsByGroup();
-  }, []);
+  }, [eventSelect]);
 
   return (
     <>

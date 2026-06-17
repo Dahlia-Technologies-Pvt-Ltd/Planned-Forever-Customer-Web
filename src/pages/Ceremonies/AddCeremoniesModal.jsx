@@ -15,6 +15,11 @@ import { VENUE_PRINT, CEREMONIES } from "../../routes/Names";
 import countriesCodeData from "../../utilities/countryCode.json";
 import { useTranslation } from "react-i18next";
 
+const defaultCountryCode = {
+  label: "+91",
+  value: "+91",
+};
+
 const AddCeremoniesModal = ({ isOpen, setIsOpen, data, refreshData, setModalData, rData, tData }) => {
   const { t } = useTranslation("common");
 
@@ -42,11 +47,11 @@ const AddCeremoniesModal = ({ isOpen, setIsOpen, data, refreshData, setModalData
   const [eventNote, setEventNote] = useState("");
   const [cermonyName, setCeremonyName] = useState("");
   const [inChargeName, setInChargeName] = useState("");
-  const [inChargeMobile, setInChargeMobile] = useState({ countryCode: "", phone: "" });
+  const [inChargeMobile, setInChargeMobile] = useState({ countryCode: defaultCountryCode, phone: "" });
   const [endDateAndTime, setEndDateAndTime] = useState("");
   const [asstInChargeName, setAsstInChargeName] = useState("");
   const [startDateAndTime, setStartDateAndTime] = useState("");
-  const [asstInChargeMobile, setAsstInChargeMobile] = useState({ countryCode: "", phone: "" });
+  const [asstInChargeMobile, setAsstInChargeMobile] = useState({ countryCode: defaultCountryCode, phone: "" });
 
   // Errors
   const [eventError, setEventError] = useState("");
@@ -101,31 +106,6 @@ const AddCeremoniesModal = ({ isOpen, setIsOpen, data, refreshData, setModalData
       setEndDateAndTimeError("Required");
       isValidData = false;
     }
-    if (inChargeName === "") {
-      setInChargeNameError(" Required");
-      isValidData = false;
-    }
-    if (inChargeMobile.phone === "") {
-      setInChargeMobileError(" Required");
-      isValidData = false;
-    }
-    if (inChargeMobile.countryCode === "") {
-      setInChargeMobileErrorC(" Required");
-      isValidData = false;
-    }
-    // if (asstInChargeName === "") {
-    //   setAsstInChargeNameError(" Required");
-    //   isValidData = false;
-    // }
-    // if (asstInChargeMobile.phone === "") {
-    //   setAsstInChargeMobileError(" Required");
-    //   isValidData = false;
-    // }
-    // if (asstInChargeMobile?.countryCode === "") {
-    //   setAsstInChargeMobileErrorC(" Required");
-    //   isValidData = false;
-    // }
-
     return isValidData;
   };
 
@@ -200,7 +180,6 @@ const AddCeremoniesModal = ({ isOpen, setIsOpen, data, refreshData, setModalData
         let payload = {
           // name: ((rData === null || tData === null) ? cermonyName : (rData === null ? tData?.name : rData?.name)),
           name: rData ? rData.name : tData ? tData.name : cermonyName,
-          event_id: event?.value,
           venue_id: heldAt?.value,
           start_date: toUTCUnixTimestamp(startDateAndTime),
           end_date: toUTCUnixTimestamp(endDateAndTime),
@@ -258,13 +237,13 @@ const AddCeremoniesModal = ({ isOpen, setIsOpen, data, refreshData, setModalData
     setInChargeName("");
     setCeremonyName("");
     setEndDateAndTime("");
-    setInChargeMobile({ countryCode: "", phone: "" });
+    setInChargeMobile({ countryCode: defaultCountryCode, phone: "" });
     setEventNoteError("");
     setStartDateAndTime("");
     setAsstInChargeName("");
     setInChargeNameError("");
     setCeremonyNameError("");
-    setAsstInChargeMobile({ countryCode: "", phone: "" });
+    setAsstInChargeMobile({ countryCode: defaultCountryCode, phone: "" });
     setInChargeMobileError("");
     setInChargeMobileErrorC("");
     setEndDateAndTimeError("");
@@ -294,11 +273,15 @@ const AddCeremoniesModal = ({ isOpen, setIsOpen, data, refreshData, setModalData
       setInChargeName(data?.incharge_name);
       setAsstInChargeName(data?.asst_incharge_name);
       setInChargeMobile({
-        countryCode: { label: data?.incharge_contact_number?.code, value: data?.incharge_contact_number?.code },
+        countryCode: data?.incharge_contact_number?.code
+          ? { label: data.incharge_contact_number.code, value: data.incharge_contact_number.code }
+          : defaultCountryCode,
         phone: data?.incharge_contact_number?.phone_number,
       });
       setAsstInChargeMobile({
-        countryCode: { label: data?.asst_incharge_contact_number?.code, value: data?.asst_incharge_contact_number?.code },
+        countryCode: data?.asst_incharge_contact_number?.code
+          ? { label: data.asst_incharge_contact_number.code, value: data.asst_incharge_contact_number.code }
+          : defaultCountryCode,
         phone: data?.asst_incharge_contact_number?.phone_number,
       });
       setHeldAt({ label: data?.venue?.name, value: data?.venue?.id });
@@ -353,8 +336,8 @@ const AddCeremoniesModal = ({ isOpen, setIsOpen, data, refreshData, setModalData
             <div className="fixed inset-0 bg-black bg-opacity-25" />
           </Transition.Child>
 
-          <div className="overflow-y-auto fixed inset-0">
-            <div className="flex justify-center items-center p-4 min-h-full text-center">
+          <div className="fixed inset-0 overflow-y-auto">
+            <div className="flex min-h-full items-center justify-center p-4 text-center">
               <Transition.Child
                 as={Fragment}
                 enter="ease-out duration-300"
@@ -364,25 +347,25 @@ const AddCeremoniesModal = ({ isOpen, setIsOpen, data, refreshData, setModalData
                 leaveFrom="opacity-100 scale-100"
                 leaveTo="opacity-0 scale-75"
               >
-                <Dialog.Panel className="overflow-hidden p-8 w-full max-w-4xl bg-white rounded-2xl shadow-xl transition-all">
-                  <div className="flex justify-between items-center mb-5">
-                    <Dialog.Title as="h3" className="text-lg font-semibold leading-7 font-poppins text-secondary-color">
+                <Dialog.Panel className="w-full max-w-4xl rounded-2xl bg-white p-6 shadow-xl transition-all">
+                  <div className="mb-2 flex items-center justify-between">
+                    <Dialog.Title as="h3" className="font-poppins ml-1 text-lg font-semibold leading-7 text-secondary-color">
                       {data === null ? <>{t("ceremonies.addNewCeremony")}</> : <>{t("ceremonies.updateCeremony")}</>}
                     </Dialog.Title>
-                    <XMarkIcon onClick={closeModal} className="w-8 h-8 cursor-pointer text-info-color" />
+                    <XMarkIcon onClick={closeModal} className="h-8 w-8 cursor-pointer text-info-color" />
                   </div>
 
-                  <form>
-                    <div className=" h-[600px] overflow-y-scroll p-2 md:h-[400px] lg:h-[400px] xl:h-[500px] 2xl:h-[600px]">
+                  <form className="[&_.label]:text-xs [&_.label]:font-medium [&_input]:h-9 [&_input]:min-h-[36px] [&_input]:text-sm [&_input]:py-1 [&_input[type='datetime-local']]:h-9 [&_textarea]:text-sm [&_.css-b62m3t-container]:text-sm [&_.css-13cymwt-control]:h-9 [&_.css-13cymwt-control]:min-h-[36px] [&_.css-13cymwt-control]:py-0 [&_.css-t3ipsp-control]:h-9 [&_.css-t3ipsp-control]:min-h-[36px] [&_.css-t3ipsp-control]:py-0 [&_.css-hlgwow]:h-9 [&_.css-hlgwow]:min-h-[36px] [&_.css-hlgwow]:py-0 [&_.css-hlgwow]:px- [&_.css-1jqq78o-placeholder]:text-sm [&_.css-1jqq78o-placeholder]:leading-none [&_.css-1dimb5e-singleValue]:text-sm [&_.css-1dimb5e-singleValue]:leading-none [&_.css-1wy0on6]:h-9 [&_.css-19bb58m]:my-0">
+                    <div className="h-[600px] overflow-y-auto p-1 md:h-[400px] lg:h-[400px] xl:h-[500px] 2xl:h-[600px]">
                       <div className="mb-5 ltr:text-left rtl:text-right">
                         <div>
-                          <div className="mb-2 label text-secondary">{t("headings.basicInfo")}</div>
+                          <div className="mb-2 label text-black">{t("headings.basicInfo")}</div>
                         </div>
                       </div>
-                      <div className="grid grid-cols-2 gap-7">
+                      <div className="grid grid-cols-3 gap-4">
                         <Input
                           label={t("ceremonies.ceremonyName")}
-                          placeholder="Ceremony Name"
+                          placeholder={t("ceremonies.ceremonyName")}
                           isRequired
                           error={cermonyNameError}
                           value={rData === null && tData === null ? cermonyName : rData === null ? tData?.name : rData?.name}
@@ -400,8 +383,8 @@ const AddCeremoniesModal = ({ isOpen, setIsOpen, data, refreshData, setModalData
 
                         {/* <Dropdown
                           isRequired
-                          title="Events"
-                          placeholder="Events"
+          title={t("ceremonies.events")}
+          placeholder={t("ceremonies.events")}
                           withError={eventError}
                           options={allEvents}
                           value={event}
@@ -411,7 +394,7 @@ const AddCeremoniesModal = ({ isOpen, setIsOpen, data, refreshData, setModalData
                         <Dropdown
                           isRequired
                           title={t("ceremonies.venue")}
-                          placeholder="Venue"
+                          placeholder={t("ceremonies.venue")}
                           withError={heldAtError}
                           options={venues}
                           value={heldAt}
@@ -425,7 +408,7 @@ const AddCeremoniesModal = ({ isOpen, setIsOpen, data, refreshData, setModalData
                         <Dropdown
                           // isRequired
                           title={t("ceremonies.heldAt")}
-                          placeholder="Held At"
+                          placeholder={t("ceremonies.heldAt")}
                           // withError={venueHeldError}
                           options={venueHeldlist}
                           value={venueHeld}
@@ -437,7 +420,7 @@ const AddCeremoniesModal = ({ isOpen, setIsOpen, data, refreshData, setModalData
 
                         <Input
                           label={t("ceremonies.dressCode")}
-                          placeholder="Dress Code"
+                          placeholder={t("ceremonies.dressCode")}
                           value={dressCode}
                           onChange={(e) => {
                             setDressCode(e.target.value);
@@ -448,7 +431,7 @@ const AddCeremoniesModal = ({ isOpen, setIsOpen, data, refreshData, setModalData
                           isRequired
                           type="datetime-local"
                           label={t("ceremonies.startDateAndTime")}
-                          placeholder="Select Start Date & Time"
+                          placeholder={t("ceremonies.startDateAndTime")}
                           value={startDateAndTime ? startDateAndTime : ""}
                           error={startDateAndTimeError}
                           onChange={(e) => {
@@ -470,7 +453,7 @@ const AddCeremoniesModal = ({ isOpen, setIsOpen, data, refreshData, setModalData
                           isRequired
                           type="datetime-local"
                           label={t("ceremonies.endDateAndTime")}
-                          placeholder="Select End Date & Time"
+                          placeholder={t("ceremonies.endDateAndTime")}
                           value={endDateAndTime}
                           error={endDateAndTimeError}
                           onChange={(e) => {
@@ -488,16 +471,14 @@ const AddCeremoniesModal = ({ isOpen, setIsOpen, data, refreshData, setModalData
                         />
                       </div>
 
-                      <div className="my-7 ltr:text-left rtl:text-right">
-                        <h2 className="label text-secondary">{t("headings.otherInfo")}</h2>
+                      <div className="relative mb-5 mt-14 ltr:text-left rtl:text-right before:absolute before:-top-7 before:left-0 before:right-0 before:h-px before:bg-gray-200">
+                        <h2 className="label text-black">{t("headings.otherInfo")}</h2>
                       </div>
 
-                      <div className="grid grid-cols-3 gap-7">
+                      <div className="grid grid-cols-3 gap-4">
                         <Input
-                          isRequired
-                          error={inChargeNameError}
                           label={t("ceremonies.personIncharge")}
-                          placeholder="Person Incharge Name"
+                          placeholder={t("ceremonies.personIncharge")}
                           value={inChargeName}
                           onChange={(e) => {
                             setInChargeName(e.target.value);
@@ -505,51 +486,45 @@ const AddCeremoniesModal = ({ isOpen, setIsOpen, data, refreshData, setModalData
                           }}
                         />
 
-                        <Dropdown
-                          isSearchable
-                          options={countriesCodeData?.countries.map((country) => ({
-                            label: `+${country.callingCodes[0]} ${country.name}`,
-                            value: `+${country.callingCodes[0]} ${country.name}`,
-                          }))}
-                          placeholder="Country Code"
-                          value={inChargeMobile.countryCode}
-                          onChange={(e) => {
-                            setInChargeMobile({ ...inChargeMobile, countryCode: e });
-                            setInChargeMobileErrorC("");
-                          }}
-                          title={t("ceremonies.countryCode")}
-                          withError={inChargeMobileErrorC}
-                          isRequired
-                        />
-                        <Input
-                          isRequired
-                          error={inChargeMobileError}
-                          label={t("ceremonies.contactNumber")}
-                          placeholder="Contact Number"
-                          value={inChargeMobile.phone}
-                          onChange={(e) => {
-                            setInChargeMobile({ ...inChargeMobile, phone: e.target.value });
-                            setInChargeMobileError("");
-                          }}
-                        />
-
-                        {/* <Input
-                          isRequired
-                          error={inChargeMobileError}
-                          label="Person Incharge Mobile"
-                          placeholder="Person Incharge Mobile"
-                          value={inChargeMobile}
-                          onChange={(e) => {
-                            setInChargeMobile(e.target.value);
-                            setInChargeMobileError("");
-                          }}
-                        />  */}
+                        <div>
+                          <div className="label mb-2 ltr:text-left rtl:text-right">
+                            <p>{t("ceremonies.contactNumber")}</p>
+                          </div>
+                          <div className="flex gap-2">
+                            <div className="w-24 shrink-0">
+                              <Dropdown
+                                isSearchable
+                                options={countriesCodeData?.countries.map((country) => ({
+                                  label: `+${country.callingCodes[0]}`,
+                                  value: `+${country.callingCodes[0]}`,
+                                }))}
+                                placeholder="+91"
+                                value={inChargeMobile.countryCode}
+                                onChange={(value) => {
+                                  setInChargeMobile({ ...inChargeMobile, countryCode: value });
+                                  setInChargeMobileErrorC("");
+                                }}
+                                invisible
+                              />
+                            </div>
+                            <div className="min-w-0 flex-1">
+                              <Input
+                                placeholder={t("ceremonies.contactNumber")}
+                                value={inChargeMobile.phone}
+                                onChange={(e) => {
+                                  setInChargeMobile({ ...inChargeMobile, phone: e.target.value });
+                                  setInChargeMobileError("");
+                                }}
+                                invisible
+                              />
+                            </div>
+                          </div>
+                        </div>
+                        <div aria-hidden="true" />
 
                         <Input
-                          // isRequired
-                          // error={asstInChargeNameError}
                           label={t("ceremonies.asstPersonIncharge")}
-                          placeholder="Asst Person Incharge Name"
+                          placeholder={t("ceremonies.asstPersonIncharge")}
                           value={asstInChargeName}
                           onChange={(e) => {
                             setAsstInChargeName(e.target.value);
@@ -557,53 +532,49 @@ const AddCeremoniesModal = ({ isOpen, setIsOpen, data, refreshData, setModalData
                           }}
                         />
 
-                        <Dropdown
-                          isSearchable
-                          options={countriesCodeData?.countries.map((country) => ({
-                            label: `+${country.callingCodes[0]} ${country.name}`,
-                            value: `+${country.callingCodes[0]} ${country.name}`,
-                          }))}
-                          placeholder="Country Code"
-                          value={asstInChargeMobile.countryCode}
-                          onChange={(e) => {
-                            setAsstInChargeMobile({ ...asstInChargeMobile, countryCode: e });
-                            setAsstInChargeMobileErrorC("");
-                          }}
-                          title={t("ceremonies.countryCode")}
-                          // withError={asstInChargeMobileErrorC}
-                          // isRequired
-                        />
-                        <Input
-                          // isRequired
-                          // error={asstInChargeMobileError}
-                          label={t("ceremonies.contactNumber")}
-                          placeholder="Contact Number"
-                          value={asstInChargeMobile.phone}
-                          onChange={(e) => {
-                            setAsstInChargeMobile({ ...asstInChargeMobile, phone: e.target.value });
-                            setAsstInChargeMobileError("");
-                          }}
-                        />
-
-                        {/* <Input
-                          isRequired
-                          error={asstInChargeMobileError}
-                          label="Asst Person Incharge Mobile"
-                          placeholder="Asst Person Incharge Mobile"
-                          value={asstInChargeMobile}
-                          onChange={(e) => {
-                            setAsstInChargeMobile(e.target.value);
-                            setAsstInChargeMobileError("");
-                          }}
-                        /> */}
+                        <div>
+                          <div className="label mb-2 ltr:text-left rtl:text-right">
+                            <p>{t("ceremonies.contactNumber")}</p>
+                          </div>
+                          <div className="flex gap-2">
+                            <div className="w-24 shrink-0">
+                              <Dropdown
+                                isSearchable
+                                options={countriesCodeData?.countries.map((country) => ({
+                                  label: `+${country.callingCodes[0]}`,
+                                  value: `+${country.callingCodes[0]}`,
+                                }))}
+                                placeholder="+91"
+                                value={asstInChargeMobile.countryCode}
+                                onChange={(value) => {
+                                  setAsstInChargeMobile({ ...asstInChargeMobile, countryCode: value });
+                                  setAsstInChargeMobileErrorC("");
+                                }}
+                                invisible
+                              />
+                            </div>
+                            <div className="min-w-0 flex-1">
+                              <Input
+                                placeholder={t("ceremonies.contactNumber")}
+                                value={asstInChargeMobile.phone}
+                                onChange={(e) => {
+                                  setAsstInChargeMobile({ ...asstInChargeMobile, phone: e.target.value });
+                                  setAsstInChargeMobileError("");
+                                }}
+                                invisible
+                              />
+                            </div>
+                          </div>
+                        </div>
+                        <div aria-hidden="true" />
                       </div>
 
-                      <div className="mt-5">
+                      <div className="relative mt-14 before:absolute before:-top-7 before:left-0 before:right-0 before:h-px before:bg-gray-200">
                         <Input
                           // isRequired
                           error={eventNoteError}
                           label={t("headings.notes")}
-                          placeholder="Ceremony Note"
+                          placeholder={t("ceremonies.ceremonyNote")}
                           textarea
                           value={eventNote}
                           onChange={(e) => {
@@ -613,7 +584,7 @@ const AddCeremoniesModal = ({ isOpen, setIsOpen, data, refreshData, setModalData
                         />
                       </div>
 
-                      <div className="grid grid-cols-2 gap-7 mx-auto mt-10 w-9/12">
+                      <div className="mx-auto mt-10 grid w-8/12 grid-cols-2 gap-7 md:w-full lg:w-8/12 xl:w-8/12">
                         <Button
                           icon={<CheckIcon />}
                           title={data === null ? <>{t("ceremonies.addNewCeremony")}</> : <>{t("ceremonies.updateCeremony")}</>}

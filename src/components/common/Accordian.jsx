@@ -616,11 +616,10 @@ console.log("data--------------", data);
                             });
                           }
                         }}
-                        className="flex items-center justify-center gap-x-2 rounded-full border-2 border-gray-400 px-6 py-2 text-sm text-blue-400"
-                        type="button"
-                      >
-                        <MagnifyingGlassIcon className="h-4 w-4 text-blue-400" />
-                        {cardAllocate ? "allocate card to all group" : "allocate gift to all group"}
+                                className="flex items-center justify-center gap-x-2 rounded-full border-2 border-gray-400 px-6 py-2 text-sm text-blue-400"
+                                type="button"
+                              >
+                                {cardAllocate ? "allocate card to all group" : "allocate gift to all group"}
                       </button>
                     )}
                     <svg
@@ -646,24 +645,9 @@ console.log("data--------------", data);
                       <tbody>
                         {item?.members?.map((member, childIndex) => (
                           <tr key={childIndex} className="divide-x-2 divide-gray-200 border-2">
-                            <td className="w-[12%] p-4">
-                              <button
-                                onClick={() => {
-                                  setOpenRsvpModal({
-                                    open: true,
-                                    data: member,
-                                    id: eventId,
-                                  });
-                                }}
-                                className="flex items-center justify-center gap-x-2 rounded-full border-2 border-gray-400 px-6 py-2 text-sm text-blue-400"
-                                type="button"
-                              >
-                                {t("invitee.mark")}
-                              </button>
-                            </td>
-                            <td className="w-[21%] p-4">{member?.first_name + " " + member?.last_name || ""}</td>
+                            <td className="w-[24%] p-4">{member?.first_name + " " + member?.last_name || ""}</td>
                             {/* <td className="w-[21%] p-4">{member?.event || member?.city}</td> */}
-                            <td className="w-[40%]3 p-4">
+                            <td className="w-[56%] p-4">
                               {member?.invitees?.map((item, index) => {
                                 return (
                                   <div className="flex flex-wrap gap-x-5 gap-y-1">
@@ -678,10 +662,27 @@ console.log("data--------------", data);
                                     <span className="font-medium">{t("invitee.mayAttend")} : </span>
                                     <span className="-ml-4  text-green-500">{item?.rsvp_may_attend}</span>
                                     <span className="font-medium">Invitiation Call : </span>
-                                    <span className="-ml-4  text-green-500">{item?.rsvp_status === 1 ? "Completed" : "Pending"}</span>
+                                    <span className="-ml-4  text-green-500">{Number(item?.rsvp_status) === 1 ? "Completed" : "Pending"}</span>
                                   </div>
                                 );
                               })}
+                            </td>
+                            <td className="w-[20%] p-4">
+                              <div className="flex justify-end">
+                                <button
+                                  onClick={() => {
+                                    setOpenRsvpModal({
+                                      open: true,
+                                      data: member,
+                                      id: eventId,
+                                    });
+                                  }}
+                                  className="flex items-center justify-center gap-x-2 rounded-full border-2 border-gray-400 px-6 py-2 text-sm text-blue-400"
+                                  type="button"
+                                >
+                                  {t("invitee.mark")}
+                                </button>
+                              </div>
                             </td>
                           </tr>
                         ))}
@@ -701,7 +702,7 @@ console.log("data--------------", data);
                                 className="flex items-center justify-center gap-x-2 rounded-full border-2 border-gray-400 px-6 py-2 text-sm text-blue-400"
                                 type="button"
                               >
-                                <MagnifyingGlassIcon className="h-4 w-4 text-blue-400" /> {t("invitee.allocateCard")}
+                                {t("invitee.allocateCard")}
                               </button>
                             </td>
                             <td className="w-1/5 p-2">{`${member?.salutation} ${member?.first_name} ${member?.last_name}` || ""}</td>
@@ -725,7 +726,7 @@ console.log("data--------------", data);
                                 className="flex items-center justify-center gap-x-2 rounded-full border-2 border-gray-400 px-6 py-2 text-sm text-blue-400"
                                 type="button"
                               >
-                                <MagnifyingGlassIcon className="h-4 w-4 text-blue-400" /> {t("invitee.allocateGift")}
+                                {t("invitee.allocateGift")}
                               </button>
                             </td>
                             <td className="w-1/3 p-4">{`${member?.salutation} ${member?.first_name} ${member?.last_name}` || ""}</td>

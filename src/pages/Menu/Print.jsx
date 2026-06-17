@@ -17,7 +17,14 @@ const MenuPrint = () => {
   const { t } = useTranslation("common");
 
   const TABLE_HEAD_MENU = [t("menu.dateTime"), t("menu.sessionName"), t("menu.menuItemCourse")];
-  const TABLE_HEAD_MENU_ITEMS = [t("menu.dateTime"), t("menu.sessionName"), t("menu.menuItemName"), t("qty	"), t("notes"), t("type")];
+  const TABLE_HEAD_MENU_ITEMS = [
+    t("menu.dateTime"),
+    t("menu.sessionName"),
+    t("menu.menuItemName"),
+    t("menu.quantity"),
+    t("headings.notes"),
+    t("menu.itemType"),
+  ];
 
   const menu_options = [
     {
@@ -41,7 +48,22 @@ const MenuPrint = () => {
   const [loading, setLoading] = useState(false);
   const [allMenuList, setAllMenuList] = useState([]);
   const [selectedItem, setSelectedItem] = useState(null);
-//'Print Menu Items'
+
+  const getSelectedType = (value) => value?.value || value;
+
+  const formatDateTime = (date, startTime, endTime) => {
+    const formattedDate = date ? moment.unix(date).format("D MMM YYYY") : "-";
+    const formattedStartTime = startTime ? moment(startTime, "HH:mm").format("hh:mm A") : "";
+    const formattedEndTime = endTime ? moment(endTime, "HH:mm").format("hh:mm A") : "";
+
+    if (!formattedStartTime && !formattedEndTime) {
+      return formattedDate;
+    }
+
+    return `${formattedDate} (${formattedStartTime}${formattedEndTime ? ` - ${formattedEndTime}` : ""})`;
+  };
+
+  //'Print Menu Items'
   // Handle Print
   const handlePrint = useReactToPrint({
     content: () => componentRef.current,
@@ -53,7 +75,7 @@ const MenuPrint = () => {
 
   useEffect(() => {
     if (selectedItem) {
-      getMenuListToPrint(selectedItem);
+      getMenuListToPrint(getSelectedType(selectedItem));
     }
   }, [selectedItem]);
   //   Get Menu List to Print
@@ -82,7 +104,7 @@ const MenuPrint = () => {
             <tr>
               {TABLE_HEAD_MENU.map((head) => (
                 <th className="p-4 bg-white border-b border-gray-100 first:pl-6">
-                  <p className="text-xs font-semibold leading-5 whitespace-nowrap cursor-pointer font-inter 3xl:text-sm">{head}</p>
+                  <p className="text-sm font-semibold leading-5 whitespace-nowrap cursor-pointer font-inter 3xl:text-sm">{head}</p>
                 </th>
               ))}
             </tr>
@@ -90,7 +112,7 @@ const MenuPrint = () => {
             <tr>
               {TABLE_HEAD_MENU_ITEMS.map((head) => (
                 <th className="p-4 bg-white border-b border-gray-100 first:pl-6">
-                  <p className="text-xs font-semibold leading-5 whitespace-nowrap cursor-pointer font-inter 3xl:text-sm">{head}</p>
+                  <p className="text-sm font-semibold leading-5 whitespace-nowrap cursor-pointer font-inter 3xl:text-sm">{head}</p>
                 </th>
               ))}
             </tr>
@@ -108,16 +130,18 @@ const MenuPrint = () => {
               selectedItem?.value === "menu" ? (
                 <tr key={item?.id}>
                   <td className="py-3 pr-4 pl-6">
-                    <p className="text-xs font-normal text-primary-color-200 3xl:text-sm">{moment.unix(item?.date).format("D MMM YYYY")}</p>
+                    <p className="text-sm font-normal text-primary-color-200 3xl:text-sm">
+                      {formatDateTime(item?.date, item?.start_time, item?.end_time)}
+                    </p>
                   </td>
 
                   <td className="py-3 pr-3 pl-4 3xl:px-4">
-                    <p className="text-xs font-normal text-primary-color-200 3xl:text-sm">{item?.session}</p>
+                    <p className="text-sm font-normal text-primary-color-200 3xl:text-sm">{item?.session}</p>
                   </td>
 
                   <td className="py-3 pr-3 pl-4 3xl:px-4">
-                    <p className="text-xs font-normal text-primary-color-200 3xl:text-sm">
-                      <p className="text-xs font-normal text-primary-color-200 3xl:text-sm">
+                    <p className="text-sm font-normal text-primary-color-200 3xl:text-sm">
+                      <p className="text-sm font-normal text-primary-color-200 3xl:text-sm">
                         {item?.menu_items?.map((menuItem, index) => (
                           <span key={index}>
                             {menuItem.name}
@@ -132,35 +156,29 @@ const MenuPrint = () => {
                 
                 <tr key={item?.id}>
                   <td className="py-3 pr-4 pl-6">
-                    <p className="text-xs font-normal text-primary-color-200 3xl:text-sm">{moment.unix(item.menu.date).format("D MMM YYYY")}</p>
+                    <p className="text-sm font-normal text-primary-color-200 3xl:text-sm">
+                      {formatDateTime(item?.menu?.date, item?.menu?.start_time, item?.menu?.end_time)}
+                    </p>
                   </td>
 
                   <td className="py-3 pr-3 pl-4 3xl:px-4">
-                    <p className="text-xs font-normal text-primary-color-200 3xl:text-sm">{item.menu.session}</p>
+                    <p className="text-sm font-normal text-primary-color-200 3xl:text-sm">{item.menu.session}</p>
                   </td>
                   <td className="py-3 pr-4 pl-6">
-                    <p className="text-xs font-normal text-primary-color-200 3xl:text-sm">{item?.name}</p>
+                    <p className="text-sm font-normal text-primary-color-200 3xl:text-sm">{item?.name}</p>
                   </td>
 
                   <td className="py-3 pr-3 pl-4 3xl:px-4">
-                    <p className="text-xs font-normal text-primary-color-200 3xl:text-sm">{item?.qty}</p>
+                    <p className="text-sm font-normal text-primary-color-200 3xl:text-sm">{item?.qty}</p>
                   </td>
 
                   <td className="py-3 pr-3 pl-4 3xl:px-4">
-                    <p className="text-xs font-normal text-primary-color-200 3xl:text-sm">{item?.notes}</p>
+                    <p className="text-sm font-normal text-primary-color-200 3xl:text-sm">{item?.notes}</p>
                   </td>
 
                   <td className="py-3 pr-3 pl-4 3xl:px-4">
-                    <p className="text-xs font-normal text-primary-color-200 3xl:text-sm">
-                      {item?.type}
-                    </p>
+                    <p className="text-sm font-normal text-primary-color-200 3xl:text-sm">{item?.type}</p>
                   </td>
-{/* 
-                  <td className="py-3 pr-3 pl-4 3xl:px-4">
-                    <p className="text-xs font-normal text-primary-color-200 3xl:text-sm">
-                      {moment(item?.menu?.end_time, "HH:mm").format("hh:mm A")}
-                    </p>
-                  </td> */}
                 </tr>
               ),
             )
@@ -168,7 +186,7 @@ const MenuPrint = () => {
             <tr className="h-[400px]">
               <td colSpan="6">
                 <Lottie options={emptyFolderAnimation} width={200} height={200} />
-                <p className="text-lg text-center text-gray-500">Please select an menu type!</p>
+                <p className="text-lg text-center text-gray-500">{t("menu.selectMenuTypeError")}</p>
               </td>
             </tr>
           )}
@@ -182,17 +200,17 @@ const MenuPrint = () => {
       {(userData?.role === "superAdmin" || userData?.role?.permissions?.includes("Menu")) && (
         <div onClick={() => navigate(MENU)} className={`flex mb-5 text-base font-medium cursor-pointer text-secondary hover:underline`}>
           <ArrowLeftIcon className="mr-2 w-4 h-6 text-secondary" />
-          <span> Back to Menu list</span>
+          <span> {t("menu.backToMenuList")}</span>
         </div>
       )}
       <div className="card ">
-        <h3 className="heading">Print Menu</h3>
+        <h3 className="heading">{t("menu.printMenu")}</h3>
         {/* <div className="grid grid-cols-12">
           <div className="col-span-4">
             <Dropdown
               isRequired
               withoutTitle
-              placeholder="Select Menu Type"
+          placeholder={t("menu.selectMenuType")}
               options={menu_options}
               value={selectedItem}
               onChange={(e) => {

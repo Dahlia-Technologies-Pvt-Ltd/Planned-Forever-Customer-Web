@@ -20,6 +20,7 @@ import { useTranslation } from "react-i18next";
 import Dropdown from "../../components/common/Dropdown";
 import Input from "../../components/common/Input";
 import { toUTCUnixTimestamp } from "../../utilities/HelperFunctions";
+import { hasPermission } from "../../utilities/permissions";
 
 const HotelRooms = () => {
   const { t } = useTranslation("common");
@@ -167,6 +168,13 @@ const HotelRooms = () => {
     setOpenStatusModal({ open: true, data: item });
   };
 
+  const handleClearFilters = () => {
+    setHotelFilter(null);
+    setCheckInFilter("");
+    setCheckOutFilter("");
+    setCurrentPage(1);
+  };
+
   const confirmStatusChange = async () => {
     try {
       setBtnLoading(true);
@@ -205,7 +213,7 @@ const HotelRooms = () => {
               <h3 className="heading">Hotel Room</h3>
               <div className="flex w-full items-center justify-between">
                 <div className="flex items-center gap-x-3">
-                  {(userData?.role?.display_name === "web_admin" || userData.role.permissions?.some((item) => item === "allocated-rooms-create")) && (
+                  {(hasPermission(userData, "allocated-rooms-create")) && (
                     <Button title={t("hotelRoom.allocateHotelRoom")} onClick={() => setAddNewModal(true)} />
                   )}
                   <Link to={HOTEL_ROOM_PRINT}>
@@ -240,7 +248,7 @@ const HotelRooms = () => {
             </div>
             
             {showFilter && (
-              <div className=" grid grid-cols-3 items-center gap-x-4 pt-6">
+              <div className="grid grid-cols-4 items-end gap-x-4 gap-y-4 pt-6">
                 <div className="pt-2">
                   <Dropdown
                     title={t("hotelRoom.hotel")}
@@ -249,6 +257,7 @@ const HotelRooms = () => {
                     value={hotelFilter}
                     onChange={(e) => {
                       setHotelFilter(e);
+                      setCurrentPage(1);
                     }}
                     noMargin
                   />
@@ -260,6 +269,7 @@ const HotelRooms = () => {
                   value={checkInFilter}
                   onChange={(e) => {
                     setCheckInFilter(e.target.value);
+                    setCurrentPage(1);
                   }}
                 />
                 <Input
@@ -269,8 +279,17 @@ const HotelRooms = () => {
                   value={checkOutFilter}
                   onChange={(e) => {
                     setCheckOutFilter(e.target.value);
+                    setCurrentPage(1);
                   }}
                 />
+                <div className="pt-2">
+                  <Button
+                    type="button"
+                    title="Clear Filter"
+                    onClick={handleClearFilters}
+                    buttonColor="border-secondary bg-secondary"
+                  />
+                </div>
               </div>
             )}
             
@@ -308,7 +327,7 @@ const HotelRooms = () => {
                             requestSort(sortKey);
                           }}
                         >
-                          <p className="font-inter cursor-pointer whitespace-nowrap text-xs font-semibold leading-5 3xl:text-sm">
+                          <p className="font-inter cursor-pointer whitespace-nowrap text-sm font-semibold leading-5 3xl:text-sm">
                             {head}
                             {sortConfig.key ===
                               (head === "Check In"
@@ -446,8 +465,7 @@ const HotelRooms = () => {
                       <div className="flex justify-between">
                         <h3 className="heading">{t("headings.details")}</h3>
                         <div className="flex items-center gap-x-3">
-                          {(userData?.role?.display_name === "web_admin" ||
-                            userData.role.permissions?.some((item) => item === "allocated-rooms-edit")) && (
+                          {(hasPermission(userData, "allocated-rooms-edit")) && (
                             <button
                               className="border-b border-secondary text-sm font-medium text-secondary"
                               type="button"
@@ -459,8 +477,7 @@ const HotelRooms = () => {
                               {t("buttons.edit")}
                             </button>
                           )}
-                          {(userData?.role?.display_name === "web_admin" ||
-                            userData.role.permissions?.some((item) => item === "allocated-rooms-delete")) && (
+                          {(hasPermission(userData, "allocated-rooms-delete")) && (
                             <button
                               onClick={() => setOpenDeleteModal({ open: true, data: detail })}
                               className="border-b border-red-500 text-sm font-medium text-red-500"

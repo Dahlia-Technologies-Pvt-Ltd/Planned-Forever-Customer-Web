@@ -153,7 +153,7 @@ const HotelTab = ({ data, t }) => {
                     requestHotelSort(sortKey);
                   }}
                 >
-                  <p className="font-inter cursor-pointer whitespace-nowrap text-xs font-semibold leading-5 3xl:text-sm">
+                  <p className="font-inter cursor-pointer whitespace-nowrap text-sm font-semibold leading-5 3xl:text-sm">
                     {head}
                     {hotelSortConfig.key ===
                       (head === "Check In" || head === t("hotelRoom.CheckIn")
@@ -197,28 +197,28 @@ const HotelTab = ({ data, t }) => {
               hotelItems.map((item, index) => (
                 <tr key={index} className="cursor-pointer even:bg-gray-50">
                   <td className="cursor-pointer py-3 pl-6 pr-4">
-                    <p className="text-xs font-normal text-primary-color 3xl:text-sm">
+                    <p className="text-sm font-normal text-primary-color 3xl:text-sm">
                       {item?.check_in ? moment.unix(item.check_in).format("D MMM YYYY") : "-"}
                     </p>
                   </td>
                   <td className="cursor-pointer py-3 pl-6 pr-4">
-                    <p className="text-xs font-normal text-primary-color 3xl:text-sm">
+                    <p className="text-sm font-normal text-primary-color 3xl:text-sm">
                       {item?.check_out ? moment.unix(item.check_out).format("D MMM YYYY") : "-"}
                     </p>
                   </td>
                   <td className="cursor-pointer py-3 pl-6 pr-4">
-                    <p className="text-xs font-normal text-primary-color 3xl:text-sm">
+                    <p className="text-sm font-normal text-primary-color 3xl:text-sm">
                       {item?.child === null ? item?.user?.first_name + " " + item?.user?.last_name : item?.child?.name || "-"}
                     </p>
                   </td>
                   <td className="cursor-pointer py-3 pl-6 pr-4">
-                    <p className="text-xs font-normal text-primary-color 3xl:text-sm">{item?.hotel?.name || "-"}</p>
+                    <p className="text-sm font-normal text-primary-color 3xl:text-sm">{item?.hotel?.name || "-"}</p>
                   </td>
                   <td className="cursor-pointer py-3 pl-6 pr-4">
-                    <p className="text-xs font-normal text-primary-color 3xl:text-sm">{item?.room?.room_type || "-"}</p>
+                    <p className="text-sm font-normal text-primary-color 3xl:text-sm">{item?.room?.room_type || "-"}</p>
                   </td>
                   <td className="cursor-pointer py-3 pl-6 pr-4">
-                    <p className="text-xs font-normal text-primary-color 3xl:text-sm">{item?.room?.room_no || "-"}</p>
+                    <p className="text-sm font-normal text-primary-color 3xl:text-sm">{item?.room?.room_no || "-"}</p>
                   </td>
                   <td className="cursor-pointer py-3 pl-6 pr-4">
                     <div className="flex items-center justify-center gap-x-3">

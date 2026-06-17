@@ -7,9 +7,14 @@ import Dropdown from "../../components/common/Dropdown";
 import countriesData from "../../utilities/country.json";
 import { useThemeContext } from "../../context/GlobalContext";
 import countriesCodeData from "../../utilities/countryCode.json";
-import { XMarkIcon, CheckIcon, MinusCircleIcon } from "@heroicons/react/24/solid";
+import { XMarkIcon, CheckIcon } from "@heroicons/react/24/solid";
+import {
+  InformationCircleIcon,
+  PlusIcon,
+  TrashIcon,
+} from "@heroicons/react/24/outline";
 import { VENUE_PRINT, VENUES } from "../../routes/Names";
-import MapPicker from "../../components/MapPicker";
+import MapPicker from "../../components/MapPickervenue";
 import { Link, useNavigate } from "react-router-dom";
 import React, { Fragment, useState, useEffect, useCallback, useRef } from "react";
 import { GoogleMap, Marker, useJsApiLoader, Autocomplete } from "@react-google-maps/api";
@@ -24,6 +29,10 @@ const defaultCenter = {
   lat: 31.5204,
   lng: 74.3587,
 };
+
+const normalizeCountryCode = (countryCode) =>
+  String(countryCode || "").match(/\+\d{1,4}/)?.[0] || "+91";
+
 const AddVenueModal = ({ isOpen, setIsOpen, refreshData, data, setModalData, rData, setRecommendedData }) => {
   // translation
   const { t } = useTranslation("common");
@@ -35,11 +44,18 @@ const AddVenueModal = ({ isOpen, setIsOpen, refreshData, data, setModalData, rDa
   // useStates
   const [pin, setPin] = useState("");
   const [city, setCity] = useState("");
+  const [Address2, setAddress2] = useState("");
+  const [address1, setAddress1] = useState("");
   const [state, setState] = useState("");
   const [country, setCountry] = useState(null);
   const [timeZone, setTimeZone] = useState("");
+  const [countryError, setCountryError] = useState("");
+  const [pinError, setPinError] = useState("");
+  const [timeZoneError, setTimeZoneError] = useState("");
   const [venueNote, setVenueNote] = useState("");
   const [cityError, setCityError] = useState("");
+  const [address1Error, setAddress1Error] = useState("");
+  const [Address2Error, setAddress2Error] = useState("");
   const [venueName, setVenueName] = useState("");
   const [stateError, setStateError] = useState("");
   const [btnLoading, setBtnLoading] = useState(false);
@@ -57,8 +73,84 @@ const AddVenueModal = ({ isOpen, setIsOpen, refreshData, data, setModalData, rDa
   const [contact, setContact] = useState({ contactType: "", countryCode: "", number: "" });
   const [contactNumber, setContactNumber] = useState({ contactType: "", countryCode: "", number: "" });
   const [contactNumber2, setContactNumber2] = useState({ contactType: "", countryCode: "", number: "" });
-  const [location, setLocation] = useState({ address: "", lat: "", lng: "" });
+  const [location, setLocation] = useState({ address: null, lat: null, lng: null });
   const [emailError, setEmailError] = useState("");
+  const [contacts, setContacts] = useState([
+    {
+      contactPerson: "",
+      countryCode: {
+        label: "+91",
+        value: "+91",
+      },
+      phone: "",
+      email: "",
+    },
+  ]);
+  const [contactErrors, setContactErrors] = useState([
+    { contactPerson: "", countryCode: "", phone: "", email: "" },
+  ]);
+
+  const addContact = () => {
+    setContacts([
+      ...contacts,
+      {
+        contactPerson: "",
+        countryCode: {
+          label: "+91",
+          value: "+91",
+        },
+        phone: "",
+        email: "",
+      },
+    ]);
+    setContactErrors([
+      ...contactErrors,
+      { contactPerson: "", countryCode: "", phone: "", email: "" },
+    ]);
+  };
+
+  const removeContact = (index) => {
+    setContacts(contacts.filter((_, i) => i !== index));
+    setContactErrors(contactErrors.filter((_, i) => i !== index));
+  };
+
+  const handleContactChange = (index, field, value) => {
+    const updated = [...contacts];
+    updated[index] = { ...updated[index], [field]: value };
+    setContacts(updated);
+
+    const updatedErrors = [...contactErrors];
+    updatedErrors[index] = { ...updatedErrors[index], [field]: "" };
+    setContactErrors(updatedErrors);
+  };
+
+  const buildContactRows = (venueData) => {
+    if (Array.isArray(venueData?.contacts) && venueData.contacts.length) {
+      return venueData.contacts.map((currentContact) => ({
+        contactPerson: currentContact.contact_person_name || currentContact.name || "",
+        countryCode: {
+          label: normalizeCountryCode(currentContact.country_code),
+          value: normalizeCountryCode(currentContact.country_code),
+        },
+        phone: currentContact.contact_number || currentContact.mobile || currentContact.land_line_number || "",
+        email: currentContact.email || "",
+      }));
+    }
+
+    const contactNumbers = venueData?.contact_numbers || [];
+    const emails = venueData?.emails || [];
+    const rowCount = Math.max(contactNumbers.length, emails.length, 1);
+
+    return Array.from({ length: rowCount }, (_, index) => ({
+      contactPerson: index === 0 ? venueData?.contact_person_name || "" : "",
+      countryCode: {
+        label: normalizeCountryCode(contactNumbers[index]?.country_code),
+        value: normalizeCountryCode(contactNumbers[index]?.country_code),
+      },
+      phone: contactNumbers[index]?.mobile || contactNumbers[index]?.land_line_number || "",
+      email: emails[index]?.personal || emails[index]?.work || "",
+    }));
+  };
 
   // field add function
   const handleInputChange = (e, index, field) => {
@@ -96,11 +188,6 @@ const AddVenueModal = ({ isOpen, setIsOpen, refreshData, data, setModalData, rDa
       //   isValid = false;
       // }
 
-      if (!currentItem.floor) {
-        itemError.floor = "Required";
-        isValid = false;
-      }
-
       return itemError;
     });
 
@@ -124,213 +211,133 @@ const AddVenueModal = ({ isOpen, setIsOpen, refreshData, data, setModalData, rDa
   const isValidForm = () => {
     let isValidData = true;
 
-    if (venueName === "") {
-      setVenueNameError(" Required");
-      isValidData = false;
-    }
-    if (!location?.address) {
-      setVenueAddressError(" Required");
+    const requiredError = " Required";
+    const trimmedVenueName = venueName?.trim();
+    const trimmedAddress = location?.address?.trim();
+
+    setVenueNameError(trimmedVenueName ? "" : requiredError);
+    setVenueAddressError(trimmedAddress ? "" : requiredError);
+    setCountryError("");
+    setStateError(state?.trim() ? "" : requiredError);
+    setCityError(city?.trim() ? "" : requiredError);
+    setPinError("");
+    setTimeZoneError("");
+
+    if (
+      !trimmedVenueName ||
+      !trimmedAddress ||
+      !state?.trim() ||
+      !city?.trim()
+    ) {
       isValidData = false;
     }
 
-    if (city === "") {
-      setCityError(" Required");
-      isValidData = false;
-    }
-    if (state === "") {
-      setStateError("Required");
-      isValidData = false;
-    }
+    const nextContactErrors = contacts.map((currentContact) => {
+      const currentErrors = {
+        contactPerson: "",
+        countryCode: "",
+        phone: "",
+        email: "",
+      };
 
-    if (contactPerson === "") {
-      setContactPersonError(" Required");
-      isValidData = false;
-    }
-
-    if (contactNumber.contactType === "" || contactNumber.number === "" || contactNumber.countryCode === "") {
-      setContactNumberError(" Required");
-      isValidData = false;
-    }
-
-    if (email.email === "" || email.emailType === "") {
-      setEmailError(" Required");
-      isValidData = false;
-    }
-
-    const newErrors = errors?.map((error, index) => {
-      const currentItem = items[index];
-      let itemError = { hallName: "", floor: "" };
-
-      if (!currentItem?.hallName) {
-        itemError.hallName = "Required";
+      if (
+        currentContact.email?.trim() &&
+        !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(currentContact.email.trim())
+      ) {
+        currentErrors.email = " Invalid email";
         isValidData = false;
       }
 
-      // if (!currentItem?.capacity) {
-      //   itemError.capacity = "Required";
-      //   isValidData = false;
-      // }
-
-      if (!currentItem?.floor) {
-        itemError.floor = "Required";
-        isValidData = false;
-      }
-
-      return itemError;
+      return currentErrors;
     });
-    setErrors(newErrors);
+
+    setContactErrors(nextContactErrors);
+    setErrors(items.map(() => ({ hallName: "", floor: "" })));
 
     return isValidData;
   };
 
-  console.log({ rData });
-
   // submit API
   const handleSubmit = async (e) => {
     e.preventDefault();
+    if (!isValidForm() || btnLoading) return;
 
-    if (isValidForm()) {
-      const contactNumbers = [];
+    const populatedContacts = contacts.filter(
+      (currentContact) =>
+        currentContact.contactPerson?.trim() ||
+        currentContact.phone?.trim() ||
+        currentContact.email?.trim()
+    );
+    const contactNumbers = populatedContacts
+      .filter((currentContact) => currentContact.phone?.trim())
+      .map((currentContact) => ({
+        contact_person_name: currentContact.contactPerson?.trim() || "",
+        mobile: currentContact.phone.trim(),
+        country_code: currentContact.countryCode?.value || "",
+      }));
+    const emailsArray = populatedContacts
+      .filter((currentContact) => currentContact.email?.trim())
+      .map((currentContact) => ({
+        contact_person_name: currentContact.contactPerson?.trim() || "",
+        personal: currentContact.email.trim(),
+      }));
+    const venueDetails = items
+      .filter((item) => item.hallName?.trim() || item.floor?.trim())
+      .map((item) => ({
+        name: item.hallName?.trim() || "",
+        location: item.floor?.trim() || "",
+      }));
 
-      if (contactNumber.number) {
-        const key = contactNumber.contactType?.label?.toLowerCase() === "mobile" ? "mobile" : "land_line_number";
-        const countryCode = typeof contactNumber.countryCode === "object" ? contactNumber.countryCode.value : contactNumber.countryCode;
-        contactNumbers.push({
-          [key]: contactNumber.number,
-          country_code: countryCode,
+    const fullAddress = [location.address.trim(), Address2?.trim()]
+      .filter(Boolean)
+      .filter((addressPart, index, addressParts) => addressParts.indexOf(addressPart) === index)
+      .join(", ");
+    const payload = {
+      name: (rData === null ? venueName : rData?.name || venueName).trim(),
+      address: fullAddress,
+      city: city.trim(),
+      state: state.trim(),
+      pin: String(pin || "").trim(),
+      time_zone: timeZone?.value || null,
+      contact_person_name: populatedContacts[0]?.contactPerson?.trim() || "",
+      contact_numbers: contactNumbers,
+      emails: emailsArray,
+      description: venueNote?.trim() || "",
+      country: country?.value || country?.Value || null,
+      longitude: location?.lng,
+      latitude: location?.lat,
+      venue_details: venueDetails,
+      event_id: eventSelect,
+      recommended_trending_id: rData?.id || null,
+      recommended_trending_type: rData ? "recommended" : data?.recommended_trending_type || "recommended",
+    };
+
+    try {
+      setBtnLoading(true);
+      console.log("Venue request payload:", payload);
+
+      const response =
+        data === null
+          ? await ApiServices.venues.addVenue(payload)
+          : await ApiServices.venues.updateVenue(data.id, payload);
+
+      if (response?.data?.code === 200 || response?.status === 200 || response?.status === 201) {
+        closeModal();
+        if (rData !== null) navigate(VENUES);
+        refreshData();
+        openSuccessModal({
+          title: t("message.success"),
+          message: t("venues.venueAddedSuccess"),
+          onClickDone: () => closeSuccessModel(),
         });
-      }
-
-      if (contact.number) {
-        const key = contact.contactType?.label?.toLowerCase() === "mobile" ? "mobile" : "land_line_number";
-        const countryCode = typeof contact.countryCode === "object" ? contact.countryCode.value : contact.countryCode;
-        contactNumbers.push({
-          [key]: contact.number,
-          country_code: countryCode,
-        });
-      }
-
-      if (contactNumber2.number) {
-        const key = contactNumber2.contactType?.label?.toLowerCase() === "mobile" ? "mobile" : "land_line_number";
-        const countryCode = typeof contactNumber2.countryCode === "object" ? contactNumber2.countryCode.value : contactNumber2.countryCode;
-        contactNumbers.push({
-          [key]: contactNumber2.number,
-          country_code: countryCode,
-        });
-      }
-
-      const emailsArray = [];
-      if (email.email) {
-        const key = email.emailType?.label?.toLowerCase() === "work" ? "work" : "personal";
-        emailsArray.push({ [key]: email.email });
-      }
-      if (emailAddress.email) {
-        const key = emailAddress.emailType?.label?.toLowerCase() === "work" ? "work" : "personal";
-        emailsArray.push({ [key]: emailAddress.email });
-      }
-
-      let payload;
-
-      if (data === null) {
-        try {
-          setBtnLoading(true);
-
-          payload = {
-            name: rData === null ? venueName : rData?.name,
-            address: location.address,
-            city: city,
-            state: state,
-            pin: pin,
-            time_zone: timeZone?.value,
-            contact_person_name: contactPerson,
-            contact_numbers: contactNumbers,
-            emails: emailsArray,
-            description: venueNote,
-            country: country.value ? country?.value : country.Value,
-            longitude: location?.lng,
-            latitude: location?.lat,
-            venue_details: items?.map((item) => ({
-              name: item.hallName,
-              // capacity: item.capacity,
-              location: item.floor,
-            })),
-            event_id: eventSelect,
-            recommended_trending_id: rData?.id,
-            recommended_trending_type: "recommended",
-          };
-
-          const response = await ApiServices.venues.addVenue(payload);
-
-          console.log({ response });
-
-          if (response?.data?.code === 200) {
-            closeModal();
-            rData !== null ? navigate(VENUES) : "";
-            refreshData();
-            openSuccessModal({
-              title: t("message.success"),
-              message: t("venues.venueAddedSuccess"),
-              onClickDone: (close) => {
-                closeSuccessModel();
-              },
-            });
-          } else {
-            setBtnLoading(false);
-          }
-        } catch (err) {
-          setErrorMessage(err?.response?.data?.message);
-          setBtnLoading(false);
-        } finally {
-          setBtnLoading(false);
-        }
       } else {
-        try {
-          setBtnLoading(true);
-
-          payload = {
-            name: venueName,
-            address: location.address,
-            city: city,
-            state: state,
-            pin: pin,
-            time_zone: timeZone?.value,
-            contact_person_name: contactPerson,
-            contact_numbers: contactNumbers,
-            emails: emailsArray,
-            description: venueNote,
-            country: country?.Value,
-            longitude: location?.lng,
-            latitude: location?.lat,
-            venue_details: items?.map((item) => ({
-              name: item.hallName || "",
-              // capacity: item.capacity,
-              location: item.floor || "",
-            })),
-            event_id: eventSelect,
-            recommended_trending_type: "recommended",
-          };
-
-          const response = await ApiServices.venues.updateVenue(data.id, payload);
-
-          if (response?.data?.code === 200) {
-            closeModal();
-            refreshData();
-            openSuccessModal({
-              title: t("message.success"),
-              message: t("venues.venueAddedSuccess"),
-              onClickDone: (close) => {
-                closeSuccessModel();
-              },
-            });
-          } else {
-            setBtnLoading(false);
-          }
-        } catch (err) {
-          setBtnLoading(false);
-        } finally {
-          setBtnLoading(false);
-        }
+        setErrorMessage(response?.data?.message || "Unable to save venue");
       }
+    } catch (err) {
+      console.error("Venue save failed:", err?.response?.data || err);
+      setErrorMessage(err?.response?.data?.message || "Unable to save venue");
+    } finally {
+      setBtnLoading(false);
     }
   };
 
@@ -339,6 +346,8 @@ const AddVenueModal = ({ isOpen, setIsOpen, refreshData, data, setModalData, rDa
     setPin("");
     setVenueName("");
     setLocation({ address: "", lat: "", lng: "" });
+    setAddress1("");
+    setAddress2("");
     setCity("");
     setState("");
     setPin("");
@@ -352,6 +361,17 @@ const AddVenueModal = ({ isOpen, setIsOpen, refreshData, data, setModalData, rDa
     setContact({ contactType: "", countryCode: "", number: "" });
     setEmail({ emailType: "", email: "" });
     setEmailAddress({ emailType: "", email: "" });
+    setContacts([
+      {
+        contactPerson: "",
+        countryCode: { label: "+91", value: "+91" },
+        phone: "",
+        email: "",
+      },
+    ]);
+    setContactErrors([
+      { contactPerson: "", countryCode: "", phone: "", email: "" },
+    ]);
     setVenueNameError("");
     setVenueAddressError("");
     setErrors([{ hallName: "", floor: "" }]);
@@ -360,6 +380,11 @@ const AddVenueModal = ({ isOpen, setIsOpen, refreshData, data, setModalData, rDa
     setStateError("");
     setCityError("");
     setEmailError("");
+    setCountryError("");
+    setPinError("");
+    setTimeZoneError("");
+    setAddress1Error("");
+    setAddress2Error("");
   };
 
   // Close Modal
@@ -378,6 +403,8 @@ const AddVenueModal = ({ isOpen, setIsOpen, refreshData, data, setModalData, rDa
       setVenueName(data?.name);
       // setVenueAddress(data?.address);
       setLocation({ address: data?.address, lat: data?.latitude, lng: data?.longitude });
+      setAddress1(data?.address_line_1 || data?.address || "");
+      setAddress2(data?.address_line_2 || "");
       setCity(data?.city);
       setState(data?.state);
       setPin(data?.pin);
@@ -393,7 +420,8 @@ const AddVenueModal = ({ isOpen, setIsOpen, refreshData, data, setModalData, rDa
         // capacity: item.capacity,
         floor: item.location,
       }));
-      setItems(currentItem);
+      setItems(currentItem.length ? currentItem : [{ hallName: "", floor: "" }]);
+      setErrors((currentItem.length ? currentItem : [{}]).map(() => ({ hallName: "", floor: "" })));
 
       let contact1 = { contactType: "", countryCode: "", number: "" };
       let contact2 = { contactType: "", countryCode: "", number: "" };
@@ -411,7 +439,10 @@ const AddVenueModal = ({ isOpen, setIsOpen, refreshData, data, setModalData, rDa
         contact1 = {
           contactType: { label: getContactType(contactNumbers[0]), value: getContactType(contactNumbers[0]) },
           number: getContactNumber(contactNumbers[0]),
-          countryCode: { label: contactNumbers[0]?.country_code, value: contactNumbers[0]?.country_code },
+          countryCode: {
+            label: normalizeCountryCode(contactNumbers[0]?.country_code),
+            value: normalizeCountryCode(contactNumbers[0]?.country_code),
+          },
         };
       }
 
@@ -419,14 +450,20 @@ const AddVenueModal = ({ isOpen, setIsOpen, refreshData, data, setModalData, rDa
         contact2 = {
           contactType: { label: getContactType(contactNumbers[1]), value: getContactType(contactNumbers[1]) },
           number: getContactNumber(contactNumbers[1]),
-          countryCode: { label: contactNumbers[1]?.country_code, value: contactNumbers[1]?.country_code },
+          countryCode: {
+            label: normalizeCountryCode(contactNumbers[1]?.country_code),
+            value: normalizeCountryCode(contactNumbers[1]?.country_code),
+          },
         };
       }
       if (contactNumbers?.length > 2) {
         contact3 = {
           contactType: { label: getContactType(contactNumbers[2]), value: getContactType(contactNumbers[2]) },
           number: getContactNumber(contactNumbers[2]),
-          countryCode: { label: contactNumbers[2]?.country_code, value: contactNumbers[2]?.country_code },
+          countryCode: {
+            label: normalizeCountryCode(contactNumbers[2]?.country_code),
+            value: normalizeCountryCode(contactNumbers[2]?.country_code),
+          },
         };
       }
 
@@ -452,13 +489,50 @@ const AddVenueModal = ({ isOpen, setIsOpen, refreshData, data, setModalData, rDa
       // Update state
       setEmail(email1);
       setEmailAddress(email2);
+      const contactRows = buildContactRows(data);
+      setContacts(contactRows);
+      setContactErrors(contactRows.map(() => ({ contactPerson: "", countryCode: "", phone: "", email: "" })));
     }
   }, [isOpen]);
 
   useEffect(() => {
-    if (rData !== null) {
+    if (isOpen && rData !== null) {
+      const recommendedAddress =
+        typeof rData?.address === "string"
+          ? rData.address
+          : rData?.address?.formatted_address ||
+            rData?.address?.full_address ||
+            rData?.address?.address_line_1 ||
+            "";
+      const recommendedAddress1 =
+        rData?.address_line_1 ||
+        rData?.addressLine1 ||
+        rData?.address_1 ||
+        rData?.address1 ||
+        rData?.venue_address ||
+        rData?.location?.address_line_1 ||
+        rData?.location?.address ||
+        rData?.formatted_address ||
+        rData?.full_address ||
+        recommendedAddress ||
+        "";
+      const recommendedAddress2 =
+        rData?.address_line_2 ||
+        rData?.addressLine2 ||
+        rData?.address_2 ||
+        rData?.address2 ||
+        rData?.location?.address_line_2 ||
+        rData?.address?.address_line_2 ||
+        "";
+
       setVenueName(rData?.name);
-      setLocation({ address: rData?.address, lat: rData?.latitude, lng: rData?.longitude });
+      setLocation({
+        address: recommendedAddress1,
+        lat: rData?.latitude,
+        lng: rData?.longitude,
+      });
+      setAddress1(recommendedAddress1);
+      setAddress2(recommendedAddress2);
       setCity(rData?.city);
       setState(rData?.state);
       setPin(rData?.pin);
@@ -474,7 +548,8 @@ const AddVenueModal = ({ isOpen, setIsOpen, refreshData, data, setModalData, rDa
         // capacity: item.capacity,
         floor: item.location,
       }));
-      setItems(currentItem);
+      setItems(currentItem.length ? currentItem : [{ hallName: "", floor: "" }]);
+      setErrors((currentItem.length ? currentItem : [{}]).map(() => ({ hallName: "", floor: "" })));
 
       let contact1 = { contactType: "", countryCode: "", number: "" };
       let contact2 = { contactType: "", countryCode: "", number: "" };
@@ -492,7 +567,10 @@ const AddVenueModal = ({ isOpen, setIsOpen, refreshData, data, setModalData, rDa
         contact1 = {
           contactType: { label: getContactType(contactNumbers[0]), value: getContactType(contactNumbers[0]) },
           number: getContactNumber(contactNumbers[0]),
-          countryCode: { label: contactNumbers[0]?.country_code, value: contactNumbers[0]?.country_code },
+          countryCode: {
+            label: normalizeCountryCode(contactNumbers[0]?.country_code),
+            value: normalizeCountryCode(contactNumbers[0]?.country_code),
+          },
         };
       }
 
@@ -500,14 +578,20 @@ const AddVenueModal = ({ isOpen, setIsOpen, refreshData, data, setModalData, rDa
         contact2 = {
           contactType: { label: getContactType(contactNumbers[1]), value: getContactType(contactNumbers[1]) },
           number: getContactNumber(contactNumbers[1]),
-          countryCode: { label: contactNumbers[1]?.country_code, value: contactNumbers[1]?.country_code },
+          countryCode: {
+            label: normalizeCountryCode(contactNumbers[1]?.country_code),
+            value: normalizeCountryCode(contactNumbers[1]?.country_code),
+          },
         };
       }
       if (contactNumbers?.length > 2) {
         contact3 = {
           contactType: { label: getContactType(contactNumbers[2]), value: getContactType(contactNumbers[2]) },
           number: getContactNumber(contactNumbers[2]),
-          countryCode: { label: contactNumbers[2]?.country_code, value: contactNumbers[2]?.country_code },
+          countryCode: {
+            label: normalizeCountryCode(contactNumbers[2]?.country_code),
+            value: normalizeCountryCode(contactNumbers[2]?.country_code),
+          },
         };
       }
 
@@ -533,14 +617,63 @@ const AddVenueModal = ({ isOpen, setIsOpen, refreshData, data, setModalData, rDa
       // Update state
       setEmail(email1);
       setEmailAddress(email2);
+      const contactRows = buildContactRows(rData);
+      setContacts(contactRows);
+      setContactErrors(contactRows.map(() => ({ contactPerson: "", countryCode: "", phone: "", email: "" })));
     }
-  }, [isOpen]);
+  }, [isOpen, rData]);
 
+  // const handleLocationSelect = (selectedLocation) => {
+  //   setLocation(selectedLocation);
+  //   if (selectedLocation) {
+  //     setVenueAddressError("");
+  //   }
+  // };
   const handleLocationSelect = (selectedLocation) => {
-    setLocation(selectedLocation);
-    if (selectedLocation) {
-      setVenueAddressError("");
+    console.log(selectedLocation);
+    setLocation({
+      address: selectedLocation.address,
+      displayAddress: selectedLocation.address1 || selectedLocation.address,
+      lat: selectedLocation.lat,
+      lng: selectedLocation.lng,
+    });
+
+    setAddress1(selectedLocation.address1 || "");
+    setAddress2(selectedLocation.address2 || "");
+
+    setCity(selectedLocation.city || "");
+    setState(selectedLocation.state || "");
+
+    setPin(selectedLocation.postalCode || "");
+
+    if (selectedLocation.country) {
+      setCountry({
+        label: selectedLocation.country,
+        value: selectedLocation.country,
+        Value: selectedLocation.country,
+      });
     }
+
+    if (selectedLocation.timeZone) {
+      const selectedTimeZone = selectedLocation.timeZone;
+      const isIndiaTimeZone = ["Asia/Calcutta", "Asia/Kolkata"].includes(selectedTimeZone.value);
+
+      setTimeZone(
+        isIndiaTimeZone
+          ? {
+              value: "Asia/Kolkata",
+              label: "(GMT+5:30) Chennai, Kolkata, Mumbai, New Delhi",
+            }
+          : selectedTimeZone
+      );
+    }
+
+    setVenueAddressError("");
+    setCountryError("");
+    setStateError("");
+    setCityError("");
+    setPinError("");
+    setTimeZoneError("");
   };
 
   console.log({ location });
@@ -572,23 +705,23 @@ const AddVenueModal = ({ isOpen, setIsOpen, refreshData, data, setModalData, rDa
               leaveTo="opacity-0 scale-75"
             >
               <Dialog.Panel
-                className={`p-8 w-full max-w-7xl bg-white rounded-2xl shadow-xl transition-all md:max-w-xl lg:max-w-3xl xl:max-w-5xl 2xl:max-w-6xl 3xl:max-w-7xl`}
+                className={`venue-modal p-6 w-full max-w-4xl bg-white rounded-2xl shadow-xl transition-all`}
               >
-                <div className="flex justify-between items-center mb-5">
-                  <Dialog.Title as="h3" className="text-lg font-semibold leading-7 font-poppins text-secondary-color">
+                <div className="flex justify-between items-center mb-2">
+                  <Dialog.Title as="h3" className="ml-1 text-lg font-semibold leading-7 font-poppins text-secondary-color">
                     {data === null ? t("venues.addVenue") : t("venues.updateVenue")}
                   </Dialog.Title>
                   <XMarkIcon onClick={closeModal} className="w-8 h-8 cursor-pointer text-info-color" />
                 </div>
 
-                <form onSubmit={handleSubmit}>
-                  <div className=" h-[600px] overflow-y-auto p-2 md:h-[400px] lg:h-[400px] xl:h-[500px] 2xl:h-[600px]">
+                <form onSubmit={handleSubmit} className="[&_.label]:text-xs [&_.label]:font-medium [&_input]:h-9 [&_input]:min-h-[36px] [&_input]:text-sm [&_input]:py-1 [&_input[type='datetime-local']]:h-9 [&_textarea]:text-sm [&_.css-b62m3t-container]:text-sm [&_.css-13cymwt-control]:h-9 [&_.css-13cymwt-control]:min-h-[36px] [&_.css-13cymwt-control]:py-0 [&_.css-t3ipsp-control]:h-9 [&_.css-t3ipsp-control]:min-h-[36px] [&_.css-t3ipsp-control]:py-0 [&_.css-hlgwow]:h-9 [&_.css-hlgwow]:min-h-[36px] [&_.css-hlgwow]:py-0 [&_.css-hlgwow]:px- [&_.css-1jqq78o-placeholder]:text-sm [&_.css-1jqq78o-placeholder]:leading-none [&_.css-1dimb5e-singleValue]:text-sm [&_.css-1dimb5e-singleValue]:leading-none [&_.css-1wy0on6]:h-9 [&_.css-19bb58m]:my-0">
+                  <div className=" h-[600px] overflow-y-auto p-1 md:h-[400px] lg:h-[400px] xl:h-[500px] 2xl:h-[600px]">
                     <div className="mb-5 ltr:text-left rtl:text-right">
                       <div>
-                        <div className="mb-2 label text-secondary">{t("headings.basicInfo")}</div>
+                        <div className="mb-2 label text-black">{t("headings.basicInfo")}</div>
                       </div>
                     </div>
-                    <div className="grid grid-cols-3 gap-7">
+                    <div className="grid grid-cols-3 gap-4">
                       <Input
                         isRequired
                         label={t("venues.venueName")}
@@ -603,6 +736,64 @@ const AddVenueModal = ({ isOpen, setIsOpen, refreshData, data, setModalData, rDa
                         disabled={rData === null && data?.recommend_trending_venue === "recommended" ? true : false}
                       />
 
+                      {/* <Input
+                        isRequired
+                        label={t("venues.venueAddress1")}
+                        placeholder={t("venues.venueAddress1")}
+                        labelOnTop
+                        value={address1}
+                        error={address1Error}
+                        onChange={(e) => {
+                          setAddress1(e.target.value);
+                          setAddress1Error("");
+                        }}
+                      /> */}
+                      <div className="[&>div>div]:mb-0">
+                        <MapPicker
+                          label={t("venues.venueAddress1")}
+                          placeholder={t("venues.searchVenueLocation")}
+                          setLocation={setLocation}
+                          location={location}
+                          autoResolveAddress={Boolean(rData)}
+                          venueAddressError={venueAddressError}
+                          onLocationSelect={handleLocationSelect}
+                        />
+                      </div>
+                      <Input
+                        
+                        label={t("venues.venueAddress2")}
+                        placeholder={t("venues.venueAddress2")}
+                        labelOnTop
+                        value={Address2}
+                        error={Address2Error}
+                        onChange={(e) => {
+                          setAddress2(e.target.value);
+                          setAddress2Error("");
+                        }}
+                      />
+                      <Dropdown
+                        isSearchable
+                        options={countriesData.countries.map((country) => ({ label: country.name, value: country.name, Value: country.name }))}
+                        title={t("venues.country")}
+                        placeholder={t("venues.country")}
+                        value={country}
+                        onChange={(value) => {
+                          setCountry(value);
+                          setCountryError("");
+                        }}
+                      />
+                      <Input
+                        isRequired 
+                        label={t("venues.state")}
+                        placeholder={t("venues.state")}
+                        labelOnTop
+                        value={state}
+                        error={stateError}
+                        onChange={(e) => {
+                          setState(e.target.value);
+                          setStateError("");
+                        }}
+                      />
                       <Input
                         isRequired
                         label={t("venues.city")}
@@ -616,44 +807,28 @@ const AddVenueModal = ({ isOpen, setIsOpen, refreshData, data, setModalData, rDa
                         }}
                       />
                       <Input
-                        isRequired
-                        label={t("venues.state")}
-                        placeholder={t("venues.state")}
-                        labelOnTop
-                        value={state}
-                        error={stateError}
-                        onChange={(e) => {
-                          setState(e.target.value);
-                          setStateError("");
-                        }}
-                      />
-                      <Dropdown
-                        isSearchable
-                        options={countriesData.countries.map((country) => ({ label: country.name, Value: country.name }))}
-                        title={t("venues.country")}
-                        placeholder={t("venues.country")}
-                        value={country}
-                        onChange={(value) => setCountry(value)}
-                      />
-                      <Input
                         label={t("venues.pin")}
                         placeholder={t("venues.pin")}
                         labelOnTop
                         value={pin}
                         onChange={(e) => {
                           setPin(e.target.value);
+                          setPinError("");
                         }}
                         type="number"
                       />
 
-                      <div>
-                        <div className="mb-2 label ltr:text-left rtl:text-right">
-                          <p>{t("venues.timeZone")}</p>
+                      <div className="col-span-2 w-full">
+                        <div className="mb-3 label ltr:text-left rtl:text-right">
+                          <p>
+                            {t("venues.timeZone")}
+                          </p>
                         </div>
                         <TimezoneSelect
                           value={timeZone}
                           onChange={(e) => {
                             setTimeZone(e);
+                            setTimeZoneError("");
                           }}
                           placeholder={t("venues.timeZone")}
                           styles={{
@@ -666,11 +841,12 @@ const AddVenueModal = ({ isOpen, setIsOpen, refreshData, data, setModalData, rDa
                             }),
                             control: (defaultStyles, state) => ({
                               ...defaultStyles,
+                              width: "100%",
                               boxShadow: state.isFocused ? "0 0 0 2px black" : defaultStyles.boxShadow,
                               borderRadius: "10px",
                               borderColor: state.isFocused || state.isHovered ? "none" : defaultStyles.border,
                               border: state.isFocused || state.isHovered ? "none" : defaultStyles.border,
-                              minHeight: "44px",
+                              minHeight: "36px",
                               textAlign: "left",
                             }),
                             menu: (defaultStyles, state) => ({
@@ -686,281 +862,212 @@ const AddVenueModal = ({ isOpen, setIsOpen, refreshData, data, setModalData, rDa
                       </div>
                     </div>
 
-                    <div className="grid grid-cols-12 mt-5">
+                    <div className="grid grid-cols-12 ">
                       <div className="col-span-8 md:col-span-12 lg:col-span-12 xl:col-span-8">
                         <div className="mt-3">
-                          <MapPicker
+                          {/* <MapPicker
                             label={t("venues.venueAddress")}
                             setLocation={setLocation}
                             placeholder={t("venues.venueAddress")}
                             onLocationSelect={handleLocationSelect}
                             location={location}
                             venueAddressError={venueAddressError}
-                          />
+                          /> */}
                         </div>
                       </div>
                     </div>
 
-                    <div className="mt-5 ltr:text-left rtl:text-right">
+                    <div className="relative mt-12 ltr:text-left rtl:text-right before:absolute before:-top-7 before:left-0 before:right-0 before:h-px before:bg-gray-200">
                       <div>
-                        <div className="mb-2 label text-secondary">
-                          {t("venues.venueDetail")}
-                          <span className="text-red-500">*</span>
+                        <div className="mb-5 flex items-center gap-1.5 label text-black">
+                          <span>{t("venues.venueDetail")}</span>
+                          <span className="group relative inline-flex">
+                            <button
+                              type="button"
+                              aria-label={t("venues.hallInfo")}
+                              className="inline-flex text-black"
+                            >
+                              <InformationCircleIcon className="h-5 w-5" />
+                            </button>
+                            <span className="pointer-events-none absolute bottom-full left-0 z-50 mb-2 hidden w-80 rounded-md bg-secondary px-3 py-2 text-xs font-normal leading-5 text-white shadow-lg group-hover:block group-focus-within:block">
+                              {t("venues.hallInfoTooltip")}
+                            </span>
+                          </span>
                         </div>
                       </div>
                     </div>
 
-                    <div className="text-left">
+                    <div className="space-y-3">
                       {items?.map((item, index) => (
-                        <div key={index} className="flex items-center mb-2 space-x-3 w-full">
-                          <Input
-                            placeholder={t("venues.hallName")}
-                            error={errors[index]?.hallName}
-                            labelOnTop
-                            value={item?.hallName}
-                            onChange={(e) => handleInputChange(e, index, "hallName")}
-                            invisible
-                          />
-
-                          <Input
-                            placeholder={t("venues.hallAddress")}
-                            labelOnTop
-                            error={errors[index]?.floor}
-                            value={item?.floor}
-                            onChange={(e) => handleInputChange(e, index, "floor")}
-                            invisible
-                          />
-                          {index > 0 && (
-                            <MinusCircleIcon
-                              className="inline-block ml-1.5 w-10 h-10 text-red-500 cursor-pointer"
-                              onClick={() => handleDeleteItem(index)}
+                        <div key={index} className="grid grid-cols-12 gap-3 items-end">
+                          <div className="col-span-5 [&_.label>span]:ml-1">
+                            <Input
+                              label={index === 0 ? t("venues.hallName") : ""}
+                              placeholder={t("venues.hallName")}
+                              error={errors[index]?.hallName}
+                              value={item?.hallName}
+                              onChange={(e) => handleInputChange(e, index, "hallName")}
+                              labelOnTop={index === 0}
                             />
-                          )}
+                          </div>
+
+                          <div className="col-span-6 [&_.label>span]:ml-1">
+                            <Input
+                              label={index === 0 ? t("venues.hallAddress") : ""}
+                        placeholder={t("venues.hallAddressExample")}
+                              error={errors[index]?.floor}
+                              value={item?.floor}
+                              onChange={(e) => handleInputChange(e, index, "floor")}
+                              labelOnTop={index === 0}
+                            />
+                          </div>
+
+                          <div className="col-span-1 flex h-9 items-center justify-center">
+                            {items.length > 1 && (
+                              <button
+                                type="button"
+                                aria-label={t("venues.removeHall")}
+                                onClick={() => handleDeleteItem(index)}
+                                className="inline-flex h-9 w-9 items-center justify-center text-gray-400 transition hover:text-red-500"
+                              >
+                                <TrashIcon className="h-5 w-5" />
+                              </button>
+                            )}
+                          </div>
                         </div>
                       ))}
-
-                      <button className="px-4 py-2 mt-4 text-white rounded-lg bg-secondary" onClick={addNewFieldSet}>
-                        {t("buttons.addAnother")}
-                      </button>
                     </div>
+                    <button
+                      type="button"
+                      onClick={addNewFieldSet}
+                      className="mt-5 flex h-8 w-fit items-center gap-2 rounded-lg border border-secondary/50 px-3 text-sm font-medium text-secondary transition hover:border-secondary hover:bg-secondary/5"
+                    >
+                      <PlusIcon className="h-5 w-5" />
+                      {t("venues.addAnotherHall")}
+                    </button>
 
-                    <div className="mt-5 mb-5 ltr:text-left rtl:text-right">
+                    <div className="relative mt-14 mb-5 ltr:text-left rtl:text-right before:absolute before:-top-7 before:left-0 before:right-0 before:h-px before:bg-gray-200">
                       <div>
-                        <div className="mb-2 label text-secondary">{t("headings.contactInfo")}</div>
+                        <div className="mb-5 label text-black">{t("venues.venuePrimaryContact")}</div>
                       </div>
                     </div>
 
-                    <div className="grid grid-cols-12 gap-7">
-                      <div className="col-span-4 md:col-span-12 lg:col-span-12 xl:col-span-4 2xl:col-span-4 3xl:col-span-4">
-                        <Input
-                          isRequired
-                          label={t("venues.contactPerson")}
-                          placeholder={t("venues.contactPerson")}
-                          labelOnTop
-                          error={contactPersonError}
-                          value={contactPerson}
-                          onChange={(e) => {
-                            setContactPerson(e.target.value);
-                            setContactPersonError("");
-                          }}
-                        />
-                      </div>
-                      <div className="col-span-4 md:col-span-12 lg:col-span-6 xl:col-span-4 2xl:col-span-4 3xl:col-span-4">
-                        <div className="grid grid-cols-12 gap-2">
-                          <div className="col-span-4">
-                            <Dropdown
-                              selectClasses=""
-                              title={t("venues.email1")}
-                              placeholder={t("venues.type")}
-                              value={email.emailType}
-                              onChange={(e) => {
-                                setEmail({ ...email, emailType: e });
-                                setEmailError("");
-                              }}
-                              options={email_options}
-                              labelClasses="whitespace-nowrap"
-                              withError={emailError}
-                              isRequired
+                    <div className="mt-5">
+                      {contacts.map((item, index) => (
+                        <div
+                          key={index}
+                          className="grid grid-cols-12 gap-4 items-end mb-4"
+                        >
+                          {/* Contact Person */}
+                          <div className="col-span-3">
+                            <Input
+                              label={t("venues.contactPerson")}
+                              labelOnTop
+                              placeholder={t("venues.contactPerson")}
+                              value={item.contactPerson}
+                              onChange={(e) =>
+                                handleContactChange(
+                                  index,
+                                  "contactPerson",
+                                  e.target.value
+                                )
+                              }
                             />
                           </div>
 
-                          <div className="col-span-8 mt-6">
-                            <Input
-                              placeholder={t("addVenueModal.emailAddress")}
-                              value={email.email}
-                              onChange={(e) => {
-                                setEmail({ ...email, email: e.target.value });
-                                setEmailError("");
-                              }}
-                              error={emailError}
-                              invisible
-                            />
-                          </div>
-                        </div>
-                      </div>
-                      <div className="col-span-4 md:col-span-12 lg:col-span-6 xl:col-span-4 2xl:col-span-4 3xl:col-span-4">
-                        <div className="grid grid-cols-12 gap-2">
+                          {/* Phone Number */}
                           <div className="col-span-4">
-                            <Dropdown
-                              title={t("venues.email2")}
-                              placeholder={t("venues.type")}
-                              value={emailAddress.emailType}
-                              onChange={(e) => {
-                                setEmailAddress({ ...emailAddress, emailType: e });
-                              }}
-                              options={email_options}
-                              labelClasses="whitespace-nowrap"
-                            />
+                            
+                            <div className="label ltr:text-left rtl:text-right">
+                              <p>
+                                {t("venues.contactNumber")}
+                              </p>
+                            </div>
+                            <div className="flex gap-2">
+                              <div className="w-24">
+                                <Dropdown
+                                  isSearchable
+                                  value={item.countryCode}
+                                  options={countriesCodeData?.countries.map(
+                                    (country) => ({
+                                      label: `+${country.callingCodes[0]}`,
+                                      value: `+${country.callingCodes[0]}`,
+                                    })
+                                  )}
+                                  onChange={(value) =>
+                                    handleContactChange(
+                                      index,
+                                      "countryCode",
+                                      value
+                                    )
+                                  }
+                                  invisible
+                                />
+                              </div>
+
+                              <div className="flex-1">
+                                <Input
+                                  placeholder={t("venues.contactNumber")}
+                                  value={item.phone}
+                                  onChange={(e) =>
+                                    handleContactChange(
+                                      index,
+                                      "phone",
+                                      e.target.value
+                                    )
+                                  }
+                                  invisible
+                                />
+                              </div>
+                            </div>
                           </div>
-                          <div className="col-span-8 mt-6">
+
+                          {/* Email */}
+                          <div className="col-span-4">
                             <Input
+                              label={t("venues.emailAddress")}
+                              labelOnTop
                               placeholder={t("venues.emailAddress")}
-                              value={emailAddress.email}
-                              onChange={(e) => setEmailAddress({ ...emailAddress, email: e.target.value })}
+                              value={item.email}
+                              error={contactErrors[index]?.email}
+                              onChange={(e) =>
+                                handleContactChange(
+                                  index,
+                                  "email",
+                                  e.target.value
+                                )
+                              }
                             />
+                          </div>
+
+                          {/* Action Button */}
+                          <div className="col-span-1 flex h-9 items-center justify-center">
+                            {contacts.length > 1 && (
+                              <button
+                                type="button"
+                                aria-label={t("venues.removeContact")}
+                                onClick={() => removeContact(index)}
+                                className="inline-flex h-9 w-9 items-center justify-center text-gray-400 transition hover:text-red-500"
+                              >
+                                <TrashIcon className="h-5 w-5" />
+                              </button>
+                            )}
                           </div>
                         </div>
-                      </div>
+                      ))}
                     </div>
+                    <button
+                      type="button"
+                      onClick={addContact}
+                      className="mt-1 flex h-8 w-fit items-center gap-2 rounded-lg border border-secondary/50 px-3 text-sm font-medium text-secondary transition hover:border-secondary hover:bg-secondary/5"
+                    >
+                      <PlusIcon className="h-5 w-5" />
+                      {t("venues.addAnotherContact")}
+                    </button>
 
-                    <div className="grid grid-cols-12 gap-2 mt-5">
-                      <div className="col-span-6">
-                        <div className="grid grid-cols-12 gap-2">
-                          <div className="col-span-3">
-                            <Dropdown
-                              isRequired
-                              title={t("venues.contact1")}
-                              placeholder={t("venues.type")}
-                              withError={contactNumberError}
-                              onChange={(e) => {
-                                setContactNumber({ ...contactNumber, contactType: e });
-                                setContactNumberError("");
-                              }}
-                              value={contactNumber.contactType}
-                              options={contact_options}
-                              labelClasses="whitespace-nowrap"
-                            />
-                          </div>
-
-                          <div className="col-span-4 mt-6">
-                            <Dropdown
-                              isSearchable
-                              options={countriesCodeData?.countries.map((country) => ({
-                                label: `+${country.callingCodes[0]} ${country.name}`,
-                                value: `+${country.callingCodes[0]} ${country.name}`,
-                              }))}
-                              placeholder={t("venues.countryCode")}
-                              value={contactNumber.countryCode}
-                              onChange={(e) => {
-                                setContactNumber({ ...contactNumber, countryCode: e });
-                                setContactNumberError("");
-                              }}
-                              invisible
-                              withError={contactNumberError}
-                              title={t("venues.contact1")}
-                            />
-                          </div>
-
-                          <div className="col-span-5 mt-6">
-                            <Input
-                              placeholder={t("venues.contactNumber")}
-                              value={contactNumber.number}
-                              onChange={(e) => {
-                                setContactNumber({ ...contactNumber, number: e.target.value });
-                                setContactNumberError("");
-                              }}
-                              type="tel"
-                              error={contactNumberError}
-                              invisible
-                            />
-                          </div>
-                        </div>
-                      </div>
-                    </div>
-
-                    <div className="grid grid-cols-12 gap-2 mt-5">
-                      <div className="col-span-6">
-                        <div className="grid grid-cols-12 gap-2">
-                          <div className="col-span-3">
-                            <Dropdown
-                              title={t("venues.contact2")}
-                              placeholder={t("venues.type")}
-                              onChange={(e) => {
-                                setContact({ ...contact, contactType: e });
-                              }}
-                              value={contact.contactType}
-                              options={contact_options}
-                              labelClasses="whitespace-nowrap"
-                            />
-                          </div>
-                          <div className="col-span-4 mt-6">
-                            <Dropdown
-                              isSearchable
-                              options={countriesCodeData?.countries.map((country) => ({
-                                label: `+${country.callingCodes[0]} ${country.name}`,
-                                value: `+${country.callingCodes[0]} ${country.name}`,
-                              }))}
-                              placeholder={t("venues.countryCode")}
-                              value={contact.countryCode}
-                              onChange={(e) => setContact({ ...contact, countryCode: e })}
-                            />
-                          </div>
-                          <div className="col-span-5 mt-6">
-                            <Input
-                              placeholder={t("venues.contactNumber")}
-                              value={contact.number}
-                              onChange={(e) => setContact({ ...contact, number: e.target.value })}
-                              type="tel"
-                            />
-                          </div>
-                        </div>
-                      </div>
-                    </div>
-
-                    <div className="grid grid-cols-12 gap-2 mt-5">
-                      <div className="col-span-6">
-                        <div className="grid grid-cols-12 gap-2">
-                          <div className="col-span-3">
-                            <Dropdown
-                              title={t("venues.contact3")}
-                              placeholder={t("venues.type")}
-                              onChange={(e) => {
-                                setContactNumber2({ ...contactNumber2, contactType: e });
-                              }}
-                              value={contactNumber2.contactType}
-                              options={contact_options}
-                              labelClasses="whitespace-nowrap"
-                            />
-                          </div>
-
-                          <div className="col-span-4 mt-6">
-                            <Dropdown
-                              isSearchable
-                              options={countriesCodeData?.countries.map((country) => ({
-                                label: `+${country.callingCodes[0]} ${country.name}`,
-                                value: `+${country.callingCodes[0]} ${country.name}`,
-                              }))}
-                              placeholder={t("venues.countryCode")}
-                              value={contactNumber2.countryCode}
-                              onChange={(e) => setContactNumber2({ ...contactNumber2, countryCode: e })}
-                            />
-                          </div>
-
-                          <div className="col-span-5 mt-6">
-                            <Input
-                              placeholder={t("venues.contactNumber")}
-                              value={contactNumber2.number}
-                              onChange={(e) => setContactNumber2({ ...contactNumber2, number: e.target.value })}
-                              type="tel"
-                            />
-                          </div>
-                        </div>
-                      </div>
-                    </div>
-
-                    <div className="mt-5 ltr:text-left rtl:text-right">
+                    <div className="relative mt-14 ltr:text-left rtl:text-right before:absolute before:-top-7 before:left-0 before:right-0 before:h-px before:bg-gray-200">
                       <div>
-                        <div className="mb-2 label text-secondary">{t("headings.otherInfo")}</div>
+                        <div className="mb-2 label text-black">{t("headings.otherInfo")}</div>
                       </div>
                     </div>
 

@@ -4,7 +4,7 @@ import Input from "../components/common/Input";
 import Dropdown from "../components/common/Dropdown";
 import { useNavigate } from "react-router-dom";
 import { useThemeContext } from "../context/GlobalContext";
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useRef } from "react";
 import { useTranslation } from "react-i18next";
 
 const EventScreen = () => {
@@ -12,27 +12,38 @@ const EventScreen = () => {
   const { t: commonT } = useTranslation("common");
 
   // Context
-  const { userData } = useThemeContext();
-  console.log("userData",userData)
+  const { userData, updateSelectedEvent, allEventsNotFormatted, getEventList } = useThemeContext();
   // Navigation
   const navigate = useNavigate();
 
   const [selectEvent, setSelectEvent] = useState(null);
+  const hasRequestedEvents = useRef(false);
 
-  const formattedEvents = userData?.user_event?.map((event) => ({
+  const userEvents = Array.isArray(userData?.user_event) ? userData.user_event : [];
+  const fallbackEvents = Array.isArray(allEventsNotFormatted)
+    ? allEventsNotFormatted.filter((event) => !userData?.event_id || event?.id === userData.event_id)
+    : [];
+  const eventOptions = userEvents.length > 0 ? userEvents : fallbackEvents;
+
+  const formattedEvents = eventOptions.map((event) => ({
     value: event?.id,
     label: event?.name,
   }));
 
-  const selectedEventDetail = userData?.user_event.find(
+  const selectedEventDetail = eventOptions.find(
     (event) => event?.id === selectEvent?.value
   );
 
   useEffect(() => {
+    if (userEvents.length === 0 && fallbackEvents.length === 0 && !hasRequestedEvents.current) {
+      hasRequestedEvents.current = true;
+      getEventList();
+    }
+  }, [fallbackEvents.length, getEventList, userEvents.length]);
+
+  useEffect(() => {
     if (selectEvent) {
-      // Store event data in localStorage
-      localStorage.setItem("event", selectEvent?.value);
-      localStorage.setItem("eventDetail", JSON.stringify(selectedEventDetail));
+      updateSelectedEvent(selectEvent?.value, selectedEventDetail);
 
       // ✅ Extract first permission name
       const firstPermission = Array.isArray(userData?.role?.permissions) && userData.role.permissions.length > 0
@@ -43,9 +54,8 @@ const EventScreen = () => {
 
       // ✅ Navigate to the first allowed route
       navigate(firstRoute, { replace: true });
-      window.location.reload();
     }
-  }, [selectEvent, navigate, selectedEventDetail, userData]);
+  }, [selectEvent, navigate, selectedEventDetail, updateSelectedEvent, userData]);
 
   return (
     <>

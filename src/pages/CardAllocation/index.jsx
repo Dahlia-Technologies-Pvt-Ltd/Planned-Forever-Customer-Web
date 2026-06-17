@@ -14,22 +14,19 @@ const CardAllocation = () => {
   const { t } = useTranslation("common");
   const navigate = useNavigate();
 
-  const { eventSelect , allEvents , getEventList } = useThemeContext();
+  const { eventSelect } = useThemeContext();
 
-  const [search, setSearch] = useState("");
-  const [event, setEvent] = useState("");
   const [loading, setLoading] = useState(false);
   const [filterData, setFilterData] = useState([]);
-  const [allContactByGroup, setAllContactByGroup] = useState([]);
 
   // Get All Contacts By Group
   const getAllContactByGroup = async () => {
+    if (!eventSelect) return;
+
     setLoading(true);
     try {
       let payload = {
-        // search: searchText,
         event_id: eventSelect,
-        isRSVP:1
       };
 
       const res = await ApiServices.allocateGift.GetAllContactByGroup(payload);
@@ -41,22 +38,20 @@ const CardAllocation = () => {
         const transformedData = data?.data?.map((group) => ({
           name: group?.name,
           memberData: group?.members,
-        }));
+        })) || [];
 
         setFilterData(transformedData);
-
-        setLoading(false);
       }
     } catch (err) {
-       
+      console.error("Error fetching contacts for card allocation:", err);
+    } finally {
+      setLoading(false);
     }
   };
 
-   
-
-  useEffect(()=>{
-    getAllContactByGroup()
-  },[])
+  useEffect(() => {
+    getAllContactByGroup();
+  }, [eventSelect]);
 
 
   return (
@@ -98,7 +93,7 @@ const CardAllocation = () => {
             {loading ? (
               <Skeleton count={1} height={100} className="!rounded-lg" />
             ) : filterData?.length > 0 ? (
-              <Accordian data={filterData} cardAllocate eventId={event?.value} onSuccess={() => getAllContactByGroup(event?.value)} />
+              <Accordian data={filterData} cardAllocate eventId={eventSelect} onSuccess={getAllContactByGroup} />
             ) : (
               <div className="m-2">
                 <h2 className="text-base text-red-500">No Contact found against this event</h2>

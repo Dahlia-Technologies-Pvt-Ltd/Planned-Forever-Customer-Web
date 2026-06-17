@@ -22,6 +22,7 @@ import { Switch } from "@headlessui/react";
 import { useTranslation } from "react-i18next";
 import Dropdown from "../../components/common/Dropdown";
 import ImportDepartureModal from "./ImportDepartureModal";
+import { hasPermission } from "../../utilities/permissions";
 
 // Table Head
 const Departures = () => {
@@ -154,6 +155,8 @@ const Departures = () => {
 
   const [openStatusModal, setOpenStatusModal] = useState({ open: false, data: null });
 
+  const isDeparted = (status) => status === 1 || status === "1" || status === true;
+
   const handleStatusChange = (item) => {
     setOpenStatusModal({ open: true, data: item });
   };
@@ -200,8 +203,7 @@ const Departures = () => {
 
                 {/* Top Buttons */}
                 <div className="flex items-center gap-x-3">
-                  {(userData?.role?.display_name === "web_admin" ||
-                    userData.role.permissions?.some((item) => item === "departures-create")) && (
+                  {(hasPermission(userData, "departures-create")) && (
                     <>
                       <Button title={t("departure.addDeparture")} onClick={() => setAddNewModal(true)} />
 
@@ -220,7 +222,7 @@ const Departures = () => {
                   <Button
                     title="Send Message"
                     onClick={() => setAddNewSendMessageModal(true)}
-                    buttonColor="bg-green-500"
+                    buttonColor="bg-[#7d1d2f] hover:bg-[#641726]"
                   />
                 </div>
 
@@ -259,7 +261,7 @@ const Departures = () => {
                         if (e.target.value.trim() === "") getDeparture(true);
                       }}
                       onKeyPress={handleSearch}
-                      className="focus:border-primary-color-100 block h-11 w-52 rounded-10 border border-primary-light-color px-4 pl-11 text-sm text-primary-color focus:ring-primary-color 3xl:w-full"
+                      className="focus:border-primary-color-100 block h-11 w-52 rounded-10 border border-primary-light-color px-4 pl-11 text-base text-primary-color focus:ring-primary-color 3xl:w-full"
                     />
                   </div>
                 </div>
@@ -297,7 +299,7 @@ const Departures = () => {
                             requestSort(sortKey);
                           }}
                         >
-                          <p className="font-inter cursor-pointer whitespace-nowrap text-xs font-semibold leading-5 3xl:text-sm">
+                          <p className="font-inter cursor-pointer whitespace-nowrap text-sm font-semibold leading-5">
                             {head}
                             {sortConfig.key ===
                               (head === "Departure Date & Time"
@@ -339,42 +341,42 @@ const Departures = () => {
                           onClick={() => handleRowClick(item?.id)}
                         >
                           <td className="py-3 pl-6 pr-4">
-                            <p className="text-primary-color-200 text-xs font-normal 3xl:text-sm">
+                            <p className="text-primary-color-200 text-sm font-normal">
                               {moment.unix(item?.date).format("D MMM YYYY h:mm A") || "-"}
                             </p>
                           </td>
 
                           <td className="py-3 pl-4 pr-3 3xl:px-4">
-                            <p className="text-primary-color-200 text-xs font-normal 3xl:text-sm">
+                            <p className="text-primary-color-200 text-sm font-normal">
                               {item?.contact?.first_name + " " + item?.contact?.last_name || "-"}
                             </p>
                           </td>
 
                           <td className="py-3 pl-4 pr-3 3xl:px-4">
-                            <p className="text-primary-color-200 text-xs font-normal 3xl:text-sm">
-                              <p className="text-primary-color-200 text-xs font-normal 3xl:text-sm">{item?.from || "-"}</p>
+                            <p className="text-primary-color-200 text-sm font-normal">
+                              <p className="text-primary-color-200 text-sm font-normal">{item?.from || "-"}</p>
                             </p>
                           </td>
 
                           <td className="py-3 pl-4 pr-3 3xl:px-4">
-                            <p className="text-primary-color-200 text-xs font-normal 3xl:text-sm">{item?.to || "-"}</p>
+                            <p className="text-primary-color-200 text-sm font-normal">{item?.to || "-"}</p>
                           </td>
                           <td className="py-3 pl-4 pr-3 3xl:px-4">
-                            <p className="text-primary-color-200 text-xs font-normal 3xl:text-sm">{item?.fligh_train_no || "-"}</p>
+                            <p className="text-primary-color-200 text-sm font-normal">{item?.fligh_train_no || "-"}</p>
                           </td>
                           <td className="py-3 pl-4 pr-3 3xl:px-4">
-                            <p className="text-primary-color-200 text-xs font-normal 3xl:text-sm">{item?.no_of_person || "-"}</p>
+                            <p className="text-primary-color-200 text-sm font-normal">{item?.no_of_person || "-"}</p>
                           </td>
                           <td className="py-3 pl-4 pr-3 3xl:px-4">
                             <div className="flex items-center justify-center gap-x-3">
                               <Switch
-                                checked={item?.status === 1}
+                                checked={isDeparted(item?.status)}
                                 onChange={() => handleStatusChange(item)}
-                                className={`group relative flex h-6 w-12 cursor-pointer rounded-full ${item?.status === 1 ? "bg-green-500" : "bg-black/30"} p-1 transition-colors duration-200 ease-in-out`}
+                                className={`group relative flex h-6 w-12 cursor-pointer rounded-full ${isDeparted(item?.status) ? "bg-green-500" : "bg-black/30"} p-1 transition-colors duration-200 ease-in-out`}
                               >
                                 <span
                                   aria-hidden="true"
-                                  className={`pointer-events-none inline-block h-4 w-4 rounded-full bg-white shadow-lg ring-0 transition duration-200 ease-in-out ${item?.status === 1 ? "translate-x-6" : "translate-x-0"}`}
+                                  className={`pointer-events-none inline-block h-4 w-4 rounded-full bg-white shadow-lg ring-0 transition duration-200 ease-in-out ${isDeparted(item?.status) ? "translate-x-6" : "translate-x-0"}`}
                                 />
                               </Switch>
                             </div>
@@ -450,8 +452,7 @@ const Departures = () => {
                       <div className="flex justify-between">
                         <h3 className="heading">{t("headings.details")}</h3>
                         <div className="flex items-center gap-x-3">
-                          {(userData?.role?.display_name === "web_admin" ||
-                            userData.role.permissions?.some((item) => item === "departures-edit")) && (
+                          {(hasPermission(userData, "departures-edit")) && (
                             <button
                               className="border-b border-secondary text-sm font-medium text-secondary"
                               type="button"
@@ -463,8 +464,7 @@ const Departures = () => {
                               {t("buttons.edit")}
                             </button>
                           )}
-                          {(userData?.role?.display_name === "web_admin" ||
-                            userData.role.permissions?.some((item) => item === "departures-delete")) && (
+                          {(hasPermission(userData, "departures-delete")) && (
                             <button
                               onClick={() => setOpenDeleteModal({ open: true, data: detail })}
                               className="border-b border-red-500 text-sm font-medium text-red-500"
@@ -483,7 +483,7 @@ const Departures = () => {
                       <TitleValue title={t("departure.arrivingAt")} value={detail?.to || "-"} />
                       <TitleValue title={t("departure.flightTrainNo")} value={detail?.fligh_train_no || "-"} />
                       <TitleValue title={t("departure.noOfPeople")} value={detail?.no_of_person || "-"} />
-                      <TitleValue title={t("departure.hasDeparture")} value={detail?.status === 1 ? "Yes" : "No" || "-"} />
+                      <TitleValue title={t("departure.hasDeparture")} value={isDeparted(detail?.status) ? "Yes" : "No" || "-"} />
                     </div>
                   </div>
 
@@ -491,7 +491,7 @@ const Departures = () => {
                     <div className="my-5">
                       {detail?.car?.driver_image !== null && (
                         <div>
-                          <h3 className="mb-2 text-xs text-info-color">{t("departure.driverImage")}</h3>
+                          <h3 className="mb-2 text-sm text-info-color">{t("departure.driverImage")}</h3>
                           <div className="h-full w-full">
                             <img src={mediaUrl + detail?.car?.driver_image} alt="image" className="h-20 w-20 rounded-full object-cover" />
                           </div>
@@ -512,7 +512,7 @@ const Departures = () => {
                     <div className="mt-2">
                       {detail?.car?.car_images !== null && (
                         <div className="w-full">
-                          <h3 className="mb-5 text-xs text-info-color">{t("departure.carImage")}</h3>
+                          <h3 className="mb-5 text-sm text-info-color">{t("departure.carImage")}</h3>
                           <div className="grid w-full grid-cols-3 gap-2">
                             {detail?.car?.car_images?.map((car) => (
                               <img src={mediaUrl + car} alt="image" className="h-full w-full rounded-10 object-cover" />

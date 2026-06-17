@@ -7,12 +7,20 @@ import { useMediaQuery } from "react-responsive";
 import Button from "../../components/common/Button";
 import ApiServices from "../../api/services";
 import animationData from "../../assets/lottie/no_data";
-import TitleValue from "../../components/common/TitleValue";
 import { useThemeContext } from "../../context/GlobalContext";
 import { useSortableData } from "../../hooks/useSortableData";
 import ConfirmationModal from "../../components/common/ConfirmationModal";
 import CountModal from "./CountModal";
-import { ChevronDownIcon, ChevronLeftIcon, ChevronRightIcon, ChevronUpIcon, MagnifyingGlassIcon } from "@heroicons/react/24/solid";
+import { ChevronDownIcon, ChevronLeftIcon, ChevronRightIcon, ChevronUpIcon } from "@heroicons/react/24/solid";
+import {
+  CalendarDaysIcon,
+  ClockIcon,
+  DocumentTextIcon,
+  MagnifyingGlassIcon,
+  PencilSquareIcon,
+  PhotoIcon,
+  TrashIcon,
+} from "@heroicons/react/24/outline";
 import { getLocalDateFromUnixTimestamp } from "../../utilities/HelperFunctions";
 import { emptyFolderAnimation } from "../../utilities/lottieAnimations";
 import { useEffect } from "react";
@@ -23,6 +31,7 @@ import { mediaUrl } from "../../utilities/config";
 import { PhotoProvider, PhotoView } from "react-photo-view";
 import "react-photo-view/dist/react-photo-view.css";
 import { useTranslation } from "react-i18next";
+import { hasPermission } from "../../utilities/permissions";
 // Table Head
 
 // local data
@@ -71,14 +80,13 @@ const Menu = () => {
   const [currentPage, setCurrentPage] = useState(1);
 
   const [modalData, setModalData] = useState(null);
-
   // Modal
   const [addNewModal, setAddNewModal] = useState(false);
   const [openDeleteModal, setOpenDeleteModal] = useState({ open: false, data: null });
 
   // Active Row
-  const handleRowClick = (id) => {
-    setActiveRow(id);
+  const handleRowClick = (item) => {
+    setActiveRow(item?.id);
   };
 
   // Detail of selected row
@@ -186,73 +194,97 @@ const Menu = () => {
   const [isOpenCount, setIsOpenCount] = useState(false);
 
   const getMenuCount = async () => {
+    if (!eventSelect) {
+      setCount([]);
+      return;
+    }
+
     try {
       const res = await ApiServices.menu.getPreferenceCount(eventSelect);
       const { data, message } = res;
 
       if (data.code === 200) {
         setCount(data.data);
+        // console.log(data.data);
       }
     } catch (err) {
+      setCount([]);
     } finally {
     }
   };
 
   useEffect(() => {
     getMenuCount();
-  }, []);
+  }, [eventSelect]);
+
+  useEffect(() => {
+    if (isOpenCount) {
+      getMenuCount();
+    }
+  }, [isOpenCount, eventSelect]);
 
   return (
     <>
-      <div className="grid grid-cols-12 gap-5">
-        <div className="col-span-12 lg:col-span-6">
-          <div className="card min-h-[83vh]">
-            <div className="flex justify-between">
-              <h3 className="heading">Menu</h3>
-
-              <div className="flex w-full items-center justify-between">
-                <div className="flex flex-wrap items-center gap-2">
-                  {(userData?.role?.display_name === "web_admin" || userData.role.permissions?.some((item) => item === "menu-create")) && (
-                    <Button title={t("menu.addMenu")} onClick={() => setAddNewModal(true)} />
-                  )}
-
-                  <Link to={MENU_PRINT}>
-                    <Button title={t("buttons.print")} buttonColor="border-primary  bg-primary " />
-                  </Link>
-                  {selectedEventRights?.rights?.includes("Trending Menu Items") && (
-                    <Link to={TRENDING_MENU}>
-                      <Button title={t("menu.trending_menu")} buttonColor="border-primary bg-pink-500" />
-                    </Link>
-                  )}
-
-                  <Button title={t("menu.guest_count")} onClick={() => setIsOpenCount(true)} />
-                </div>
-                <div className="relative flex items-center">
+      <div className="venues-page-layout grid grid-cols-12 items-start gap-5 lg:items-stretch">
+        <div className="col-span-12 lg:col-span-8">
+          <div className="venues-list-card card flex min-h-[72vh] flex-col shadow-[0_12px_34px_rgba(15,23,42,0.14)]">
+            <div className="w-full">
+              <div className="flex w-full items-center justify-between gap-4">
+                <h2 className="shrink-0 text-xl font-semibold text-black">{t("menu.menu")}</h2>
+                <div className="relative ml-auto flex items-center">
                   <div className="pointer-events-none absolute inset-y-0 left-0 z-20 flex items-center pl-4">
                     <MagnifyingGlassIcon className="h-5 w-5 text-primary-light-color" />
                   </div>
                   <input
-                    type="text"
+                    type="search"
                     id="search"
                     name="search"
-                    placeholder={t("placeholders.search")}
+                    placeholder={`${t("placeholders.search")}...`}
                     autoComplete="off"
                     value={searchText}
-                    onChange={(e) => {
-                      setSearchText(e.target.value);
-                      if (e.target.value.trim() === "") {
-                        getMenus(true);
-                      }
+                    onChange={(event) => {
+                      setSearchText(event.target.value);
+                      if (!event.target.value.trim()) getMenus(true);
                     }}
-                    onKeyPress={handleKeyPress}
-                    className="focus:border-primary-color-100 block h-11 w-52 rounded-10 border border-primary-light-color px-4 pl-11 text-sm text-primary-color focus:ring-primary-color 3xl:w-full"
+                    onKeyDown={handleKeyPress}
+                    className="block h-11 w-52 rounded-10 border border-primary-light-color px-4 pl-11 text-sm text-primary-color focus:border-primary-color-100 focus:ring-primary-color"
                   />
                 </div>
               </div>
+
+              <div className="mt-4 flex w-full items-center justify-end gap-3">
+                {selectedEventRights?.rights?.includes("Trending Menu Items") && (
+                  <Link to={TRENDING_MENU}>
+                    <Button title={t("menu.trending_menu")} buttonColor="border-primary bg-pink-500" />
+                  </Link>
+                )}
+                <div className="group relative inline-flex">
+                  <Button
+                    title={t("menu.guest_count")}
+                    buttonColor="border border-cyan-500 bg-cyan-500 hover:border-cyan-600 hover:bg-cyan-600"
+                    className="focus:outline-none focus:ring-2 focus:ring-cyan-300 focus:ring-offset-2"
+                    onClick={() => setIsOpenCount(true)}
+                  />
+                  <span
+                    role="tooltip"
+                    className="pointer-events-none absolute bottom-full left-1/2 z-50 mb-2 hidden -translate-x-1/2 whitespace-nowrap rounded-md bg-secondary px-3 py-2 text-xs font-normal text-white shadow-lg group-hover:block group-focus-within:block"
+                  >
+                    {t("menu.guestMealPreferencesTooltip")}
+                  </span>
+                </div>
+                {hasPermission(userData, "menu-create") && <Button title={t("menu.addMenu")} onClick={() => setAddNewModal(true)} />}
+                <Link to={MENU_PRINT}>
+                  <Button
+                    title={t("buttons.print")}
+                    buttonColor="border border-secondary bg-transparent"
+                    className="!text-secondary hover:bg-secondary/5"
+                  />
+                </Link>
+              </div>
             </div>
             {/* Table Start */}
-            <div className="mt-5">
-              <div className="-mx-6 mb-8 overflow-x-auto">
+            <div className="mt-5 flex min-h-0 flex-1 flex-col">
+              <div className="-mx-6 mb-8 flex-1 overflow-x-auto">
                 <table className="w-full text-left">
                   <thead>
                     <tr>
@@ -276,7 +308,7 @@ const Menu = () => {
                             requestSort(sortKey);
                           }}
                         >
-                          <p className="font-inter cursor-pointer whitespace-nowrap text-xs font-semibold leading-5 3xl:text-sm">
+                          <p className="font-inter cursor-pointer whitespace-nowrap text-sm font-semibold leading-5 3xl:text-sm">
                             {head}
                             {sortConfig.key ===
                               (head === "Date"
@@ -309,30 +341,24 @@ const Menu = () => {
                         <tr
                           key={item?.id}
                           className={`cursor-pointer ${item?.id === activeRow ? "border-l-4 border-secondary bg-secondary/15" : "even:bg-gray-50"}`}
-                          onClick={() => handleRowClick(item?.id)}
+                          onClick={() => handleRowClick(item)}
                         >
                           <td className="py-3 pl-6 pr-4">
-                            <p className="text-primary-color-200 text-xs font-normal 3xl:text-sm">{moment.unix(item?.date).format("D MMM YYYY")}</p>
+                            <p className="text-sm font-normal text-primary-color-200">{moment.unix(item?.date).format("D MMM YYYY")}</p>
                           </td>
 
                           <td className="py-3 pl-4 pr-3 3xl:px-4">
-                            <p className="text-primary-color-200 text-xs font-normal 3xl:text-sm">{item?.session}</p>
+                            <p className="text-sm font-normal text-primary-color-200">{item?.session || "-"}</p>
                           </td>
 
                           <td className="py-3 pl-4 pr-3 3xl:px-4">
-                            <p className="text-primary-color-200 text-xs font-normal 3xl:text-sm">
-                              <p className="text-primary-color-200 text-xs font-normal 3xl:text-sm">
-                                {" "}
-                                {moment(item?.start_time, "HH:mm").format("hh:mm A")}
-                              </p>
+                            <p className="text-sm font-normal text-primary-color-200">
+                              {moment(item?.start_time, "HH:mm").format("hh:mm A")}
                             </p>
                           </td>
 
                           <td className="py-3 pl-4 pr-3 3xl:px-4">
-                            <p className="text-primary-color-200 text-xs font-normal 3xl:text-sm">
-                              {" "}
-                              {moment(item?.end_time, "HH:mm").format("hh:mm A")}
-                            </p>
+                            <p className="text-sm font-normal text-primary-color-200">{moment(item?.end_time, "HH:mm").format("hh:mm A")}</p>
                           </td>
 
                           {/* <td className="py-3 pr-3 pl-4 3xl:px-4">
@@ -359,9 +385,25 @@ const Menu = () => {
                       ))
                     ) : (
                       // Render "No Data" message
-                      <tr className="h-[400px]">
-                        <td colSpan="6">
-                          <Lottie options={emptyFolderAnimation} width={200} height={200} />
+                      <tr>
+                        <td colSpan="4">
+                          <div className="flex min-h-[52vh] flex-col items-center justify-center px-4 text-center">
+                            <Lottie options={emptyFolderAnimation} width={170} height={170} />
+                            <h4 className="-mt-4 text-base font-semibold text-black">{t("menu.noMenusAdded")}</h4>
+                            <p className="mt-2 max-w-xs text-sm text-primary-light-color">{t("menu.addFirstMenu")}</p>
+                            {hasPermission(userData, "menu-create") && (
+                              <button
+                                type="button"
+                                onClick={() => {
+                                  setModalData(null);
+                                  setAddNewModal(true);
+                                }}
+                                className="mt-5 min-w-[150px] rounded-10 bg-secondary px-6 py-3 text-sm font-semibold text-white"
+                              >
+                                {t("menu.addMenu")}
+                              </button>
+                            )}
+                          </div>
                         </td>
                       </tr>
                     )}
@@ -369,7 +411,7 @@ const Menu = () => {
                 </table>
               </div>
 
-              <div className="absolute bottom-4">
+              {items.length > 0 && <div className="absolute bottom-4">
                 <ReactPaginate
                   breakLabel="..."
                   pageRangeDisplayed={5}
@@ -387,150 +429,131 @@ const Menu = () => {
                   nextLabel={<ChevronRightIcon className="h-5 w-5" />}
                   previousLabel={<ChevronLeftIcon className="h-5 w-5" />}
                 />
-              </div>
+              </div>}
             </div>
             {/* Table End */}
           </div>
         </div>
 
-        <div className="col-span-12 lg:col-span-6">
-          <div className="card min-h-[83vh]">
+        <div className="col-span-12 lg:col-span-4">
+          <div className="venues-details-card card flex h-[72vh] flex-col overflow-hidden shadow-[0_12px_34px_rgba(15,23,42,0.14)] lg:sticky lg:top-0">
             {loading ? (
-              <Skeleton count={10} height={50} />
-            ) : activeRow ? (
-              <>
-                <div className="h-[73vh] space-y-8 overflow-y-auto 3xl:mr-0">
-                  <div>
-                    <div className="mb-5 flex items-center justify-between">
-                      <h2 className="sub-heading">{t("headings.basicInfo")}</h2>
-                      <div className="flex justify-between">
-                        <h3 className="heading">Details</h3>
-                        <div className="flex items-center gap-x-3">
-                          {(userData?.role?.display_name === "web_admin" || userData.role.permissions?.some((item) => item === "menu-edit")) && (
-                            <button
-                              className="border-b border-secondary text-sm font-medium text-secondary"
-                              type="button"
-                              onClick={() => {
-                                setAddNewModal(true);
-                                setModalData(detail);
-                              }}
-                            >
-                              {t("buttons.edit")}
-                            </button>
-                          )}
-                          {(userData?.role?.display_name === "web_admin" || userData.role.permissions?.some((item) => item === "menu-delete")) && (
-                            <button
-                              onClick={() => setOpenDeleteModal({ open: true, data: detail })}
-                              className="border-b border-red-500 text-sm font-medium text-red-500"
-                              type="button"
-                            >
-                              {t("buttons.delete")}
-                            </button>
-                          )}
-                        </div>
-                      </div>
-                    </div>
-                    <div className="grid grid-cols-2 gap-5 3xl:grid-cols-3">
-                      <TitleValue title={t("menu.date")} value={moment.unix(detail?.date).format("D MMM YYYY") || "-"} />
-                      <TitleValue title={t("menu.session_name")} value={detail?.session || "-"} />
-                      <TitleValue title={t("menu.start_time")} value={moment(detail?.start_time, "HH:mm").format("hh:mm A") || "-"} />
-                      <TitleValue title={t("menu.end_time")} value={moment(detail?.end_time, "HH:mm").format("hh:mm A") || "-"} />
-                    </div>
-                    {/* <div className="my-5">
-                      <h2 className="sub-heading mb-5">{t("headings.otherInfo")}</h2>
-                      <TitleValue title={t("headings.notes")} value={detail?.notes || "-"} />
-                    </div> */}
-                    {detail?.notes && detail.notes !== "-" && (
-                      <div className="my-5">
-                        <h2 className="sub-heading mb-5">{t("headings.otherInfo")}</h2>
-                        <TitleValue title={t("headings.notes")} value={detail.notes} />
-                      </div>
+              <Skeleton count={8} height={50} className="mt-3" />
+            ) : detail ? (
+              <div className="-mx-1 -my-1 flex min-h-0 flex-1 flex-col px-1 py-1">
+                <div className="shrink-0">
+                  <div className="flex items-center justify-end gap-2">
+                    {hasPermission(userData, "menu-edit") && (
+                      <button
+                        type="button"
+                        className="flex h-8 items-center gap-2 rounded-lg border border-secondary bg-transparent px-3 text-sm font-medium text-secondary hover:bg-secondary/5"
+                        onClick={() => {
+                          setModalData(detail);
+                          setAddNewModal(true);
+                        }}
+                      >
+                        <PencilSquareIcon className="h-4 w-4" />
+                        {t("buttons.edit")}
+                      </button>
                     )}
-                    <div className="mt-3">
-                      <div className="space-y-2">
-                        <h3 className="sub-heading text-xs text-info-color">{t("menu.menuFile")}</h3>
+                    {hasPermission(userData, "menu-delete") && (
+                      <button
+                        type="button"
+                        className="flex h-8 items-center gap-2 rounded-lg border border-red-500 bg-transparent px-3 text-sm font-medium text-red-500 hover:bg-red-50"
+                        onClick={() => setOpenDeleteModal({ open: true, data: detail })}
+                      >
+                        <TrashIcon className="h-4 w-4" />
+                        {t("buttons.delete")}
+                      </button>
+                    )}
+                  </div>
+                  <h2 className="mt-5 text-xl font-semibold text-black">{detail?.session || "Menu Details"}</h2>
+                  <p className="mt-2 text-sm text-gray-600">{moment.unix(detail?.date).format("D MMM YYYY")}</p>
+                </div>
 
-                        <div className="mt-2">
-                          {detail?.images !== null && (
-                            <div className="w-full">
-                              <h3 className="mb-5 text-xs text-info-color">Menu File</h3>
-                              <div className="grid w-full grid-cols-3 gap-2">
-                                {detail?.images?.map((car) => (
-                                  <img src={mediaUrl + car} alt="image" className="h-full w-full rounded-10 object-cover" />
-                                ))}
-                              </div>
-                            </div>
-                          )}
-                        </div>
+                <div className="venue-details-scroll -mr-2 mt-6 min-h-0 flex-1 overflow-y-auto pr-2">
+                  <section>
+                    <div className="flex items-center gap-2 border-b border-gray-200 pb-3 text-secondary">
+                      <CalendarDaysIcon className="h-5 w-5" />
+                      <h3 className="text-sm font-semibold">{t("menu.menuDetails")}</h3>
+                    </div>
+                    <div className="grid grid-cols-2 gap-x-8 gap-y-5 pt-5">
+                      <div>
+                        <p className="text-xs text-gray-600">{t("menu.date")}</p>
+                        <p className="mt-1 text-sm font-medium text-black">{moment.unix(detail?.date).format("D MMM YYYY")}</p>
                       </div>
-                      <div className="mt-5 overflow-auto">
-                        <table className="w-full text-left">
-                          <thead>
-                            <tr>
-                              {TABLE_HEAD_Detail.map((head) => (
-                                <th key={head} className="border-b border-gray-100 bg-white py-4 pr-4 first:pl-6">
-                                  <p className="font-inter whitespace-nowrap text-xs font-semibold leading-5 3xl:text-sm">{head}</p>
-                                </th>
-                              ))}
-                            </tr>
-                          </thead>
-                          <tbody>
-                            {loading ? (
-                              <tr>
-                                <td colSpan="4">
-                                  <Skeleton count={itemsPerPage} height={50} />
-                                </td>
-                              </tr>
-                            ) : detail?.menu_items?.length > 0 ? (
-                              detail?.menu_items?.map((menuItem, index) => (
-                                <tr key={index} className="odd:bg-gray-100">
-                                  <td className="py-3 pl-7 3xl:pr-4">
-                                    <p className="text-primary-color-200 text-xs font-normal 3xl:text-sm">{menuItem?.name || "-"}</p>
-                                  </td>
-                                  <td className="py-3 pl-4 3xl:px-4">
-                                    <p className="text-primary-color-200 text-xs font-normal 3xl:text-sm">{menuItem?.type || "-"}</p>
-                                  </td>
-                                  <td className="py-3 pl-4 3xl:px-4">
-                                    <p className="text-primary-color-200 text-xs font-normal 3xl:text-sm">{menuItem?.qty || "-"}</p>
-                                  </td>
-                                  <td className="py-3 pl-4 3xl:px-4">
-                                    <p className="text-primary-color-200 text-xs font-normal 3xl:text-sm">{menuItem?.notes || "-"}</p>
-                                  </td>
-                                  <td className="py-3 pr-4">
-                                    <PhotoProvider>
-                                      <PhotoView src={mediaUrl + menuItem?.image}>
-                                        {menuItem?.image ? (
-                                          <img
-                                            src={mediaUrl + menuItem?.image}
-                                            alt="image"
-                                            className="h-24 w-24 cursor-pointer rounded-10 object-cover"
-                                          />
-                                        ) : (
-                                          <p className="text-primary-color-200 text-xs font-normal 3xl:text-sm">-</p>
-                                        )}
-                                      </PhotoView>
-                                    </PhotoProvider>
-                                  </td>
-                                </tr>
-                              ))
-                            ) : (
-                              // Render "No Data" message
-                              <tr className="h-[200px]">
-                                <td colSpan="4">
-                                  <Lottie options={emptyFolderAnimation} width={100} height={100} />
-                                </td>
-                              </tr>
-                            )}
-                          </tbody>
-                        </table>
+                      <div>
+                        <p className="text-xs text-gray-600">{t("menu.session_name")}</p>
+                        <p className="mt-1 text-sm font-medium text-black">{detail?.session || "-"}</p>
+                      </div>
+                      <div>
+                        <p className="text-xs text-gray-600">{t("menu.start_time")}</p>
+                        <p className="mt-1 text-sm font-medium text-black">{moment(detail?.start_time, "HH:mm").format("hh:mm A")}</p>
+                      </div>
+                      <div>
+                        <p className="text-xs text-gray-600">{t("menu.end_time")}</p>
+                        <p className="mt-1 text-sm font-medium text-black">{moment(detail?.end_time, "HH:mm").format("hh:mm A")}</p>
                       </div>
                     </div>
-                  </div>
+                  </section>
+
+                  <section className="mt-8">
+                    <div className="flex items-center gap-2 border-b border-gray-200 pb-3 text-secondary">
+                      <ClockIcon className="h-5 w-5" />
+                      <h3 className="text-sm font-semibold">{t("menu.menuItems")}</h3>
+                    </div>
+                    <div className="space-y-3 pt-5">
+                      {detail?.menu_items?.length ? (
+                        detail.menu_items.map((menuItem, index) => (
+                          <div key={menuItem?.id || index} className="flex gap-3 rounded-xl border border-gray-100 bg-gray-50 p-3">
+                            {menuItem?.image ? (
+                              <PhotoProvider>
+                                <PhotoView src={mediaUrl + menuItem.image}>
+                                  <img
+                                    src={mediaUrl + menuItem.image}
+                                    alt={menuItem?.name || "Menu item"}
+                                    className="h-16 w-16 shrink-0 cursor-pointer rounded-lg object-cover"
+                                  />
+                                </PhotoView>
+                              </PhotoProvider>
+                            ) : (
+                              <div className="flex h-16 w-16 shrink-0 items-center justify-center rounded-lg bg-white text-gray-400">
+                                <PhotoIcon className="h-6 w-6" />
+                              </div>
+                            )}
+                            <div className="min-w-0 flex-1">
+                              <p className="text-sm font-semibold text-black">{menuItem?.name || "-"}</p>
+                              <p className="mt-1 text-xs text-gray-600">
+                                {[menuItem?.type, menuItem?.qty].filter(Boolean).join(" · ") || "-"}
+                              </p>
+                              {menuItem?.notes && <p className="mt-2 text-xs leading-5 text-gray-600">{menuItem.notes}</p>}
+                            </div>
+                          </div>
+                        ))
+                      ) : (
+                        <p className="text-sm text-gray-600">{t("menu.noMenuItemsAdded")}</p>
+                      )}
+                    </div>
+                  </section>
+
+                  {detail?.notes && detail.notes !== "-" && (
+                    <section className="mt-8 pb-2">
+                      <div className="flex items-center gap-2 border-b border-gray-200 pb-3 text-secondary">
+                        <DocumentTextIcon className="h-5 w-5" />
+                        <h3 className="text-sm font-semibold">{t("headings.notes")}</h3>
+                      </div>
+                      <p className="pt-5 text-sm leading-6 text-black">{detail.notes}</p>
+                    </section>
+                  )}
                 </div>
-              </>
+              </div>
             ) : (
-              <div className="flex h-[70vh] items-center justify-center">
-                <Lottie options={emptyFolderAnimation} width={200} height={200} />
+              <div className="flex flex-1 items-center justify-center px-6 text-center">
+                <div>
+                  <Lottie options={emptyFolderAnimation} width={170} height={170} />
+                  <h4 className="-mt-4 text-base font-semibold text-black">{t("menu.noMenuSelected")}</h4>
+                  <p className="mt-2 text-sm text-primary-light-color">{t("menu.selectMenuToView")}</p>
+                </div>
               </div>
             )}
           </div>

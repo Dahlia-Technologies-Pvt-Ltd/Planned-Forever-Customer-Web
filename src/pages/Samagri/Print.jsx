@@ -65,7 +65,7 @@ const SamagriPrint = () => {
           <tr>
             {TABLE_HEAD.map((head) => (
               <th key={head} className="border-b border-gray-100 bg-white p-4 first:pl-6">
-                <p className="font-inter cursor-pointer whitespace-nowrap text-xs font-semibold leading-5 3xl:text-sm">{head}</p>
+                <p className="font-inter cursor-pointer whitespace-nowrap text-sm font-semibold leading-5 3xl:text-sm">{head}</p>
               </th>
             ))}
           </tr>

@@ -5,10 +5,9 @@ import Button from "../../components/common/Button";
 import { Fragment, useState, useEffect } from "react";
 import { Dialog, Transition } from "@headlessui/react";
 import Dropdown from "../../components/common/Dropdown";
-import DateAndTime from "../../components/common/DateAndTime";
 import { XMarkIcon, CheckIcon } from "@heroicons/react/24/solid";
 import { useThemeContext } from "../../context/GlobalContext";
-import { getLocalDateFromUnixTimestamp, toUTCUnixTimestamp } from "../../utilities/HelperFunctions";
+import { toUTCUnixTimestamp } from "../../utilities/HelperFunctions";
 import moment from "moment";
 import { useTranslation } from "react-i18next";
 
@@ -19,32 +18,24 @@ const AddReceivedGfitModal = ({ label, isOpen, setIsOpen, refreshData, data, set
   // useContext
   const {
     eventSelect,
-    allEvents,
     allContact,
-    allGifts,
     openSuccessModal,
     closeSuccessModel,
     setBtnLoading,
     btnLoading,
-    getEventList,
     getContacts,
-    getGifts,
   } = useThemeContext();
 
   // useState
 
   const [note, setNote] = useState("");
   const [receviedOn, setReceivedOn] = useState("");
-  const [noteSentOn, setNoteSentOn] = useState("");
   const [receivedGfit, setReceivedGfit] = useState("");
-  const [eventName, setEventName] = useState("");
   const [receivedGfitFrom, setReceivedGfitFrom] = useState("");
 
   // validation states
   const [noteError, setNoteError] = useState("");
-  const [eventNameError, setEventNameError] = useState("");
   const [receviedOnError, setReceviedOnError] = useState("");
-  const [noteSentOnError, setNoteSentOnError] = useState("");
   const [receivedGfitError, setReceivedGfitError] = useState("");
   const [receivedGfitFromError, setReceivedGfitFromError] = useState("");
   const [message, setMessage] = useState("");
@@ -58,24 +49,11 @@ const AddReceivedGfitModal = ({ label, isOpen, setIsOpen, refreshData, data, set
     // } else {
     //   setNoteError("");
     // }
-    // if (!eventName) {
-    //   setEventNameError("Required");
-    //   isValidData = false;
-    // } else {
-    //   setEventNameError("");
-    // }
     if (!receviedOn) {
       setReceviedOnError("Required");
       isValidData = false;
     } else {
       setReceviedOnError("");
-    }
-
-    if (!noteSentOn) {
-      setNoteSentOnError("Required");
-      isValidData = false;
-    } else {
-      setNoteSentOnError("");
     }
     if (!receivedGfit) {
       setReceivedGfitError("Required");
@@ -107,7 +85,6 @@ const AddReceivedGfitModal = ({ label, isOpen, setIsOpen, refreshData, data, set
             gift_received: receivedGfit,
             received_on: toUTCUnixTimestamp(receviedOn),
             notes: note,
-            note_send_at: toUTCUnixTimestamp(noteSentOn),
           };
           const response = await ApiServices.receivedGift.addReceivedGifts(payload);
 
@@ -143,7 +120,6 @@ const AddReceivedGfitModal = ({ label, isOpen, setIsOpen, refreshData, data, set
             gift_received: receivedGfit,
             received_on: toUTCUnixTimestamp(receviedOn),
             notes: note,
-            note_send_at: toUTCUnixTimestamp(noteSentOn),
           };
 
           const response = await ApiServices.receivedGift.updateReceivedGifts(data?.id, payload);
@@ -179,13 +155,9 @@ const AddReceivedGfitModal = ({ label, isOpen, setIsOpen, refreshData, data, set
     setNoteError("");
     setMessage("");
     setReceivedOn("");
-    setNoteSentOn("");
     setReceivedGfit("");
     setReceivedGfitFrom("");
     setReceviedOnError("");
-    setNoteSentOnError("");
-    setEventName(null);
-    setEventNameError("");
     setReceivedGfitError("");
     setReceivedGfitFromError("");
   };
@@ -204,18 +176,13 @@ const AddReceivedGfitModal = ({ label, isOpen, setIsOpen, refreshData, data, set
       setNote(data?.notes);
       setReceivedGfitFrom({ label: data?.contact?.first_name + " " + data?.contact?.last_name, value: data?.contact?.uuid });
       setReceivedGfit(data?.gift_received);
-      setEventName({ label: data?.event?.name, value: data?.event?.id });
-      // setReceivedOn(getLocalDateFromUnixTimestamp(data?.received_on));
-      // setNoteSentOn(getLocalDateFromUnixTimestamp(data?.note_send_at));
       setReceivedOn(moment.unix(data?.received_on).format("YYYY-MM-DD HH:mm"));
-      setNoteSentOn(moment.unix(data?.note_send_at).format("YYYY-MM-DD HH:mm"));
     }
   }, [isOpen]);
 
   useEffect(() => {
     if (isOpen) {
       getContacts();
-      getGifts();
     }
   }, [isOpen]);
 
@@ -254,21 +221,9 @@ const AddReceivedGfitModal = ({ label, isOpen, setIsOpen, refreshData, data, set
                     <XMarkIcon onClick={closeModal} className="h-8 w-8 cursor-pointer text-info-color" />
                   </div>
 
-                  <form onSubmit={handleSubmit}>
+                  <form onSubmit={handleSubmit} className="[&_.label]:text-xs [&_.label]:font-medium [&_input]:h-9 [&_input]:min-h-[36px] [&_input]:text-sm [&_input]:py-1 [&_input[type='datetime-local']]:h-9 [&_textarea]:text-sm [&_.css-b62m3t-container]:text-sm [&_.css-13cymwt-control]:h-9 [&_.css-13cymwt-control]:min-h-[36px] [&_.css-13cymwt-control]:py-0 [&_.css-t3ipsp-control]:h-9 [&_.css-t3ipsp-control]:min-h-[36px] [&_.css-t3ipsp-control]:py-0 [&_.css-hlgwow]:h-9 [&_.css-hlgwow]:min-h-[36px] [&_.css-hlgwow]:py-0 [&_.css-hlgwow]:px- [&_.css-1jqq78o-placeholder]:text-sm [&_.css-1jqq78o-placeholder]:leading-none [&_.css-1dimb5e-singleValue]:text-sm [&_.css-1dimb5e-singleValue]:leading-none [&_.css-1wy0on6]:h-9 [&_.css-19bb58m]:my-0">
                     <div className=" h-[400px] overflow-y-auto p-2 md:h-[500px] lg:h-[500px] xl:h-[500px] 2xl:h-[500px]">
                       <div className="grid grid-cols-2 gap-7">
-                        {/* <Dropdown
-                          isRequired
-                          title="Event"
-                          placeholder="Name"
-                          value={eventName}
-                          options={allEvents}
-                          withError={eventNameError}
-                          onChange={(e) => {
-                            setEventName(e);
-                            setEventNameError("");
-                          }}
-                        /> */}
                         <Dropdown
                           isRequired
                           title={t("receivedGifts.receivedGiftFrom")}
@@ -307,37 +262,6 @@ const AddReceivedGfitModal = ({ label, isOpen, setIsOpen, refreshData, data, set
                             setReceviedOnError("");
                           }}
                         />
-
-                        <Input
-                          isRequired
-                          type="datetime-local"
-                          label={t("receivedGifts.thankYouNoteSentOn")}
-                          placeholder={t("receivedGifts.thankYouNoteSentOn")}
-                          value={noteSentOn}
-                          error={noteSentOnError}
-                          onChange={(e) => {
-                            setNoteSentOn(e.target.value);
-                            setNoteSentOnError("");
-                          }}
-                        />
-
-                        {/* <DateAndTime
-                          isRequired
-                          dateAndTime={receviedOn}
-                          setDateAndTime={setReceivedOn}
-                          label="Received On"
-                          error={receviedOnError}
-                          setError={setNoteSentOnError}
-                        /> */}
-
-                        {/* <DateAndTime
-                          isRequired
-                          dateAndTime={noteSentOn}
-                          setDateAndTime={setNoteSentOn}
-                          label="Thank you note sent on"
-                          error={noteSentOnError}
-                          setError={setNoteSentOnError}
-                        /> */}
                       </div>
                       <div className="mt-5 text-left ">
                         <h2 className="label mb-2 text-secondary">{t("headings.basicInfo")}</h2>

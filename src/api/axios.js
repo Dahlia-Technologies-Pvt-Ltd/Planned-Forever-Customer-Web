@@ -63,7 +63,7 @@ const setupDynamicInterceptors = (instance) => {
 
 // Create axios instance without initial baseURL (will be set dynamically)
 const instance = axios.create({
-  timeout: 10000,
+  timeout: 30000,
 });
 
 // Setup interceptors

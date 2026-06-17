@@ -24,6 +24,21 @@ export default function CardAllocationModal({ label, isOpen, setIsOpen, allocate
   const [selectedContacts, setSelectedContacts] = useState([]);
   const [selectAllContacts, setSelectAllContacts] = useState(false);
 
+  const getAutoCardName = (contact) => {
+    if (!contact) return "";
+
+    const salutation = contact?.salutation?.trim?.() || "";
+    const firstName = contact?.first_name?.trim?.() || "";
+    const lastName = contact?.last_name?.trim?.() || "";
+
+    if (!salutation) return "";
+
+    return [salutation, firstName, lastName].filter(Boolean).join(" ").trim();
+  };
+
+  const autoCardName = !isBulkAllocation ? getAutoCardName(allocateData) : "";
+  const isNameLocked = Boolean(autoCardName);
+
   const handleInputChange = (value, field, index) => {
     const updatedItems = items.map((item, idx) => {
       if (idx === index) {
@@ -54,7 +69,7 @@ export default function CardAllocationModal({ label, isOpen, setIsOpen, allocate
         isValid = false;
       }
 
-      if (!currentItem.name) {
+      if (!isBulkAllocation && !currentItem.name) {
         itemError.name = "Required";
         isValid = false;
       }
@@ -65,7 +80,7 @@ export default function CardAllocationModal({ label, isOpen, setIsOpen, allocate
     setErrors(newErrors);
 
     if (isValid) {
-      setItems([...items, { card: "", name: "" }]);
+      setItems([...items, { card: "", name: isBulkAllocation ? "" : autoCardName }]);
       setErrors([...errors, { card: "", name: "" }]);
     }
   };
@@ -96,7 +111,7 @@ export default function CardAllocationModal({ label, isOpen, setIsOpen, allocate
         isValidData = false;
       }
 
-      if (!currentItem.name) {
+      if (!isBulkAllocation && !currentItem.name) {
         itemError.name = "Required";
         isValidData = false;
       }
@@ -121,7 +136,6 @@ export default function CardAllocationModal({ label, isOpen, setIsOpen, allocate
             user_id: selectedContacts,
             cards: items.map((item) => ({
               card_id: item?.card?.value,
-              name_on_card: item?.name,
             })),
           };
 
@@ -258,13 +272,18 @@ export default function CardAllocationModal({ label, isOpen, setIsOpen, allocate
             };
           });
 
-          setItems(updatedItems);
+          setItems(
+            updatedItems.map((item) => ({
+              ...item,
+              name: isNameLocked ? autoCardName : item.name,
+            })),
+          );
         } else {
-          setItems([{ card: "", name: "" }]);
+          setItems([{ card: "", name: autoCardName }]);
         }
       } 
     }
-  }, [isOpen, allInvitationCards, isBulkAllocation, allocateData]);
+  }, [isOpen, allInvitationCards, isBulkAllocation, allocateData, autoCardName, isNameLocked]);
 
   // Get Invitation Cards
   const getInvitationCards = async () => {
@@ -337,18 +356,18 @@ export default function CardAllocationModal({ label, isOpen, setIsOpen, allocate
                 leaveFrom="opacity-100 scale-100"
                 leaveTo="opacity-0 scale-75"
               >
-                <Dialog.Panel className="min-h-[600px] w-full max-w-4xl overflow-hidden rounded-2xl bg-white p-4 text-center align-middle shadow-xl transition-all xl:max-w-5xl xl:p-6 3xl:max-w-6xl 3xl:p-8">
-                  <div className="flex items-center gap-x-4 rounded-10 border bg-blue-400 p-4 font-poppins text-20 font-semibold leading-7 text-white">
-                    {isBulkAllocation ? <UserGroupIcon className="h-10 w-10 text-white" /> : <EnvelopeIcon className="h-10 w-10 text-white" />}
-                    <h3>
+                <Dialog.Panel className="w-full max-w-2xl overflow-hidden rounded-2xl bg-white p-3 text-center align-middle shadow-xl transition-all xl:max-w-3xl xl:p-4 3xl:max-w-4xl 3xl:p-5">
+                  <div className="flex items-center gap-x-3 rounded-10 border bg-blue-400 p-3 font-poppins text-sm font-semibold leading-5 text-white xl:text-base">
+                    {isBulkAllocation ? <UserGroupIcon className="h-7 w-7 text-white" /> : <EnvelopeIcon className="h-7 w-7 text-white" />}
+                    <h3 className="text-left">
                       {t("cardAllocation.allocateCardTo")} {getDisplayName()}
                     </h3>
                   </div>
 
                   {/* Contact Selection for Bulk Allocation */}
                   {isBulkAllocation && Array.isArray(allocateData) && (
-                    <div className="mt-6 rounded-lg border border-gray-300 p-4">
-                      <h4 className="mb-4 text-left text-lg font-semibold">Select Contacts for Card Allocation</h4>
+                    <div className="mt-4 rounded-lg border border-gray-300 p-3">
+                      <h4 className="mb-3 text-left text-sm font-semibold xl:text-base">Select Contacts for Card Allocation</h4>
 
                       <div className="mb-4">
                         <label className="flex items-center">
@@ -358,7 +377,7 @@ export default function CardAllocationModal({ label, isOpen, setIsOpen, allocate
                             onChange={(e) => handleSelectAllContacts(e.target.checked)}
                             className="mr-2"
                           />
-                          <span className="font-medium">Select All ({allocateData.length} contacts)</span>
+                          <span className="text-sm font-medium">Select All ({allocateData.length} contacts)</span>
                         </label>
                       </div>
 
@@ -371,14 +390,14 @@ export default function CardAllocationModal({ label, isOpen, setIsOpen, allocate
                               onChange={(e) => handleContactSelection(contact.uuid, e.target.checked)}
                               className="mr-2"
                             />
-                            <span className="text-[12px]">
-                              {contact.salutation} {contact.first_name} {contact.last_name}
-                            </span>
+                              <span className="text-[11px] xl:text-xs">
+                                {contact.salutation} {contact.first_name} {contact.last_name}
+                              </span>
                           </label>
                         ))}
                       </div>
 
-                      <div className="mt-3 text-sm text-gray-600">
+                      <div className="mt-3 text-xs text-gray-600 xl:text-sm">
                         {selectedContacts.length} of {allocateData.length} contacts selected
                       </div>
                     </div>
@@ -387,15 +406,15 @@ export default function CardAllocationModal({ label, isOpen, setIsOpen, allocate
                   <div>
                     {/* <table className="mt-8 w-full border-collapse"> */}
                     <table
-                        className={`mt-8 border-collapse ${
+                        className={`mt-5 border-collapse ${
                           isBulkAllocation ? "w-1/3" : "w-full"
                         }`}
                       >
                       <thead>
                         <tr>
-                          <th className="border border-gray-400 px-2 py-2 text-start">{t("cardAllocation.card")}</th>
+                          <th className="border border-gray-400 px-2 py-2 text-start text-sm">{t("cardAllocation.card")}</th>
                           {!isBulkAllocation && (
-                            <th className="border border-gray-400 px-2 py-2 text-start">{t("cardAllocation.nameOnCard")}</th>
+                            <th className="border border-gray-400 px-2 py-2 text-start text-sm">{t("cardAllocation.nameOnCard")}</th>
                           )}
                           {/* <th className="border border-gray-400 px-2 text-start">{t("headings.actions")}</th> */}
                         </tr>
@@ -416,14 +435,19 @@ export default function CardAllocationModal({ label, isOpen, setIsOpen, allocate
                                 <td></td>
                               ) : (
                                 <td className="border border-gray-400 px-2 pb-3 pt-2">
-                                  <Input
-                                    type="text"
-                                    labelOnTop
-                                    value={item.name}
-                                    withError={errors[index]?.name}
-                                    onChange={(e) => handleInputChange(e.target.value, "name", index)}
-                                  />
-                                </td>
+                                <Input
+                                  type="text"
+                                  labelOnTop
+                                  value={item.name}
+                                  readOnly={isNameLocked}
+                                  withError={errors[index]?.name}
+                                  onChange={(e) => {
+                                    if (!isNameLocked) {
+                                      handleInputChange(e.target.value, "name", index);
+                                    }
+                                  }}
+                                />
+                              </td>
                               )}
 
                             {/* <td className="flex items-center justify-center gap-x-2 border border-gray-400 px-3 py-4">
@@ -447,7 +471,7 @@ export default function CardAllocationModal({ label, isOpen, setIsOpen, allocate
                     </button> */}
                   </div>
 
-                  <div className="mt-64 flex justify-end gap-x-6 px-8">
+                  <div className="mt-10 flex justify-end gap-x-4 px-2 xl:px-4">
                     <Button loading={btnLoading} title={t("buttons.save")} icon={<CheckIcon />} onClick={handleSubmit} />
                     <Button title={t("buttons.cancel")} icon={<XMarkIcon />} buttonColor="bg-red-500" className="border-primary bg-primary" onClick={closeModal} />
                   </div>

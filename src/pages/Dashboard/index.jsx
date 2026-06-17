@@ -25,6 +25,9 @@ import {
 } from "@heroicons/react/24/outline";
 
 const Dashboard = () => {
+  const DMS_STORE_SECRET = "79dc90d28be247dcad4dabce8190c857";
+  // const DMS_STORE_URL = "https://app-sandbox.dahlia.tech/loesch-store/auto-login";
+  const DMS_STORE_URL = "http://127.0.0.1:8000/auto-login";
   const { t } = useTranslation("common");
 
   const navigate = useNavigate();
@@ -45,6 +48,8 @@ const Dashboard = () => {
   const [statsData, setStatsData] = useState([]);
   const [taskCount, setTaskCount] = useState({});
   const [statsLoading, setStatsLoading] = useState(false);
+  const [dmsLoading, setDmsLoading] = useState(false);
+  const [dmsError, setDmsError] = useState("");
 
   // Get Stats
   const getStats = () => {
@@ -125,6 +130,61 @@ const Dashboard = () => {
   const pendingWidth = totalTasks > 0 ? (taskCount?.pending / totalTasks) * 100 : 0;
   const overDueWidth = totalTasks > 0 ? (taskCount?.over_due / totalTasks) * 100 : 0;
 
+  const base64UrlEncode = (value) =>
+    window
+      .btoa(value)
+      .replace(/\+/g, "-")
+      .replace(/\//g, "_")
+      .replace(/=+$/g, "");
+
+  const signDmsPayload = async (payloadEncoded) => {
+    const encoder = new TextEncoder();
+    const cryptoKey = await window.crypto.subtle.importKey(
+      "raw",
+      encoder.encode(DMS_STORE_SECRET),
+      { name: "HMAC", hash: "SHA-256" },
+      false,
+      ["sign"],
+    );
+
+    const signatureBuffer = await window.crypto.subtle.sign("HMAC", cryptoKey, encoder.encode(payloadEncoded));
+    return Array.from(new Uint8Array(signatureBuffer))
+      .map((byte) => byte.toString(16).padStart(2, "0"))
+      .join("");
+  };
+
+  const handleOpenDmsStore = async () => {
+    const customerEmail = userData?.email || userData?.contact_email || userData?.user_email;
+
+    if (!customerEmail) {
+      setDmsError("User email not found for DMS Store login.");
+      return;
+    }
+
+    try {
+      setDmsLoading(true);
+      setDmsError("");
+
+      const payload = {
+        customer_email: customerEmail,
+        exp: Math.floor(Date.now() / 1000) + 300,
+      };
+
+      const payloadEncoded = base64UrlEncode(JSON.stringify(payload));
+      const signature = await signDmsPayload(payloadEncoded);
+      const token = `${payloadEncoded}.${signature}`;
+      const link = `${DMS_STORE_URL}?t=${encodeURIComponent(token)}`;
+
+      window.open(link, "_blank", "noopener,noreferrer");
+    } catch (error) {
+      setDmsError("Unable to open DMS Store right now.");
+    } finally {
+      setDmsLoading(false);
+    }
+  };
+
+  // const userDatass = JSON.parse(localStorage.getItem('userData'));
+  // console.log(userDatass.email);
   return (
     <>
       <div className="grid grid-cols-12 gap-5">
@@ -133,7 +193,16 @@ const Dashboard = () => {
             <div>
               <h1 className="text-xl font-medium">{t("dashboard.allStatistics")}</h1>
               <p className="mt-1 text-sm text-gray-500">{t("dashboard.statisticsSummary")}</p>
+              {dmsError && <p className="mt-2 text-sm text-red-500">{dmsError}</p>}
             </div>
+            <button
+              type="button"
+              onClick={handleOpenDmsStore}
+              disabled={dmsLoading}
+              className="rounded-lg bg-[#7d1d2f] px-4 py-2 text-sm font-semibold text-white transition hover:bg-[#641726] disabled:cursor-not-allowed disabled:opacity-60"
+            >
+              {dmsLoading ? "Opening..." : "LOESCH STORE"}
+            </button>
           </div>
 
           {statsLoading ? (
@@ -161,7 +230,7 @@ const Dashboard = () => {
                         ? VENUES
                         : ""
                 }
-                className="flex gap-2 rounded-lg border-2 border-transparent bg-orange-100 px-2 py-4 transition-all duration-300 hover:border-orange-300 hover:shadow-orange-card 3xl:gap-3 3xl:p-4"
+                className="order-1 flex gap-2 rounded-lg border-2 border-transparent bg-orange-100 px-2 py-4 transition-all duration-300 hover:border-orange-300 hover:shadow-orange-card 3xl:gap-3 3xl:p-4"
               >
                 <div className="relative flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-orange-400 3xl:h-10 3xl:w-10">
                   <MapPinIcon className="h-5 w-5 text-white 3xl:h-6 3xl:w-6" />
@@ -169,6 +238,26 @@ const Dashboard = () => {
                 <div className="space-y-">
                   <p className="text-sm font-medium 3xl:text-base">{t("dashboard.stats.venues")}</p>
                   <h3 className="text-lg font-bold 3xl:text-xl">{statsData?.venue_count}</h3>
+                </div>
+              </Link>
+              <Link
+                to={
+                  userData?.role === "superAdmin"
+                    ? CEREMONIES
+                    : userData?.role?.permissions?.includes("Ceremonies")
+                      ? CEREMONIES
+                      : userData.role?.permissions?.length === 0
+                        ? CEREMONIES
+                        : ""
+                }
+                className="order-2 flex gap-2 rounded-lg border-2 border-transparent bg-yellow-100 px-2 py-4 transition-all duration-300 hover:border-yellow-400 hover:shadow-gray-card 3xl:gap-3 3xl:p-4"
+              >
+                <div className="relative flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-yellow-400 3xl:h-10 3xl:w-10">
+                  <CalendarIcon className="h-5 w-5 text-white 3xl:h-6 3xl:w-6" />
+                </div>
+                <div className="space-y-">
+                  <p className="text-sm font-medium 3xl:text-base">{t("dashboard.stats.ceremony")}</p>
+                  <h3 className="text-lg font-bold 3xl:text-xl">{statsData?.ceremony_count}</h3>
                 </div>
               </Link>
 
@@ -182,7 +271,7 @@ const Dashboard = () => {
                         ? GIFTS
                         : ""
                 }
-                className="flex gap-2 rounded-lg border-2 border-transparent bg-blue-100 px-2 py-4 transition-all duration-300 hover:border-blue-300 hover:shadow-gray-card 3xl:gap-3 3xl:p-4"
+                className="order-5 flex gap-2 rounded-lg border-2 border-transparent bg-blue-100 px-2 py-4 transition-all duration-300 hover:border-blue-300 hover:shadow-gray-card 3xl:gap-3 3xl:p-4"
               >
                 <div className="relative flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-blue-400 3xl:h-10 3xl:w-10">
                   <GiftIcon className="h-5 w-5 text-white 3xl:h-6 3xl:w-6" />
@@ -203,7 +292,7 @@ const Dashboard = () => {
                         ? HOTELS
                         : ""
                 }
-                className="flex gap-2 rounded-lg border-2 border-transparent bg-red-100 px-2 py-4 transition-all duration-300 hover:border-red-300 hover:shadow-orange-card 3xl:gap-3 3xl:p-4"
+                className="order-9 flex gap-2 rounded-lg border-2 border-transparent bg-red-100 px-2 py-4 transition-all duration-300 hover:border-red-300 hover:shadow-orange-card 3xl:gap-3 3xl:p-4"
               >
                 <div className="relative flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-red-400 3xl:h-10 3xl:w-10">
                   <BuildingOfficeIcon className="h-5 w-5 text-white 3xl:h-6 3xl:w-6" />
@@ -224,7 +313,7 @@ const Dashboard = () => {
                         ? VENDORS
                         : ""
                 }
-                className="flex gap-2 rounded-lg border-2 border-transparent bg-green-100 px-2 py-4 transition-all duration-300 hover:border-green-400 hover:shadow-gray-card 3xl:gap-3 3xl:p-4"
+                className="order-4 flex gap-2 rounded-lg border-2 border-transparent bg-green-100 px-2 py-4 transition-all duration-300 hover:border-green-400 hover:shadow-gray-card 3xl:gap-3 3xl:p-4"
               >
                 <div className="relative flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-green-400 3xl:h-10 3xl:w-10">
                   <BuildingStorefrontIcon className="h-5 w-5 text-white 3xl:h-6 3xl:w-6" />
@@ -245,7 +334,7 @@ const Dashboard = () => {
                         ? DEPARTURES
                         : ""
                 }
-                className="flex gap-2 rounded-lg border-2 border-transparent bg-violet-100 px-2 py-4 transition-all duration-300 hover:border-violet-400 hover:shadow-gray-card 3xl:gap-3 3xl:p-4"
+                className="order-8 flex gap-2 rounded-lg border-2 border-transparent bg-violet-100 px-2 py-4 transition-all duration-300 hover:border-violet-400 hover:shadow-gray-card 3xl:gap-3 3xl:p-4"
               >
                 <div className="relative flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-violet-400 3xl:h-10 3xl:w-10">
                   <ChevronUpIcon className="h-5 w-5 text-white 3xl:h-6 3xl:w-6" />
@@ -266,7 +355,7 @@ const Dashboard = () => {
                         ? CARS
                         : ""
                 }
-                className="flex gap-2 rounded-lg border-2 border-transparent bg-purple-100 px-2 py-4 transition-all duration-300 hover:border-purple-400 hover:shadow-gray-card 3xl:gap-3 3xl:p-4"
+                className="order-10 flex gap-2 rounded-lg border-2 border-transparent bg-purple-100 px-2 py-4 transition-all duration-300 hover:border-purple-400 hover:shadow-gray-card 3xl:gap-3 3xl:p-4"
               >
                 <div className="relative flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-purple-400 3xl:h-10 3xl:w-10">
                   <TruckIcon className="h-5 w-5 text-white 3xl:h-6 3xl:w-6" />
@@ -287,7 +376,7 @@ const Dashboard = () => {
                         ? CONTACTS
                         : ""
                 }
-                className="flex gap-2 rounded-lg border-2 border-transparent bg-teal-100 px-2 py-4 transition-all duration-300 hover:border-teal-400 hover:shadow-gray-card 3xl:gap-3 3xl:p-4"
+                className="order-3 flex gap-2 rounded-lg border-2 border-transparent bg-teal-100 px-2 py-4 transition-all duration-300 hover:border-teal-400 hover:shadow-gray-card 3xl:gap-3 3xl:p-4"
               >
                 <div className="relative flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-teal-400 3xl:h-10 3xl:w-10">
                   <UsersIcon className="h-5 w-5 text-white 3xl:h-6 3xl:w-6" />
@@ -308,7 +397,7 @@ const Dashboard = () => {
                         ? ARRIVALS
                         : ""
                 }
-                className="flex gap-2 rounded-lg border-2 border-transparent bg-indigo-100 px-2 py-4 transition-all duration-300 hover:border-indigo-400 hover:shadow-gray-card 3xl:gap-3 3xl:p-4"
+                className="order-7 flex gap-2 rounded-lg border-2 border-transparent bg-indigo-100 px-2 py-4 transition-all duration-300 hover:border-indigo-400 hover:shadow-gray-card 3xl:gap-3 3xl:p-4"
               >
                 <div className="relative flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-indigo-400 3xl:h-10 3xl:w-10">
                   <ChevronDownIcon className="h-5 w-5 text-white 3xl:h-6 3xl:w-6" />
@@ -319,26 +408,7 @@ const Dashboard = () => {
                 </div>
               </Link>
 
-              <Link
-                to={
-                  userData?.role === "superAdmin"
-                    ? CEREMONIES
-                    : userData?.role?.permissions?.includes("Ceremonies")
-                      ? CEREMONIES
-                      : userData.role?.permissions?.length === 0
-                        ? CEREMONIES
-                        : ""
-                }
-                className="flex gap-2 rounded-lg border-2 border-transparent bg-yellow-100 px-2 py-4 transition-all duration-300 hover:border-yellow-400 hover:shadow-gray-card 3xl:gap-3 3xl:p-4"
-              >
-                <div className="relative flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-yellow-400 3xl:h-10 3xl:w-10">
-                  <CalendarIcon className="h-5 w-5 text-white 3xl:h-6 3xl:w-6" />
-                </div>
-                <div className="space-y-">
-                  <p className="text-sm font-medium 3xl:text-base">{t("dashboard.stats.ceremony")}</p>
-                  <h3 className="text-lg font-bold 3xl:text-xl">{statsData?.ceremony_count}</h3>
-                </div>
-              </Link>
+              
 
               <Link
                 to={
@@ -350,7 +420,7 @@ const Dashboard = () => {
                       ? INVITATION_CARDS
                       : ""
                 }
-                className="flex gap-2 rounded-lg border-2 border-transparent bg-cyan-100 px-2 py-4 transition-all duration-300 hover:border-cyan-400 hover:shadow-gray-card 3xl:gap-3 3xl:p-4"
+                className="order-6 flex gap-2 rounded-lg border-2 border-transparent bg-cyan-100 px-2 py-4 transition-all duration-300 hover:border-cyan-400 hover:shadow-gray-card 3xl:gap-3 3xl:p-4"
               >
                 <div className="relative flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-cyan-400 3xl:h-10 3xl:w-10">
                   <IdentificationIcon className="h-5 w-5 text-white 3xl:h-6 3xl:w-6" />
@@ -364,7 +434,7 @@ const Dashboard = () => {
           )}
         </div>
 
-        <div className="card col-span-6 lg:col-span-6">
+        {/* <div className="card col-span-6 lg:col-span-6">
           {/* <div className="flex justify-between items-start">
             <div>
               <h1 className="heading">Events </h1>
@@ -373,7 +443,7 @@ const Dashboard = () => {
             <Link to={userData?.role === "superAdmin" ? EVENTS : userData?.role?.permissions?.includes("Events") ? EVENTS : ""}>
               <div className="underline cursor-pointer">View All</div>
             </Link>
-          </div> */}
+          </div> 
           <div className="mt-2">
             <div className="-mx-6 mb-8 overflow-x-auto">
               <table className="w-full text-left">
@@ -397,7 +467,7 @@ const Dashboard = () => {
                           requestSort(sortKey);
                         }}
                       >
-                        <p className="font-inter cursor-pointer whitespace-nowrap text-xs font-semibold leading-5 3xl:text-sm">
+                        <p className="font-inter cursor-pointer whitespace-nowrap text-sm font-semibold leading-5 3xl:text-sm">
                           {head}
                           {sortConfig.key ===
                             (head === "Event Name"
@@ -461,11 +531,11 @@ const Dashboard = () => {
               </table>
             </div>
           </div>
-        </div>
+        </div> */}
 
-        <div className="card col-span-6 lg:col-span-6">
+        {/* <div className="card col-span-6 lg:col-span-6"> */}
           {/* Legend */}
-          <div className="mb-4 flex justify-between text-sm">
+          {/* <div className="mb-4 flex justify-between text-sm">
             <div className="flex items-center">
               <span className="mr-2 inline-block h-4 w-4 bg-green-500"></span>
               {t("dashboard.chart.completed")} ({taskCount.completed})
@@ -478,18 +548,18 @@ const Dashboard = () => {
               <span className="mr-2 inline-block h-4 w-4 bg-[#FAA502]"></span>
               {t("dashboard.chart.overdue")} ({taskCount.over_due})
             </div>
-          </div>
+          </div> */}
 
           {/* Progress Bar */}
-          <div className="flex h-8 w-full">
+          {/* <div className="flex h-8 w-full"> */}
             {/* Completed */}
-            <div className="bg-green-500" style={{ width: `${completedWidth}%` }} />
+            {/* <div className="bg-green-500" style={{ width: `${completedWidth}%` }} /> */}
             {/* Pending */}
-            <div className="bg-orange-500" style={{ width: `${pendingWidth}%` }} />
+            {/* <div className="bg-orange-500" style={{ width: `${pendingWidth}%` }} /> */}
             {/* Overdue */}
-            <div className="bg-[repeating-linear-gradient(45deg,orange,orange_10px,white_10px,white_20px)]" style={{ width: `${overDueWidth}%` }} />
-          </div>
-        </div>
+            {/* <div className="bg-[repeating-linear-gradient(45deg,orange,orange_10px,white_10px,white_20px)]" style={{ width: `${overDueWidth}%` }} /> */}
+          {/* </div> */}
+        {/* </div> */}
       </div>
     </>
   );

@@ -294,19 +294,19 @@ const QuickImportText = ({ isOpen, setIsOpen, refreshData }) => {
 
         <div className="overflow-y-auto fixed inset-0">
           <div className="flex justify-center items-center p-4 min-h-full text-center">
-            <Dialog.Panel className="p-8 w-full max-w-4xl bg-white rounded-2xl shadow-xl">
-              <div className="flex justify-between items-center mb-5">
-                <Dialog.Title className="text-lg font-semibold">
+            <Dialog.Panel className="w-full max-w-4xl rounded-2xl bg-white p-6 shadow-xl">
+              <div className="mb-3 flex items-center justify-between">
+                <Dialog.Title className="text-lg font-semibold text-black">
                   {t("contacts.addContacts")}
                 </Dialog.Title>
-                <XMarkIcon onClick={handleClose} className="w-8 h-8 cursor-pointer" />
+                <XMarkIcon onClick={handleClose} className="h-7 w-7 cursor-pointer text-info-color" />
               </div>
 
               <hr />
                 
-              <form onSubmit={handleSubmit}>
-                <div className="p-2">
-                    <div className="grid grid-cols-2 gap-7 my-7">
+              <form onSubmit={handleSubmit} className="[&_.label]:text-xs [&_.label]:font-medium [&_input]:h-9 [&_input]:min-h-[36px] [&_input]:text-sm [&_input]:py-1 [&_input[type='datetime-local']]:h-9 [&_textarea]:text-sm [&_.css-b62m3t-container]:text-sm [&_.css-13cymwt-control]:h-9 [&_.css-13cymwt-control]:min-h-[36px] [&_.css-13cymwt-control]:py-0 [&_.css-t3ipsp-control]:h-9 [&_.css-t3ipsp-control]:min-h-[36px] [&_.css-t3ipsp-control]:py-0 [&_.css-hlgwow]:h-9 [&_.css-hlgwow]:min-h-[36px] [&_.css-hlgwow]:py-0 [&_.css-hlgwow]:px- [&_.css-1jqq78o-placeholder]:text-xs [&_.css-1jqq78o-placeholder]:leading-none [&_.css-1dimb5e-singleValue]:text-xs [&_.css-1dimb5e-singleValue]:leading-none [&_.css-1wy0on6]:h-9 [&_.css-19bb58m]:my-0 [&_textarea]:text-xs [&_textarea]:leading-4 [&_textarea::placeholder]:text-gray-300 [&_textarea::placeholder]:leading-6 [&_textarea::placeholder]:text-xs">
+                <div className="p-1 pt-5">
+                    <div className="grid grid-cols-1 gap-4 md:grid-cols-3">
                         <Dropdown
                             isSearchable
                             title={t("contacts.countryCode")}
@@ -314,17 +314,15 @@ const QuickImportText = ({ isOpen, setIsOpen, refreshData }) => {
                             label: `+${country.callingCodes[0]} ${country.name}`,
                             value: `+${country.callingCodes[0]}`,
                             }))}
-                            placeholder="Country Code"
+                      placeholder={t("contacts.countryCode")}
                             value={spouse.countryCode}
                             onChange={(e) => setSpouse({ ...spouse, countryCode: e })}
-                            invisible
+                            
                         />
-                    </div>
-                    <div className="grid grid-cols-2 gap-7 my-7">
                         <Dropdown
                             options={groupOptions}
-                            //title={t("contacts.groups")}
-                            placeholder="Select groups"
+                            title={t("contacts.groups")}
+                    placeholder={t("contacts.selectGroup")}
                             value={groups}
                             onChange={handleGroupChange}
                             Delete
@@ -333,8 +331,8 @@ const QuickImportText = ({ isOpen, setIsOpen, refreshData }) => {
                             
                         <Dropdown
                             options={options}
-                            //title={t("contacts.family")}
-                            placeholder="Select family"
+                            title={t("contacts.family")}
+                    placeholder={t("contacts.selectFamily")}
                             value={family}
                             onChange={handleFamilyChange}
                             Delete
@@ -343,20 +341,50 @@ const QuickImportText = ({ isOpen, setIsOpen, refreshData }) => {
                             />
                             
                     </div>
-                    <Input label={t("contacts.enterNameandNumbers")} placeholder={`Example:\nMr. John Michael Doe 9876000431 johndoe@gmail.com\nMr. Alex Robert Brown  7540005938 alexbrown@gmail.com` } textarea rows={4}
-                    onChange={(e) => {
-                            const value = e.target.value;
-                            setAddress(value);
-                            const parsed = parseContacts(value, spouse.countryCode.value.trim(), groups.label, family.label);
-                            setContacts(parsed);
+                    <div className="mt-5">
+                      <Input
+                        label=""
+                        placeholder={`Example:
+  Mr. John Michael Doe 9876000431 johndoe@gmail.com
+  Mr. Alex Robert Brown 7540005938 alexbrown@gmail.com`}
+                        textarea
+                        rows={7}
+                        value={address}
+                        onChange={(e) => {
+                          const value = e.target.value;
+                          setAddress(value);
+                          const parsed = parseContacts(
+                            value,
+                            spouse.countryCode?.value?.trim(),
+                            groups?.label,
+                            family?.label
+                          );
+                          setContacts(parsed);
                         }}
+                        className="rounded-xl border border-slate-200 bg-slate-50 px-4 py-4 text-sm leading-7 placeholder:text-slate-400 focus:border-primary focus:bg-white"
+                      />
+                    </div>
+                  <div className="mt-5 flex justify-end gap-3">
+                    <Button
+                      icon={<XMarkIcon />}
+                      title={t("buttons.cancel")}
+                      type="button"
+                      buttonColor="bg-red-500"
+                      className="!h-9 !px-5"
+                      onClick={handleClose}
                     />
-
-                  
-
-                  <div className="grid grid-cols-2 gap-1 mx-auto mt-5 w-12/12">
-                    <Button icon={<XMarkIcon />} title={t("buttons.cancel")} type="button" buttonColor="bg-red-500" onClick={handleClose} />
-                    <Button icon={<CheckIcon />} title={t("buttons.verify")} type="submit" buttonColor="bg-blue-500" loading={btnLoading} onClick={() => {setOpenQuickImportDisplayText(true); setIsOpen(false);}} />
+                    <Button
+                      icon={<CheckIcon />}
+                      title={t("buttons.verify")}
+                      type="submit"
+                      buttonColor="bg-secondary"
+                      className="!h-9 !px-5"
+                      loading={btnLoading}
+                      onClick={() => {
+                        setOpenQuickImportDisplayText(true);
+                        setIsOpen(false);
+                      }}
+                    />
                   </div>
 
                 </div>

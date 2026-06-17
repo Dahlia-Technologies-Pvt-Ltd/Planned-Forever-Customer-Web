@@ -16,6 +16,7 @@ import ConfirmationModal from "../../components/common/ConfirmationModal";
 import { emptyFolderAnimation } from "../../utilities/lottieAnimations";
 import { ChevronDownIcon, ChevronLeftIcon, ChevronRightIcon, ChevronUpIcon, MagnifyingGlassIcon } from "@heroicons/react/24/solid";
 import { useTranslation } from "react-i18next";
+import { hasPermission } from "../../utilities/permissions";
 
 const Hotels = () => {
   const { t } = useTranslation("common");
@@ -39,7 +40,6 @@ const Hotels = () => {
   const [currentPage, setCurrentPage] = useState(1);
 
   const [modalData, setModalData] = useState(null);
-
   // Modal
   const [addNewModal, setAddNewModal] = useState(false);
   const [openDeleteModal, setOpenDeleteModal] = useState({ open: false, data: null });
@@ -160,7 +160,7 @@ const Hotels = () => {
               <h3 className="heading">{t("pageTitles.hotels")}</h3>
               <div className="flex w-full items-center justify-between">
                 <div className="flex items-center gap-x-3">
-                  {(userData?.role?.display_name === "web_admin" || userData.role.permissions?.some((item) => item === "hotels-create")) && (
+                  {(hasPermission(userData, "hotels-create")) && (
                     <Button title={t("hotels.addHotel")} onClick={() => setAddNewModal(true)} />
                   )}
                   <Link to={HOTEL_PRINT}>
@@ -218,7 +218,7 @@ const Hotels = () => {
                             requestSort(sortKey);
                           }}
                         >
-                          <p className="font-inter cursor-pointer whitespace-nowrap text-xs font-semibold leading-5 3xl:text-sm">
+                          <p className="font-inter cursor-pointer whitespace-nowrap text-sm font-semibold leading-5 3xl:text-sm">
                             {head}
                             {sortConfig.key ===
                               (head === "Hotel Name"
@@ -351,7 +351,7 @@ const Hotels = () => {
                       <div className="flex justify-between">
                         <h3 className="heading">{t("headings.details")}</h3>
                         <div className="flex items-center gap-x-3">
-                          {(userData?.role?.display_name === "web_admin" || userData.role.permissions?.some((item) => item === "hotels-edit")) && (
+                          {(hasPermission(userData, "hotels-edit")) && (
                             <button
                               className="border-b border-secondary text-sm font-medium text-secondary"
                               type="button"
@@ -363,7 +363,7 @@ const Hotels = () => {
                               {t("buttons.edit")}
                             </button>
                           )}
-                          {(userData?.role?.display_name === "web_admin" || userData.role.permissions?.some((item) => item === "hotels-delete")) && (
+                          {(hasPermission(userData, "hotels-delete")) && (
                             <button
                               onClick={() => setOpenDeleteModal({ open: true, data: detail })}
                               className="border-b border-red-500 text-sm font-medium text-red-500"
@@ -393,7 +393,7 @@ const Hotels = () => {
                           <tr>
                             {TABLE_HEAD_Detail.map((head) => (
                               <th key={head} className="border-b border-gray-100 bg-white py-4 pr-4">
-                                <p className="font-inter cursor-pointer whitespace-nowrap text-xs font-semibold leading-5 3xl:text-sm">{head}</p>
+                                <p className="font-inter cursor-pointer whitespace-nowrap text-sm font-semibold leading-5 3xl:text-sm">{head}</p>
                               </th>
                             ))}
                           </tr>

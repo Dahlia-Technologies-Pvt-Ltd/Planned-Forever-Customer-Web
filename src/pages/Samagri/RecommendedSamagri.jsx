@@ -293,7 +293,7 @@ const Ceremonies = () => {
                             requestSort(sortKey);
                           }}
                         >
-                          <p className="font-inter cursor-pointer whitespace-nowrap text-xs font-semibold leading-5 3xl:text-sm">
+                          <p className="font-inter cursor-pointer whitespace-nowrap text-sm font-semibold leading-5 3xl:text-sm">
                             {head}
                             {sortConfig.key ===
                               (head === "Ceremony Name"
@@ -331,11 +331,11 @@ const Ceremonies = () => {
                           onClick={() => handleRowClick(item)}
                         >
                           <td className="py-3 pl-6 pr-4">
-                            <p className="text-xs font-normal text-primary-color 3xl:text-sm">{item?.ceremony?.name}</p>
+                            <p className="text-sm font-normal text-primary-color 3xl:text-sm">{item?.ceremony?.name}</p>
                           </td>
 
                           <td className="py-3 pl-4 3xl:px-4">
-                            <p className="line-clamp-1 text-xs font-normal text-primary-color 3xl:text-sm">{item?.recommended_significance}</p>
+                            <p className="line-clamp-1 text-sm font-normal text-primary-color 3xl:text-sm">{item?.recommended_significance}</p>
                           </td>
 
                           <td className="flex items-center gap-x-2 py-3 pl-4 3xl:px-4">
@@ -432,7 +432,7 @@ const Ceremonies = () => {
                         <tr>
                           {TABLE_HEAD_Detail.map((head) => (
                             <th key={head} className="border-b border-gray-100 bg-white py-4 pr-4">
-                              <p className="font-inter cursor-pointer whitespace-nowrap text-xs font-semibold leading-5 3xl:text-sm">{head}</p>
+                              <p className="font-inter cursor-pointer whitespace-nowrap text-sm font-semibold leading-5 3xl:text-sm">{head}</p>
                             </th>
                           ))}
                         </tr>

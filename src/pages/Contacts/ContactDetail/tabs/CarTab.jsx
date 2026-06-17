@@ -114,7 +114,7 @@ const CarTab = ({ data, t }) => {
                     requestCarSort(sortKey);
                   }}
                 >
-                  <p className="font-inter cursor-pointer whitespace-nowrap text-xs font-semibold leading-5 3xl:text-sm">
+                  <p className="font-inter cursor-pointer whitespace-nowrap text-sm font-semibold leading-5 3xl:text-sm">
                     {head}
                     {carSortConfig.key ===
                       (head === "Car Model" || head === t("carAllocation.carModel")
@@ -158,31 +158,31 @@ const CarTab = ({ data, t }) => {
               carItems.map((item, index) => (
                 <tr key={index} className="cursor-pointer even:bg-gray-50">
                   <td className="cursor-pointer py-3 pl-6 pr-4">
-                    <p className="text-xs font-normal text-primary-color 3xl:text-sm">{item?.car?.make_and_model || "-"}</p>
+                    <p className="text-sm font-normal text-primary-color 3xl:text-sm">{item?.car?.make_and_model || "-"}</p>
                   </td>
                   <td className="cursor-pointer py-3 pl-6 pr-4">
-                    <p className="text-xs font-normal text-primary-color 3xl:text-sm">{item?.car?.number || "-"}</p>
+                    <p className="text-sm font-normal text-primary-color 3xl:text-sm">{item?.car?.number || "-"}</p>
                   </td>
                   <td className="cursor-pointer py-3 pl-6 pr-4">
-                    <p className="text-xs font-normal text-primary-color 3xl:text-sm">
+                    <p className="text-sm font-normal text-primary-color 3xl:text-sm">
                       {item?.type === "pick_up" ? "Pick Up" : item?.type === "general" ? "General" : item?.type === "drop_off" ? "Drop Off" : "-"}
                     </p>
                   </td>
                   <td className="cursor-pointer py-3 pl-6 pr-4">
-                    <p className="text-xs font-normal text-primary-color 3xl:text-sm">
+                    <p className="text-sm font-normal text-primary-color 3xl:text-sm">
                       {item?.from ? getLocalDateFromUnixTimestamp(item.from, "DD MMM, YYYY h:mm A") : "-"}
                     </p>
                   </td>
                   <td className="cursor-pointer py-3 pl-6 pr-4">
-                    <p className="text-xs font-normal text-primary-color 3xl:text-sm">
+                    <p className="text-sm font-normal text-primary-color 3xl:text-sm">
                       {item?.till ? getLocalDateFromUnixTimestamp(item.till, "DD MMM, YYYY h:mm A") : "-"}
                     </p>
                   </td>
                   <td className="cursor-pointer py-3 pl-6 pr-4">
-                    <p className="text-xs font-normal text-primary-color 3xl:text-sm">{item?.car?.driver_name || "-"}</p>
+                    <p className="text-sm font-normal text-primary-color 3xl:text-sm">{item?.car?.driver_name || "-"}</p>
                   </td>
                   <td className="cursor-pointer py-3 pl-6 pr-4">
-                    <p className="text-xs font-normal text-primary-color 3xl:text-sm">{item?.car?.driver_contact?.phone || "-"}</p>
+                    <p className="text-sm font-normal text-primary-color 3xl:text-sm">{item?.car?.driver_contact?.phone || "-"}</p>
                   </td>
                 </tr>
               ))

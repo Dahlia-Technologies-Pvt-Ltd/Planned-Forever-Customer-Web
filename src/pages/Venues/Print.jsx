@@ -22,11 +22,11 @@ const VenuePrint = () => {
     t("venues.state"),
     t("venues.country"),
     t("venues.pin"),
-    t("Timezone"),
+    t("venues.timeZone"),
     t("venues.venueAddress"),
     t("venues.contactPerson"),
     t("venues.countryCode"),
-    t("Phone Number"),
+    t("venues.phoneNumber"),
   ];
 
   const { eventSelect, userData } = useThemeContext();
@@ -75,7 +75,7 @@ const VenuePrint = () => {
           <tr>
             {TABLE_HEAD_VENUE.map((head) => (
               <th className="p-4 bg-white border-b border-gray-100 first:pl-6">
-                <p className="text-xs font-semibold leading-5 whitespace-nowrap cursor-pointer font-inter 3xl:text-sm">{head}</p>
+                <p className="text-sm font-semibold leading-5 whitespace-nowrap cursor-pointer font-inter 3xl:text-sm">{head}</p>
               </th>
             ))}
           </tr>
@@ -91,34 +91,34 @@ const VenuePrint = () => {
             allVenueList.map((item, index) => (
               <tr key={item?.id}>
                 <td className="py-3 pr-4 pl-6">
-                  <p className="text-xs font-normal text-primary-color-200 3xl:text-sm">{item?.name || "-"}</p>
+                  <p className="text-sm font-normal text-primary-color-200 3xl:text-sm">{item?.name || "-"}</p>
                 </td>
                 <td className="py-3 pr-3 pl-4 3xl:px-4">
-                  <p className="text-xs font-normal text-primary-color-200 3xl:text-sm">{item?.city || "-"}</p>
+                  <p className="text-sm font-normal text-primary-color-200 3xl:text-sm">{item?.city || "-"}</p>
                 </td>
                 <td className="py-3 pr-3 pl-4 3xl:px-4">
-                  <p className="text-xs font-normal text-primary-color-200 3xl:text-sm">{item?.state || "-"}</p>
+                  <p className="text-sm font-normal text-primary-color-200 3xl:text-sm">{item?.state || "-"}</p>
                 </td>
                 <td className="py-3 pr-3 pl-4 3xl:px-4">
-                  <p className="text-xs font-normal text-primary-color-200 3xl:text-sm">{item?.country || "-"}</p>
+                  <p className="text-sm font-normal text-primary-color-200 3xl:text-sm">{item?.country || "-"}</p>
                 </td>
                 <td className="py-3 pr-3 pl-4 3xl:px-4">
-                  <p className="text-xs font-normal text-primary-color-200 3xl:text-sm">{item?.pin || "-"}</p>
+                  <p className="text-sm font-normal text-primary-color-200 3xl:text-sm">{item?.pin || "-"}</p>
                 </td>
                 <td className="py-3 pr-3 pl-4 3xl:px-4">
-                  <p className="text-xs font-normal text-primary-color-200 3xl:text-sm">{item?.time_zone || "-"}</p>
+                  <p className="text-sm font-normal text-primary-color-200 3xl:text-sm">{item?.time_zone || "-"}</p>
                 </td>
                 <td className="py-3 pr-3 pl-4 3xl:px-4">
-                  <p className="text-xs font-normal text-primary-color-200 3xl:text-sm">{item?.address || "-"}</p>
+                  <p className="text-sm font-normal text-primary-color-200 3xl:text-sm">{item?.address || "-"}</p>
                 </td>
                 <td className="py-3 pr-3 pl-4 3xl:px-4">
-                  <p className="text-xs font-normal text-primary-color-200 3xl:text-sm">{item?.contact_person_name || "-"}</p>
+                  <p className="text-sm font-normal text-primary-color-200 3xl:text-sm">{item?.contact_person_name || "-"}</p>
                 </td>
                 <td className="py-3 pr-3 pl-4 3xl:px-4">
-                  <p className="text-xs font-normal text-primary-color-200 3xl:text-sm">{item?.contact_numbers[0]?.country_code || "-"}</p>
+                  <p className="text-sm font-normal text-primary-color-200 3xl:text-sm">{item?.contact_numbers[0]?.country_code || "-"}</p>
                 </td>
                 <td className="py-3 pr-3 pl-4 3xl:px-4">
-                  <p className="text-xs font-normal text-primary-color-200 3xl:text-sm">{item?.contact_numbers?.[0]?.mobile || "-"}</p>
+                  <p className="text-sm font-normal text-primary-color-200 3xl:text-sm">{item?.contact_numbers?.[0]?.mobile || "-"}</p>
                 </td>
               </tr>
             ))
@@ -139,11 +139,11 @@ const VenuePrint = () => {
       {(userData?.role === "superAdmin" || userData?.role?.permissions?.includes("Venues")) && (
         <div onClick={() => navigate(VENUES)} className={`flex mb-5 text-base font-medium cursor-pointer text-secondary hover:underline`}>
           <ArrowLeftIcon className="mr-2 w-4 h-6 text-secondary" />
-          <span> Back to Venue list</span>
+          <span> {t("venues.backToVenuesList")}</span>
         </div>
       )}
       <div className="card min-h-[76vh]">
-        <h3 className="heading">Print Venue</h3>
+        <h3 className="heading">{t("venues.printVenue")}</h3>
 
         <div className="mt-5 h-[58vh] overflow-y-auto overflow-x-hidden">
           <div className="overflow-x-auto -mx-6 mb-8">

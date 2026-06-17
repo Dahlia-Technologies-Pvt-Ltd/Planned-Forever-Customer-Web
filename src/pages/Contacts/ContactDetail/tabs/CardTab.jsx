@@ -64,7 +64,7 @@ const CardTab = ({ data, t }) => {
                   requestCardSort(sortKey);
                 }}
               >
-                <p className="font-inter cursor-pointer whitespace-nowrap text-xs font-semibold leading-5 3xl:text-sm">
+                <p className="font-inter cursor-pointer whitespace-nowrap text-sm font-semibold leading-5 3xl:text-sm">
                   {head}
                   {cardSortConfig.key ===
                     (head === "Card" || head === t("contacts.card")
@@ -94,13 +94,13 @@ const CardTab = ({ data, t }) => {
             cardItems?.map((item, index) => (
               <tr key={index} className="cursor-pointer">
                 <td className="cursor-pointer py-3 pl-6 pr-4">
-                  <p className="text-xs font-normal text-primary-color 3xl:text-sm">{item?.cardName}</p>
+                  <p className="text-sm font-normal text-primary-color 3xl:text-sm">{item?.cardName}</p>
                 </td>
                 <td className="cursor-pointer py-3 pl-6 pr-4">
-                  <p className="text-xs font-normal text-primary-color 3xl:text-sm">{item?.nameOnCard}</p>
+                  <p className="text-sm font-normal text-primary-color 3xl:text-sm">{item?.nameOnCard}</p>
                 </td>
                 <td className="cursor-pointer py-3 pl-6 pr-4">
-                  <p className="text-xs font-normal text-primary-color 3xl:text-sm">{item?.description}</p>
+                  <p className="text-sm font-normal text-primary-color 3xl:text-sm">{item?.description}</p>
                 </td>
               </tr>
             ))

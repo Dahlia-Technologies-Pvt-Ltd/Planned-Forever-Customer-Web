@@ -6,7 +6,17 @@ import { Fragment, useState, useEffect, useCallback} from "react";
 import { Dialog, Transition } from "@headlessui/react";
 import DateAndTime from "../../components/common/DateAndTime";
 import { XMarkIcon, CheckIcon } from "@heroicons/react/24/solid";
-import { ArrowUpCircleIcon, MinusCircleIcon, PencilIcon, PlusCircleIcon } from "@heroicons/react/24/outline";
+import {
+  ArrowUpCircleIcon,
+  CloudArrowUpIcon,
+  FolderIcon,
+  LightBulbIcon,
+  MinusCircleIcon,
+  PencilIcon,
+  PlusCircleIcon,
+  PlusIcon,
+  PhotoIcon,
+} from "@heroicons/react/24/outline";
 import ChooseFile from "../../components/common/ChooseFile";
 import { useThemeContext } from "../../context/GlobalContext";
 import { toUTCUnixTimestamp } from "../../utilities/HelperFunctions";
@@ -21,6 +31,46 @@ import mammoth from "mammoth";
 import { useDropzone } from "react-dropzone";
 import { pdfjs } from "react-pdf";
 pdfjs.GlobalWorkerOptions.workerSrc = "/pdf.worker.min.js";
+
+const SESSION_OPTIONS = [
+  "Welcome Dinner",
+  "Breakfast",
+  "Lunch",
+  "Hi Tea",
+  "Cocktail",
+  "Dinner",
+  "Midnight Buffet",
+].map((label) => ({ label, value: label }));
+
+const MENU_ITEM_TYPE_OPTIONS = [
+  "Starter",
+  "Main Course",
+  "Dessert",
+  "Live Counter",
+  "Served Hot",
+  "Floating",
+].map((label) => ({ label, value: label }));
+
+const ITEM_ENTRY_OPTIONS = [
+  {
+    value: "upload",
+    titleKey: "menu.bulkUpload",
+    descriptionKey: "menu.bulkUploadDescription",
+    icon: FolderIcon,
+  },
+  {
+    value: "curated",
+    titleKey: "menu.curatedRecommendations",
+    descriptionKey: "menu.curatedRecommendationsDescription",
+    icon: LightBulbIcon,
+  },
+  {
+    value: "manual",
+    titleKey: "menu.manualEntry",
+    descriptionKey: "menu.manualEntryDescription",
+    icon: PlusIcon,
+  },
+];
 
 const AddMenuModal = ({ label, isOpen, setIsOpen, refreshData, data, setModalData, preselectedItems }) => {
   const { t } = useTranslation("common");
@@ -58,6 +108,8 @@ const AddMenuModal = ({ label, isOpen, setIsOpen, refreshData, data, setModalDat
   const [sessionNameError, setSessionNameError] = useState("");
   const [errors, setErrors] = useState([{ item: "", type: "", quantity: "", description: "", id: "", img: null }]);
   const [itemFile, setItemFile] = useState(null);
+  const [itemEntryMode, setItemEntryMode] = useState(null);
+  const [itemEntryModeError, setItemEntryModeError] = useState("");
 
   // States for Suggested Menu
   const [allRecCeremonies, setAllRecCeremonies] = useState([]);
@@ -72,6 +124,7 @@ const AddMenuModal = ({ label, isOpen, setIsOpen, refreshData, data, setModalDat
 
   const [selectedFilePath, setSelectedFilePath] = useState(null);
   const [selectedFilePathError, setSelectedFilePathError] = useState(null);
+  const [isFileReading, setIsFileReading] = useState(false);
 
   const handleInputChange = (e, index, field) => {
     setItems((prevItems) => {
@@ -93,30 +146,61 @@ const AddMenuModal = ({ label, isOpen, setIsOpen, refreshData, data, setModalDat
     });
   };
 
+  const handleItemTypeChange = (selectedOption, index) => {
+    setItems((prevItems) =>
+      prevItems.map((item, itemIndex) =>
+        itemIndex === index ? { ...item, type: selectedOption?.value || "" } : item
+      )
+    );
+    setErrors((prevErrors) =>
+      prevErrors.map((itemError, errorIndex) =>
+        errorIndex === index ? { ...itemError, type: "" } : itemError
+      )
+    );
+  };
+
+  const handleItemEntryModeChange = (value) => {
+    if (itemEntryMode === value) return;
+
+    setItemEntryMode(value);
+    setItemEntryModeError("");
+    setFileError("");
+    setError("");
+    setRecCeremony(null);
+    setRecCeremonyError("");
+    setSuggestedMenu([]);
+    setItemFile(null);
+    setSelectedFilePath(null);
+    setSelectedFilePathError(null);
+    setItems([{ item: "", type: "", quantity: "", description: "", img: null, id: "" }]);
+    setErrors([{ item: "", type: "", quantity: "", description: "", id: "", img: null }]);
+  };
+
   const addNewFieldSet = (e) => {
     e.preventDefault();
     let isValid = true;
+    const requiredMessage = t("message.required");
 
     const newErrors = items.map((currentItem) => {
       let itemError = { item: "", type: "", quantity: "", description: "", id: "", img: null };
 
       if (!currentItem.item) {
-        itemError.item = "Required";
+        itemError.item = requiredMessage;
         isValid = false;
       }
 
       if (!currentItem.type) {
-        itemError.type = "Required";
+        itemError.type = requiredMessage;
         isValid = false;
       }
 
       if (!currentItem.quantity) {
-        itemError.quantity = "Required";
+        itemError.quantity = requiredMessage;
         isValid = false;
       }
 
       if (!currentItem.description) {
-        itemError.description = "Required";
+        itemError.description = requiredMessage;
         isValid = false;
       }
 
@@ -127,7 +211,7 @@ const AddMenuModal = ({ label, isOpen, setIsOpen, refreshData, data, setModalDat
 
     if (isValid) {
       setItems([...items, { item: "", type: "", quantity: "", description: "", img: null, id: "" }]);
-      setErrors([...errors, { item: "", type: "", quantity: "", description: "" }]);
+      setErrors([...newErrors, { item: "", type: "", quantity: "", description: "", id: "", img: null }]);
     }
   };
 
@@ -142,10 +226,11 @@ const AddMenuModal = ({ label, isOpen, setIsOpen, refreshData, data, setModalDat
 
   const isValidForm = () => {
     let isValidData = true;
+    const requiredMessage = t("message.required");
 
     // Check date field
     if (!date) {
-      setDateError("Required");
+      setDateError(requiredMessage);
       isValidData = false;
     } else {
       setDateError("");
@@ -153,7 +238,7 @@ const AddMenuModal = ({ label, isOpen, setIsOpen, refreshData, data, setModalDat
 
     // Check end time field
     if (!endTime) {
-      setEndTimeError("Required");
+      setEndTimeError(requiredMessage);
       isValidData = false;
     } else {
       setEndTimeError("");
@@ -161,7 +246,7 @@ const AddMenuModal = ({ label, isOpen, setIsOpen, refreshData, data, setModalDat
 
     // Check start time field
     if (!startTime) {
-      setStartTimeError("Required");
+      setStartTimeError(requiredMessage);
       isValidData = false;
     } else {
       setStartTimeError("");
@@ -169,36 +254,111 @@ const AddMenuModal = ({ label, isOpen, setIsOpen, refreshData, data, setModalDat
 
     // Check session name field
     if (!sessionName) {
-      setSessionNameError("Required");
+      setSessionNameError(requiredMessage);
       isValidData = false;
     } else {
       setSessionNameError("");
     }
 
-    if (itemFile) {
-      // If itemFile exists, clear errors or skip validation
-      setErrors([]); // Clear previous errors (optional based on your use case)
+    if (startTime && endTime && startTime >= endTime) {
+      setStartTimeError(t("menu.startTimeBeforeEndTime"));
+      setEndTimeError(t("menu.endTimeAfterStartTime"));
+      isValidData = false;
+    }
+
+    if (!itemEntryMode) {
+      setItemEntryModeError(t("menu.chooseItemEntryMethodError"));
+      setFileError("");
+      setRecCeremonyError("");
+      setError("");
+      setErrors([]);
+      isValidData = false;
+    } else if (itemEntryMode === "upload") {
+      setItemEntryModeError("");
+      setRecCeremonyError("");
+      setError("");
+      if (!itemFile) {
+        setFileError(requiredMessage);
+        isValidData = false;
+      } else if (isFileReading) {
+        setFileError(t("menu.readingFile"));
+        isValidData = false;
+      } else if (items.length === 0) {
+        setFileError(t("menu.noItemsExtracted"));
+        isValidData = false;
+      } else {
+        setFileError("");
+      }
+
+      const newErrors = items.map((currentItem) => {
+        const itemError = { item: "", type: "", quantity: "", description: "", id: "", img: null };
+
+        if (!currentItem?.item) {
+          itemError.item = requiredMessage;
+          isValidData = false;
+        }
+        if (!currentItem?.type) {
+          itemError.type = requiredMessage;
+          isValidData = false;
+        }
+        if (!currentItem?.quantity) {
+          itemError.quantity = requiredMessage;
+          isValidData = false;
+        }
+        if (!currentItem?.description) {
+          itemError.description = requiredMessage;
+          isValidData = false;
+        }
+
+        return itemError;
+      });
+      setErrors(newErrors);
+    } else if (itemEntryMode === "curated") {
+      setItemEntryModeError("");
+      setFileError("");
+      setErrors([]);
+
+      if (!recCeremony?.value) {
+        setRecCeremonyError(requiredMessage);
+        isValidData = false;
+      } else {
+        setRecCeremonyError("");
+      }
+
+      const selectedCuratedItems = items.filter(
+        (item) => item?.id && item?.source === "recommended"
+      );
+      if (selectedCuratedItems.length === 0) {
+        setError(t("menu.selectAtLeastOneMenuItem"));
+        isValidData = false;
+      } else {
+        setError("");
+      }
     } else {
+      setItemEntryModeError("");
+      setFileError("");
+      setRecCeremonyError("");
+      setError("");
       const newErrors = items.map((currentItem, index) => {
         let itemError = { item: "", type: "", quantity: "", description: "", id: "", img: null };
 
         if (!currentItem?.item) {
-          itemError.item = "Required";
+          itemError.item = requiredMessage;
           isValidData = false;
         }
 
         if (!currentItem?.type) {
-          itemError.type = "Required";
+          itemError.type = requiredMessage;
           isValidData = false;
         }
 
         if (!currentItem?.quantity) {
-          itemError.quantity = "Required";
+          itemError.quantity = requiredMessage;
           isValidData = false;
         }
 
         if (!currentItem?.description) {
-          itemError.description = "Required";
+          itemError.description = requiredMessage;
           isValidData = false;
         }
 
@@ -312,15 +472,20 @@ const AddMenuModal = ({ label, isOpen, setIsOpen, refreshData, data, setModalDat
           if (item?.image) {
             formData.append(`menu_items[${index}][image]`, item?.image);
           }
-          if (item?.id !== "") {
+          if (item?.id) {
             formData.append(`menu_items[${index}][menu_item_id]`, item?.id);
-            
-            // Determine if it's from suggested menu or trending menu
-            const isSuggestedItem = suggestedMenu.some(sugItem => sugItem.id === item.id);
-            const isTrendingItem = trendingMenu.some(trendItem => trendItem.id === item.id);
-            
-            const type = isSuggestedItem ? "recommended" : isTrendingItem ? "trending" : "trending";
-            formData.append(`menu_items[${index}][recommended_trending_type]`, type);
+
+            const catalogueType =
+              item?.source ||
+              (suggestedMenu.some((suggestedItem) => suggestedItem.id === item.id)
+                ? "recommended"
+                : trendingMenu.some((trendingItem) => trendingItem.id === item.id)
+                  ? "trending"
+                  : null);
+
+            if (catalogueType) {
+              formData.append(`menu_items[${index}][recommended_trending_type]`, catalogueType);
+            }
           }
         });
 
@@ -358,11 +523,20 @@ const AddMenuModal = ({ label, isOpen, setIsOpen, refreshData, data, setModalDat
     setMenuFile(null);
     setStartTime(null);
     setSessionName("");
+    setEvent(null);
+    setError("");
+    setEventError("");
     setItems([{ item: "", type: "", quantity: "", description: "", id: "", img: null }]);
-    setErrors([{ item: "", type: "", quantity: "", description: "" }]);
+    setErrors([{ item: "", type: "", quantity: "", description: "", id: "", img: null }]);
     setItemFile(null);
+    setItemEntryMode(null);
+    setItemEntryModeError("");
+    setSelectedFilePath(null);
+    setSelectedFilePathError(null);
+    setIsFileReading(false);
     setFileError("");
     setRecCeremony(null);
+    setRecCeremonyError("");
     setSuggestedMenu([]);
     setTrendingMenu([]);
     setDateError("");
@@ -412,6 +586,7 @@ const AddMenuModal = ({ label, isOpen, setIsOpen, refreshData, data, setModalDat
 
   useEffect(() => {
     if (data !== null) {
+      setItemEntryMode("manual");
       setDate(moment.unix(data?.date).format("YYYY-MM-DD"));
       setEvent({ label: data?.event?.name, value: data?.event?.id });
       setSessionName(data?.session);
@@ -436,6 +611,7 @@ const AddMenuModal = ({ label, isOpen, setIsOpen, refreshData, data, setModalDat
   // Effect to handle preselected items from trending menu
   useEffect(() => {
     if (isOpen && preselectedItems && preselectedItems.length > 0) {
+      setItemEntryMode("manual");
       setItems(preselectedItems);
       setErrors(Array(preselectedItems.length).fill({ item: "", type: "", quantity: "", description: "", id: "", img: null }));
     }
@@ -508,6 +684,8 @@ const AddMenuModal = ({ label, isOpen, setIsOpen, refreshData, data, setModalDat
 
   // Handle checkbox click for suggested or trending items
   const handleCheckboxClick = (item, source) => {
+    setError("");
+
     // Check if this item is already in the menu items
     const existingItemIndex = items.findIndex(menuItem => menuItem.id === item.id);
     
@@ -533,7 +711,8 @@ const AddMenuModal = ({ label, isOpen, setIsOpen, refreshData, data, setModalDat
         quantity: "",
         description: item.notes || "",
         img: item.image,
-        id: item.id
+        id: item.id,
+        source: source === "suggested" ? "recommended" : source,
       };
       
       // Check if there's an empty item we can replace
@@ -567,8 +746,12 @@ const AddMenuModal = ({ label, isOpen, setIsOpen, refreshData, data, setModalDat
 const onDrop = useCallback((acceptedFiles) => {
   if (acceptedFiles && acceptedFiles.length > 0) {
       const file = acceptedFiles[0];
+      setItemFile(file);
       setSelectedFilePath(file);
       setSelectedFilePathError(null);
+      setFileError("");
+      setItems([]);
+      setErrors([]);
 
       // 🔥 OCR / PDF / Excel / Word processing
       handleFile(file);
@@ -594,13 +777,40 @@ const handleFile = async (file) => {
   //setText("");
 
   const ext = file.name.split(".").pop().toLowerCase();
-  //console.log(ext);
+  setIsFileReading(true);
+
+  const updateExtractedItems = (extractedItems) => {
+    const normalizedItems = (Array.isArray(extractedItems) ? extractedItems : [])
+      .map((item) => ({
+        item: String(item?.item || item?.name || "").trim(),
+        type: String(item?.type || "").trim(),
+        quantity: item?.quantity ?? item?.qty ?? "",
+        description: String(item?.description || item?.notes || "").trim(),
+        img: item?.img || item?.image || null,
+        id: item?.id || "",
+      }))
+      .filter((item) => item.item || item.type || item.quantity || item.description);
+
+    setItems(normalizedItems);
+    setErrors(
+      normalizedItems.map(() => ({
+        item: "",
+        type: "",
+        quantity: "",
+        description: "",
+        id: "",
+        img: null,
+      }))
+    );
+    setFileError(normalizedItems.length > 0 ? "" : t("menu.noItemsExtracted"));
+  };
+
   try {
       if (["jpg", "jpeg", "png"].includes(ext)) {
         const result = await Tesseract.recognize(file, "eng");
         // console.log(result.data.text);
         const jsonData = convertMenuPdfTextToJson(result.data.text);
-        setItems(jsonData);
+        updateExtractedItems(jsonData);
       } else if (ext === "pdf") {
         const arrayBuffer = await file.arrayBuffer();
         const pdf = await pdfjs.getDocument({
@@ -619,8 +829,7 @@ const handleFile = async (file) => {
             + "\n";
         }
         const menuJson = convertMenuPdfTextToJson(pdfText);
-        console.log(menuJson);
-        setItems(menuJson);
+        updateExtractedItems(menuJson);
       } else if (["xls", "xlsx"].includes(ext)) {
         const data = await file.arrayBuffer();
         const workbook = XLSX.read(data);
@@ -629,7 +838,7 @@ const handleFile = async (file) => {
         // Map the Excel data to your items structure
         const jsonData = XLSX.utils.sheet_to_json(sheet);
         // console.log(jsonData);
-        const newItems = jsonData.map((row, index) => {
+        const newItems = jsonData.map((row) => {
           return {
             item: row.name || row.item || "",
             type: row.type || "",
@@ -639,31 +848,25 @@ const handleFile = async (file) => {
             id: "",
           };
         });
-        // console.log(newItems);
-
-        // Update state with the new items
-        if (newItems.length > 0) {
-          setItems(newItems);
-          console.log("Imported items:", newItems);
-        } else {
-          console.warn("No valid data found in the Excel file");
-        }
+        updateExtractedItems(newItems);
 
       } else if (["doc", "docx"].includes(ext)) {
-        console.log(ext);
         const data = await file.arrayBuffer();
         const result = await mammoth.extractRawText({ arrayBuffer: data });
-        // setText(result.value);
         const jsonData = convertMenuPdfTextToJson(result.value);
-        setItems(jsonData);
+        updateExtractedItems(jsonData);
       } else {
-      alert("Unsupported file type");
+        setItems([]);
+        setErrors([]);
+        setFileError(t("menu.unsupportedFileType"));
       }
   } catch (err) {
-      //console.error(err);
-      alert("Failed to read file");
+      console.error("Menu file reading failed:", err);
+      setItems([]);
+      setErrors([]);
+      setFileError(t("menu.failedToReadFile"));
   } finally {
-      //setLoading(false);
+      setIsFileReading(false);
   }
 };
 const convertMenuPdfTextToJson = (text) => {
@@ -731,7 +934,6 @@ const convertMenuPdfTextToJson = (text) => {
 
   return result;
 };
-const gridCols = "grid grid-cols-[2fr_1fr_1fr_2fr_2fr_40px] gap-3 items-center";
   return (
     <>
       <Transition appear show={isOpen} as={Fragment}>
@@ -759,28 +961,28 @@ const gridCols = "grid grid-cols-[2fr_1fr_1fr_2fr_2fr_40px] gap-3 items-center";
                 leaveFrom="opacity-100 scale-100"
                 leaveTo="opacity-0 scale-75"
               >
-                <Dialog.Panel className="w-full overflow-hidden rounded-xxl bg-white p-8 shadow-xl transition-all md:max-w-7xl xl:max-w-9xl">
-                  <div className="mb-5 flex items-center justify-between">
+                <Dialog.Panel className="menu-modal w-full max-w-4xl bg-white rounded-2xl  p-6 shadow-xl transition-all">
+                  <div className="mb-2 flex items-center justify-between">
                     <Dialog.Title as="h3" className="font-poppins text-lg font-semibold leading-7 text-secondary-color">
                       {data === null ? t("menu.addMenu") : t("menu.updateMenu")}
                     </Dialog.Title>
                     <XMarkIcon onClick={closeModal} className="h-8 w-8 cursor-pointer text-info-color" />
                   </div>
 
-                  <form>
-                    <div className="h-[750px] overflow-y-auto p-2 md:h-[550px] lg:h-[550px] xl:h-[650px] 2xl:h-[750px]">
+                  <form className="[&_.label]:text-xs [&_.label]:font-medium [&_input]:h-9 [&_input]:min-h-[36px] [&_input]:text-sm [&_input]:py-1 [&_input[type='datetime-local']]:h-9 [&_textarea]:text-sm [&_.css-b62m3t-container]:text-sm [&_.css-13cymwt-control]:h-9 [&_.css-13cymwt-control]:min-h-[36px] [&_.css-13cymwt-control]:py-0 [&_.css-t3ipsp-control]:h-9 [&_.css-t3ipsp-control]:min-h-[36px] [&_.css-t3ipsp-control]:py-0 [&_.css-hlgwow]:h-9 [&_.css-hlgwow]:min-h-[36px] [&_.css-hlgwow]:py-0 [&_.css-hlgwow]:px- [&_.css-1jqq78o-placeholder]:text-sm [&_.css-1jqq78o-placeholder]:leading-none [&_.css-1dimb5e-singleValue]:text-sm [&_.css-1dimb5e-singleValue]:leading-none [&_.css-1wy0on6]:h-9 [&_.css-19bb58m]:my-0 [&_textarea]:text-sm [&_textarea]:leading-6 [&_textarea::placeholder]:text-gray-200 [&_textarea::placeholder]:leading-6 [&_textarea]:resize-none [&_textarea]:overflow-hidden [&_textarea]:leading-5">
+                    <div className="venue-details-scroll h-[600px] overflow-y-auto p-1 md:h-[400px] lg:h-[400px] xl:h-[500px] 2xl:h-[600px]">
                       <div className="mb-5 ltr:text-left rtl:text-right">
                         <div>
-                          <div className="label mb-2 text-secondary">{t("headings.basicInfo")}</div>
+                          <div className="label mb-2 text-black">{t("headings.basicInfo")}</div>
                         </div>
                       </div>
-                      <div className="grid grid-cols-2 gap-7">
+                      <div className="grid grid-cols-1 gap-4 md:grid-cols-3">
                         <Input
                           isRequired
                           type="date"
                           label={t("menu.date")}
                           error={dateError}
-                          placeholder="Date"
+                          placeholder={t("menu.date")}
                           value={date}
                           onChange={(e) => {
                             setDate(e.target.value);
@@ -790,14 +992,15 @@ const gridCols = "grid grid-cols-[2fr_1fr_1fr_2fr_2fr_40px] gap-3 items-center";
                           max={moment.unix(eventDetail?.end_date).format("YYYY-MM-DD")}
                         />
 
-                        <Input
+                        <Dropdown
                           isRequired
-                          label={t("menu.session_name")}
-                          error={sessionNameError}
-                          placeholder="Session"
-                          value={sessionName}
-                          onChange={(e) => {
-                            setSessionName(e.target.value);
+                          title={t("menu.session_name")}
+                          placeholder={t("menu.session")}
+                          options={SESSION_OPTIONS}
+                          value={SESSION_OPTIONS.find((option) => option.value === sessionName) || null}
+                          withError={sessionNameError}
+                          onChange={(option) => {
+                            setSessionName(option?.value || "");
                             setSessionNameError("");
                           }}
                         />
@@ -805,7 +1008,7 @@ const gridCols = "grid grid-cols-[2fr_1fr_1fr_2fr_2fr_40px] gap-3 items-center";
                           isRequired
                           type="time"
                           label={t("menu.start_time")}
-                          placeholder="Start Time"
+                          placeholder={t("menu.start_time")}
                           value={startTime}
                           error={startTimeError}
                           onChange={(e) => {
@@ -822,7 +1025,7 @@ const gridCols = "grid grid-cols-[2fr_1fr_1fr_2fr_2fr_40px] gap-3 items-center";
                           isRequired
                           type="time"
                           label={t("menu.end_time")}
-                          placeholder="End Time"
+                          placeholder={t("menu.end_time")}
                           value={endTime}
                           error={endTimeError}
                           onChange={(e) => {
@@ -837,13 +1040,45 @@ const gridCols = "grid grid-cols-[2fr_1fr_1fr_2fr_2fr_40px] gap-3 items-center";
                         />
                       </div>
 
+                      <div className="relative mt-12 text-left before:absolute before:-top-7 before:left-0 before:right-0 before:h-px before:bg-gray-200">
+                        <div className="label mb-4 text-black">{t("menu.chooseItemEntryMethod")}</div>
+                        <div className="grid grid-cols-1 gap-4 md:grid-cols-3">
+                          {ITEM_ENTRY_OPTIONS.map(({ value, titleKey, descriptionKey, icon: Icon }) => {
+                            const isSelected = itemEntryMode === value;
+
+                            return (
+                              <button
+                                key={value}
+                                type="button"
+                                onClick={() => handleItemEntryModeChange(value)}
+                                className={`flex min-h-[110px] items-center gap-4 rounded-xl border px-5 py-4 text-left transition ${
+                                  isSelected
+                                    ? "border-secondary bg-secondary/5 shadow-sm"
+                                    : "border-gray-300 bg-white hover:border-secondary/60 hover:bg-gray-50"
+                                }`}
+                              >
+                                <Icon className={`h-8 w-8 shrink-0 ${isSelected ? "text-secondary" : "text-gray-700"}`} />
+                                <span>
+                                  <span className="block text-sm font-semibold text-gray-900">{t(titleKey)}</span>
+                                  <span className="mt-1 block text-xs leading-5 text-gray-500">{t(descriptionKey)}</span>
+                                </span>
+                              </button>
+                            );
+                          })}
+                        </div>
+                        {itemEntryModeError && (
+                          <p className="mt-2 text-xs text-red-500">{itemEntryModeError}</p>
+                        )}
+                      </div>
+
                       {/* Trending Menu Section */}
                       {/* {selectedEventRights?.rights?.includes("Trending Menu Items") && (
                         <div className="mt-3 text-left">
                           <p className="label mt-4 text-green-800 ltr:text-left rtl:text-right">{t("menu.trending_menu")}</p>
                           
                           <p className="label my-4 text-green-800 ltr:text-left rtl:text-right">
-                            {t("menu.trendingMenuItems")} <span className="text-xs text-gray-600">(Select to add to menu)</span>
+                            {t("menu.trendingMenuItems")}{" "}
+                            <span className="text-xs text-gray-600">({t("menu.selectToAddToMenu")})</span>
                           </p>
 
                           {trendingLoading ? (
@@ -860,7 +1095,7 @@ const gridCols = "grid grid-cols-[2fr_1fr_1fr_2fr_2fr_40px] gap-3 items-center";
                                       onChange={() => handleCheckboxClick(item, "trending")}
                                       checked={items.some(i => i.id === item.id)}
                                     />
-                                    <Input placeholder="Item" labelOnTop value={item.name} disabled />
+                                    <Input placeholder={t("menu.menu_item")} labelOnTop value={item.name} disabled />
                                     {item.image ? (
                                       <img src={`${mediaUrl}${item.image}`} alt="image" className="h-24 w-24 rounded-10 object-cover" />
                                     ) : (
@@ -872,32 +1107,34 @@ const gridCols = "grid grid-cols-[2fr_1fr_1fr_2fr_2fr_40px] gap-3 items-center";
                                   </div>
                                 ))
                               ) : (
-                                <p className="flex justify-center text-gray-400">No Trending Items Found</p>
+                                <p className="flex justify-center text-gray-400">{t("menu.noTrendingItems")}</p>
                               )}
                             </>
                           )}
                         </div>
                       )} */}
 
-                      {/* Suggested Menu Section */}
-                      {selectedEventRights?.rights?.includes("Suggested Menu") && (
-                        <div className="mt-3 text-left">
-                          <p className="label mt-4 text-green-800 ltr:text-left rtl:text-right">{t("menu.suggestedMenu")}</p>
+                      {/* Curated Recommendations */}
+                      {itemEntryMode === "curated" && (
+                        <div className="relative mt-12 text-left before:absolute before:-top-7 before:left-0 before:right-0 before:h-px before:bg-gray-200">
                           <div className="mt-4">
                             <Dropdown
                               isRequired
                               title={t("menu.recommendedCeremony")}
-                              placeholder="Ceremony for Occasion or Activity"
+                              placeholder={t("menu.ceremonyForOccasion")}
                               options={allRecCeremonies}
                               withError={recCeremonyError}
                               value={recCeremony}
                               onChange={(e) => {
                                 setRecCeremony(e);
                                 setRecCeremonyError("");
+                                setError("");
+                                setItems([{ item: "", type: "", quantity: "", description: "", img: null, id: "" }]);
                               }}
                             />
-                            <p className="label my-4 text-green-800 ltr:text-left rtl:text-right">
-                              {t("menu.suggestedMenuItems")} <span className="text-xs text-gray-600">(Select to add to menu)</span>
+                            <p className="label my-4 text-black ltr:text-left rtl:text-right">
+                              {t("menu.curatedMenuItems")}{" "}
+                              <span className="text-xs text-gray-600">({t("menu.selectToAddToMenu")})</span>
                             </p>
 
                             {suggestedLoading ? (
@@ -908,37 +1145,65 @@ const gridCols = "grid grid-cols-[2fr_1fr_1fr_2fr_2fr_40px] gap-3 items-center";
                               <>
                                 {suggestedMenu.length > 0 ? (
                                   suggestedMenu.map((item, index) => (
-                                    <div key={index} className="mb-2 flex w-full items-center space-x-3">
+                                    <div
+                                      key={item?.id || index}
+                                      className="mb-3 grid grid-cols-[22px_minmax(150px,1fr)_64px_minmax(220px,2fr)] items-center gap-4 rounded-xl border border-gray-200 bg-white p-3 transition hover:border-secondary/40 hover:bg-secondary/[0.02]"
+                                    >
                                       <input
                                         type="checkbox"
+                                        aria-label={item?.name || t("menu.menu_item")}
                                         onChange={() => handleCheckboxClick(item, "suggested")}
                                         checked={items.some(i => i.id === item.id)}
+                                        className="!m-0 !h-5 !min-h-[20px] !w-5 shrink-0 cursor-pointer rounded border-gray-300 !p-0 accent-secondary"
                                       />
-                                      <Input placeholder="Item" labelOnTop value={item.name} disabled />
+                                      <span className="text-sm font-medium text-gray-800">{item?.name || "-"}</span>
                                       {item.image ? (
-                                        <img src={`${mediaUrl}${item.image}`} alt="image" className="h-24 w-24 rounded-10 object-cover" />
+                                        <div className="relative flex h-14 w-14 items-center justify-center overflow-hidden rounded-lg border border-gray-200 bg-gray-50">
+                                          <img
+                                            src={`${mediaUrl}${item.image}`}
+                                            alt={item?.name || t("menu.image")}
+                                            className="h-full w-full object-cover"
+                                            onError={(event) => {
+                                              event.currentTarget.style.display = "none";
+                                              event.currentTarget.nextElementSibling.classList.remove("hidden");
+                                            }}
+                                          />
+                                          <PhotoIcon className="hidden h-6 w-6 text-gray-300" />
+                                        </div>
                                       ) : (
-                                        <p className="text-primary-color-200 text-xs font-normal 3xl:text-sm">-</p>
-                                      )}{" "}
-                                      <div className="w-full">
-                                        <Input textarea rows={3} className="w-full " value={item?.notes} disabled />
-                                      </div>
+                                        <div className="flex h-14 w-14 items-center justify-center rounded-lg border border-gray-200 bg-gray-50">
+                                          <PhotoIcon className="h-6 w-6 text-gray-300" />
+                                        </div>
+                                      )}
+                                      <span className="text-sm leading-5 text-gray-600">{item?.notes || "-"}</span>
                                     </div>
                                   ))
                                 ) : (
-                                  <p className="flex justify-center text-gray-400">No Item Found</p>
+                                  <p className="flex justify-center text-gray-400">{t("menu.noItemFound")}</p>
                                 )}
+                                {error && <p className="mt-2 text-xs text-red-500">{error}</p>}
                               </>
                             )}
                           </div>
                         </div>
                       )}
 
-                      <div className="my-5 ltr:text-left rtl:text-right">
-                        <div className="label mb-2">{t("menu.menuItemsFile")}</div>
-                        <div className="w-6/12">
+                      {itemEntryMode === "upload" && (
+                        <>
+                          <div className="relative mt-12 ltr:text-left rtl:text-right before:absolute before:-top-7 before:left-0 before:right-0 before:h-px before:bg-gray-200">
+                            <div className="mb-3 flex items-center justify-between gap-4">
+                              <div className="label">{t("menu.menuItemsFile")}</div>
+                              <button
+                                type="button"
+                                onClick={downloadFile}
+                                className="flex h-8 shrink-0 items-center rounded-lg border border-secondary/50 px-3 text-sm font-medium text-secondary transition hover:border-secondary hover:bg-secondary/5"
+                              >
+                                {t("menu.downloadSampleFile")}
+                              </button>
+                            </div>
+                            <div className="w-full">
                           {/* <ChooseFile
-                            label="Menu File"
+                            label={t("menu.menuFile")}
                             placeholderText="Choose File"
                             accept=".xlsx,.csv,text/csv,application/vnd.ms-excel,application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
                             uni="imageInput3"
@@ -946,143 +1211,267 @@ const gridCols = "grid grid-cols-[2fr_1fr_1fr_2fr_2fr_40px] gap-3 items-center";
                             selectedFile={itemFile}
                             onClickCross={() => setItemFile(null)}
                           /> */}
-                          <div
+                              <div
                               {...getRootProps()}
-                              className="border-2 border-dashed border-gray-300 rounded-lg p-6 text-center cursor-pointer mt-5"
+                              className={`flex min-h-[150px] cursor-pointer flex-col items-center justify-center rounded-xl border-2 border-dashed px-6 py-7 text-center transition ${
+                                isDragActive
+                                  ? "border-secondary bg-secondary/5"
+                                  : "border-gray-300 bg-gray-50/60 hover:border-secondary/60 hover:bg-secondary/[0.03]"
+                              }`}
                             >
                               <input {...getInputProps()} />
+                              <span className="mb-3 flex h-12 w-12 items-center justify-center rounded-full bg-secondary/10">
+                                <CloudArrowUpIcon className="h-7 w-7 text-secondary" />
+                              </span>
 
                               {isDragActive ? (
-                                <p className="text-sm text-blue-500">Drop the file here...</p>
+                                <p className="text-sm font-medium text-secondary">{t("menu.dropFileHere")}</p>
                               ) : (
-                                <p className="text-sm text-gray-500">
-                                  Drag & drop file here, or click to browse
+                                <p className="text-sm font-medium text-gray-700">
+                                  {t("menu.dragDropBrowse")}
                                 </p>
                               )}
+                              <p className="mt-1 text-xs text-gray-400">{t("menu.supportedFileTypes")}</p>
 
                               {itemFile && (
-                                <div className="flex justify-between items-center mt-2">
-                                  <p className="text-xs text-green-600">
-                                    Selected File: {itemFile.name}
+                                <div className="mt-4 flex items-center gap-3 rounded-lg border border-green-200 bg-green-50 px-4 py-2">
+                                  <p className="max-w-[420px] truncate text-xs font-medium text-green-700">
+                                    {itemFile.name}
                                   </p>
                                   <button
                                     type="button"
                                     onClick={(e) => {
                                       e.stopPropagation();
                                       setItemFile(null);
+                                      setSelectedFilePath(null);
+                                      setItems([]);
+                                      setErrors([]);
+                                      setFileError("");
                                     }}
-                                    className="text-red-500 text-xs ml-2"
+                                    aria-label={t("menu.removeSelectedFile")}
+                                    className="text-[0] text-red-500 transition hover:text-red-600"
                                   >
-                                    ✕
+                                    <XMarkIcon className="h-4 w-4" />
                                   </button>
                                 </div>
                               )}
+                              </div>
                             </div>
-
-                        </div>
-                      </div>
-
-                      <div className="mt-3 flex justify-end">
-                        <Button type="button" onClick={downloadFile} title={t("menu.downloadSampleFile")}></Button>
-                      </div>
-
-                      {fileError && <span className="mt-5 block text-xs text-red-500"> {fileError}</span>}
-
-                      <div className="mt-3 ltr:text-left rtl:text-right">
-                        <div className="label ">{t("menu.menuItems")}</div>
-
-                        <div>
-                          <div className={`${gridCols} mb-2 mt-3 font-semibold text-sm text-gray-700`}>
-                              <div>Item<span className="text-red-500">*</span></div>
-                              <div>Type</div>
-                              <div>Quantity<span className="text-red-500">*</span></div>
-                              <div>Description</div>
-                              <div>Image</div>
                           </div>
-                          {items.map((item, index) => (
-                            <div key={index} className={`${gridCols} mb-2`}>
-                              <Input
-                                placeholder="Item"
-                                error={!!item.id ? "" : itemFile ? false : errors[index]?.item}
-                                labelOnTop
-                                value={item?.item}
-                                onChange={(e) => handleInputChange(e, index, "item")}
-                                disabled={!!item.id}
-                              />
-                              <Input
-                                placeholder="Type"
-                                error={itemFile ? false : errors[index]?.type}
-                                labelOnTop
-                                value={item?.type}
-                                onChange={(e) => handleInputChange(e, index, "type")}
-                              />
-                              <Input
-                                placeholder="Quantity"
-                                labelOnTop
-                                type="text"
-                                error={itemFile ? false : errors[index]?.quantity}
-                                value={item?.quantity}
-                                onChange={(e) => handleInputChange(e, index, "quantity")}
-                              />
-                              <Input
-                                placeholder="Description"
-                                labelOnTop
-                                error={itemFile ? false : errors[index]?.description}
-                                value={item?.description}
-                                onChange={(e) => handleInputChange(e, index, "description")}
-                                textarea
-                                rows="1"
-                                
-                              />
-                              {item?.id === "" ? (
-                                <>
-                                  <ChooseFile
-                                    placeholderText="Choose Image"
-                                    selectedFile={item?.img}
-                                    accept="image/png, image/jpeg, image/jpg"
-                                    onChange={(e) => handleFileChange(e, index)}
-                                    onClickCross={() => handleRemoveFile(index)}
-                                    uni={`fileInput-${index}`}
-                                    noText
-                                    style
-                                    width = "w-40"
-                                  />
-                                </>
-                              ) : (
-                                <>
-                                  {item?.img ? (
-                                    <img src={mediaUrl + item?.img} alt="image" className="h-24 w-24 rounded-10 object-cover" />
-                                  ) : (
-                                    <p className="text-primary-color-200 text-xs font-normal 3xl:text-sm">-</p>
-                                  )}
-                                </>
-                              )}
 
-                              {index > 0 && (
-                                <MinusCircleIcon
-                                  className="ml-1.5 inline-block h-10 w-10 cursor-pointer text-red-500"
-                                  onClick={() => handleDeleteItem(index)}
-                                />
-                              )}
+                          {fileError && <span className="mt-5 block text-xs text-red-500"> {fileError}</span>}
+
+                          {isFileReading && (
+                            <div className="mt-6 flex items-center justify-center rounded-xl border border-gray-200 bg-gray-50 py-8">
+                              <Spinner />
+                              <span className="ml-3 text-sm font-medium text-gray-600">{t("menu.readingFile")}</span>
                             </div>
-                          ))}
+                          )}
 
-                          <button className="mt-4 rounded-lg bg-secondary px-4 py-2 text-white" onClick={addNewFieldSet}>
+                          {!isFileReading && items.length > 0 && (
+                            <div className="mt-6 overflow-hidden rounded-xl border border-gray-200 bg-white text-left">
+                              <div className="grid grid-cols-1 bg-secondary/[0.06] text-xs font-semibold uppercase tracking-wide text-secondary md:grid-cols-[minmax(0,1.35fr)_minmax(0,1fr)_180px]">
+                                <div className="px-4 py-3">{t("menu.itemAndDescription")}</div>
+                                <div className="border-gray-200 px-4 py-3 md:border-l">{t("menu.typeAndQuantity")}</div>
+                                <div className="border-gray-200 px-4 py-3 md:border-l">{t("menu.image")}</div>
+                              </div>
+
+                              {items.map((item, index) => (
+                                <div
+                                  key={`uploaded-menu-item-${index}`}
+                                  className="grid grid-cols-1 gap-4 border-t border-gray-200 p-4 md:grid-cols-[minmax(0,1.35fr)_minmax(0,1fr)_180px] md:gap-0 md:p-0"
+                                >
+                                  <div className="space-y-4 md:p-4">
+                                    <Input
+                                      isRequired
+                                      label={t("menu.menu_item")}
+                                      placeholder={t("menu.menu_item")}
+                                      error={errors[index]?.item}
+                                      value={item?.item}
+                                      onChange={(event) => handleInputChange(event, index, "item")}
+                                    />
+                                    <Input
+                                      isRequired
+                                      label={t("menu.description")}
+                                      placeholder={t("menu.description")}
+                                      error={errors[index]?.description}
+                                      value={item?.description}
+                                      onChange={(event) => handleInputChange(event, index, "description")}
+                                    />
+                                  </div>
+
+                                  <div className="space-y-4 border-gray-200 md:border-l md:p-4">
+                                    <Dropdown
+                                      isRequired
+                                      title={t("menu.itemType")}
+                                      placeholder={t("menu.itemType")}
+                                      options={MENU_ITEM_TYPE_OPTIONS}
+                                      value={
+                                        MENU_ITEM_TYPE_OPTIONS.find((option) => option.value === item?.type) ||
+                                        (item?.type ? { label: item.type, value: item.type } : null)
+                                      }
+                                      withError={errors[index]?.type}
+                                      onChange={(option) => handleItemTypeChange(option, index)}
+                                    />
+                                    <Input
+                                      isRequired
+                                      type="number"
+                                      min="1"
+                                      label={t("menu.quantity")}
+                                      placeholder={t("menu.quantity")}
+                                      error={errors[index]?.quantity}
+                                      value={item?.quantity}
+                                      onChange={(event) => handleInputChange(event, index, "quantity")}
+                                    />
+                                  </div>
+
+                                  <div className="flex items-center gap-3 border-gray-200 md:border-l md:p-4">
+                                    <div className="flex h-28 min-w-0 flex-1 items-center justify-center overflow-hidden rounded-xl border border-gray-200 bg-gray-50 p-2 [&_.h-40]:!h-20 [&_.w-40]:!w-20 [&_label]:!mt-0">
+                                      <ChooseFile
+                                        placeholderText={t("menu.chooseImage")}
+                                        selectedFile={item?.img}
+                                        accept="image/png, image/jpeg, image/jpg"
+                                        onChange={(event) => handleFileChange(event, index)}
+                                        onClickCross={() => handleRemoveFile(index)}
+                                        uni={`uploaded-file-input-${index}`}
+                                        noText
+                                        style
+                                        width="w-full"
+                                      />
+                                    </div>
+                                    <button
+                                      type="button"
+                                      aria-label={t("menu.removeMenuItem")}
+                                      onClick={() => handleDeleteItem(index)}
+                                      className="flex h-7 w-7 shrink-0 items-center justify-center text-red-500 transition hover:text-red-600"
+                                    >
+                                      <MinusCircleIcon className="h-7 w-7" />
+                                    </button>
+                                  </div>
+                                </div>
+                              ))}
+                            </div>
+                          )}
+                        </>
+                      )}
+
+                      {itemEntryMode === "manual" && (
+                        <div className="relative mt-12 ltr:text-left rtl:text-right before:absolute before:-top-7 before:left-0 before:right-0 before:h-px before:bg-gray-200">
+                        <div className="label text-black">{t("menu.menuItems")}</div>
+
+                        <div className="pb-2">
+                          <div className="mt-4 space-y-4">
+                            {items.map((item, index) => (
+                              <div key={index} className="relative rounded-xl bg-gray-50/40 p-4">
+                                {items.length > 1 && (
+                                  <button
+                                    type="button"
+                                    aria-label={t("menu.removeMenuItem")}
+                                    className="absolute right-3 top-3 z-10 text-red-500 transition hover:text-red-600"
+                                    onClick={() => handleDeleteItem(index)}
+                                  >
+                                    <MinusCircleIcon className="h-6 w-6" />
+                                  </button>
+                                )}
+
+                                <div className="grid grid-cols-1 gap-5 lg:grid-cols-12">
+                                  <div className="grid grid-cols-1 gap-4 sm:grid-cols-8 lg:col-span-8">
+                                    <div className="sm:col-span-5">
+                                      <Input
+                                        isRequired
+                                        label={t("menu.menu_item")}
+                                        placeholder={t("menu.menu_item")}
+                                        labelOnTop
+                                        error={errors[index]?.item}
+                                        value={item?.item}
+                                        onChange={(e) => handleInputChange(e, index, "item")}
+                                      />
+                                    </div>
+
+                                    <div className="sm:col-span-3">
+                                      <Dropdown
+                                        isRequired
+                                        title={t("menu.itemType")}
+                                        placeholder={t("menu.itemType")}
+                                        options={MENU_ITEM_TYPE_OPTIONS}
+                                        value={MENU_ITEM_TYPE_OPTIONS.find((option) => option.value === item?.type) || null}
+                                        withError={errors[index]?.type}
+                                        onChange={(option) => handleItemTypeChange(option, index)}
+                                      />
+                                    </div>
+
+                                    <div className="sm:col-span-5">
+                                      <Input
+                                        isRequired
+                                        label={t("menu.description")}
+                                        placeholder={t("menu.description")}
+                                        labelOnTop
+                                        error={errors[index]?.description}
+                                        value={item?.description}
+                                        onChange={(e) => handleInputChange(e, index, "description")}
+                                      />
+                                    </div>
+
+                                    <div className="sm:col-span-3">
+                                      <Input
+                                        isRequired
+                                        label={t("menu.quantity")}
+                                        placeholder={t("menu.quantity")}
+                                        labelOnTop
+                                        type="number"
+                                        min="1"
+                                        error={errors[index]?.quantity}
+                                        value={item?.quantity}
+                                        onChange={(e) => handleInputChange(e, index, "quantity")}
+                                      />
+                                    </div>
+                                  </div>
+
+                                  <div className="flex h-full flex-col lg:col-span-4">
+                                    <label className="mb-2 block text-xs font-medium text-black">
+                                      {t("menu.image")}
+                                    </label>
+                                    <div className="flex min-h-0 flex-1 mt-2 items-center justify-center overflow-hidden rounded-xl border border-gray-200 bg-white p-3 [&_.h-40]:!h-24 [&_.w-40]:!w-24 [&_label]:!mt-0">
+                                      <ChooseFile
+                                        placeholderText={t("menu.chooseImage")}
+                                        selectedFile={item?.img}
+                                        accept="image/png, image/jpeg, image/jpg"
+                                        onChange={(e) => handleFileChange(e, index)}
+                                        onClickCross={() => handleRemoveFile(index)}
+                                        uni={`fileInput-${index}`}
+                                        noText
+                                        style
+                                        width="w-full"
+                                      />
+                                    </div>
+                                  </div>
+                                </div>
+                              </div>
+                            ))}
+                          </div>
+
+                          <button
+                            type="button"
+                            className="mt-4 flex h-8 w-fit items-center gap-2 rounded-lg border border-secondary/50 px-3 text-sm font-medium text-secondary transition hover:border-secondary hover:bg-secondary/5"
+                            onClick={addNewFieldSet}
+                          >
+                            <PlusIcon className="h-4 w-4" />
                             {t("menu.addNewFieldSet")}
                           </button>
                         </div>
-                      </div>
+                        </div>
+                      )}
 
-                      <div className="mt-5 ltr:text-left rtl:text-right">
+                      <div className="relative mt-12 ltr:text-left rtl:text-right before:absolute before:-top-7 before:left-0 before:right-0 before:h-px before:bg-gray-200">
                         <div>
-                          <div className="label mb-2 text-secondary">{t("headings.otherInfo")}</div>
+                          <div className="label mb-2 text-black">{t("headings.otherInfo")}</div>
                         </div>
                       </div>
 
                       <div className="mt-5">
                         <Input
                           label={t("headings.notes")}
-                          placeholder="Menu Note"
+                          placeholder={t("menu.menuNote")}
                           textarea
                           value={menuNote}
                           error={menuNoteError}
@@ -1093,7 +1482,7 @@ const gridCols = "grid grid-cols-[2fr_1fr_1fr_2fr_2fr_40px] gap-3 items-center";
                         />
                       </div>
 
-                      <div className="mx-auto mt-10 grid w-8/12 grid-cols-2 gap-7">
+                      <div className="mx-auto mt-10 grid w-full max-w-lg grid-cols-2 gap-4">
                         <Button
                           icon={<CheckIcon />}
                           title={data === null ? t("menu.addMenu") : t("menu.updateMenu")}

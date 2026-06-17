@@ -12,6 +12,7 @@ import { emptyFolderAnimation } from "../../utilities/lottieAnimations";
 import ConfirmationModal from "../../components/common/ConfirmationModal";
 import { ChevronDownIcon, ChevronLeftIcon, ChevronRightIcon, ChevronUpIcon, MagnifyingGlassIcon } from "@heroicons/react/24/solid";
 import { useTranslation } from "react-i18next";
+import { hasPermission } from "../../utilities/permissions";
 
 const QuickContact = () => {
   const { t } = useTranslation("common");
@@ -150,7 +151,7 @@ const QuickContact = () => {
             <div className="flex justify-between">
               <h3 className="heading">Quick Contact</h3>
               <div className="flex w-full items-center justify-between">
-                {(userData?.role?.display_name === "web_admin" || userData.role.permissions?.some((item) => item === "quick-contact-create")) && (
+                {(hasPermission(userData, "quick-contact-create")) && (
                   <Button title={t("quickContact.addQuickContact")} onClick={() => setAddNewModal(true)} />
                 )}
                 <div className="relative flex items-center">
@@ -196,7 +197,7 @@ const QuickContact = () => {
                             requestSort(sortKey);
                           }}
                         >
-                          <p className="font-inter cursor-pointer whitespace-nowrap text-xs font-semibold leading-5 3xl:text-sm">
+                          <p className="font-inter cursor-pointer whitespace-nowrap text-sm font-semibold leading-5 3xl:text-sm">
                             {head}
                             {sortConfig.key === (head === "Hotel Name" ? "name" : head.toLowerCase()) && sortConfig.direction === "asc" ? (
                               <ChevronUpIcon className="inline-block h-4 w-3.5" />
@@ -229,8 +230,7 @@ const QuickContact = () => {
                             </p>
                           </td>
 
-                          {(userData?.role?.display_name === "web_admin" ||
-                            userData.role.permissions?.some((item) => item === "quick-contact-delete")) && (
+                          {(hasPermission(userData, "quick-contact-delete")) && (
                             <td className="flex items-end justify-end px-12 py-3 pl-4">
                               <span
                                 onClick={() => setOpenDeleteModal({ open: true, data: item })}

@@ -4,7 +4,6 @@ import ApiServices from "../../api/services";
 import { CONTACTS } from "../../routes/Names";
 import Skeleton from "react-loading-skeleton";
 import { useReactToPrint } from "react-to-print";
-import Button from "../../components/common/Button";
 import React, { useEffect, useState, useRef } from "react";
 import { ArrowLeftIcon, PrinterIcon, ClipboardIcon } from "@heroicons/react/24/outline";
 
@@ -157,6 +156,14 @@ const ContactPrint = () => {
 
     console.log("allColumns-------------",allColumns);
 
+    const getColumnWidthClass = (head) => {
+      if (["DOB", "Anniversery Date"].includes(head)) return "min-w-[150px]";
+      if (head === "Preferences") return "min-w-[280px]";
+      if (["Address", "Work Address", "Special Need", "description"].includes(head)) return "min-w-[240px]";
+      if (head.includes("Name") || head.includes("address")) return "min-w-[160px]";
+      return "min-w-[120px]";
+    };
+
     const renderCell = (item, header) => {
       // Base field mappings (best-effort to typical API fields)
       switch (header) {
@@ -268,8 +275,8 @@ const ContactPrint = () => {
           <thead>
             <tr>
               {allColumns.map((head) => (
-                <th key={head} className="p-4 bg-white border-b border-gray-100 first:pl-6">
-                  <p className="text-xs font-semibold leading-5 whitespace-nowrap cursor-pointer font-inter 3xl:text-sm">{head}</p>
+                <th key={head} className={`p-4 bg-white border-b border-gray-100 first:pl-6 ${getColumnWidthClass(head)}`}>
+                  <p className="text-sm font-semibold leading-5 whitespace-nowrap cursor-pointer font-inter 3xl:text-sm">{head}</p>
                 </th>
               ))}
             </tr>
@@ -286,8 +293,8 @@ const ContactPrint = () => {
               allContactList?.map((item) => (
                 <tr key={item?.id}>
                   {allColumns.map((head) => (
-                    <td key={head} className="py-3 pr-3 pl-4 first:pl-6 3xl:px-4">
-                      <p className="text-xs font-normal text-primary-color-200 3xl:text-sm">{renderCell(item, head)}</p>
+                    <td key={head} className={`py-3 pr-3 pl-4 align-middle first:pl-6 3xl:px-4 ${getColumnWidthClass(head)}`}>
+                      <p className="text-md whitespace-nowrap font-normal text-primary-color-200 3xl:text-sm">{renderCell(item, head)}</p>
                     </td>
                   ))}
                 </tr>
@@ -495,17 +502,22 @@ const handleExport = async () => {
   };
   return (
     <>
-      {(userData?.role === "superAdmin" || userData?.role?.permissions?.includes("Contacts")) && (
-        <div onClick={() => navigate(CONTACTS)} className={`flex mb-5 text-base font-medium cursor-pointer text-secondary hover:underline`}>
-          <ArrowLeftIcon className="mr-2 w-4 h-6 text-secondary" />
-          <span> Back to Contacts list</span>
+      <div className="card flex min-h-[72vh] flex-col shadow-[0_12px_34px_rgba(15,23,42,0.14)]">
+        <div className="flex w-full flex-col items-start gap-3">
+          <h3 className="text-xl font-semibold text-black">{t("contacts.printContacts")}</h3>
+
+          <button
+            type="button"
+            onClick={() => navigate(CONTACTS)}
+            className="inline-flex items-center text-base font-medium text-secondary hover:underline"
+          >
+            <ArrowLeftIcon className="mr-2 h-5 w-4 text-secondary" />
+            <span>{t("contacts.backToContactList")}</span>
+          </button>
         </div>
-      )}
-      <div className="card min-h-[76vh]">
-        <h3 className="heading">Print Contacts</h3>
 
         {/* <div className="flex gap-x-4 mt-5">
-          <h3 className="text-base font-medium">Include:</h3>
+          <h3 className="text-base font-medium">{t("contacts.include")}:</h3>
           <div className="flex gap-x-2 items-center pl-2">
             <input
               onChange={(e) => handleCheckboxChange(e, "Address")}
@@ -546,26 +558,40 @@ const handleExport = async () => {
           </div>
         </div> */}
 
-        <div className="mt-5 h-[58vh] overflow-y-auto overflow-x-hidden">
-          <div className="overflow-x-auto -mx-6 mb-8">
+        <div className="mt-5 flex min-h-0 flex-1 flex-col">
+          <div className="-mx-6 mb-8 flex-1 overflow-auto">
             <PrintableContactList ref={componentRef} allContactList={allContactList} loading={loading} />
           </div>
+
+          {allContactList?.length > 0 && (
+            <div className="flex justify-end gap-3 border-t border-gray-100 pt-5">
+              <button
+                type="button"
+                onClick={handleExport}
+                disabled={exportLoading}
+                className="inline-flex h-10 items-center justify-center rounded-10 border border-secondary bg-transparent px-6 text-sm font-medium text-secondary transition hover:bg-secondary/5 disabled:cursor-not-allowed disabled:opacity-60"
+              >
+                {exportLoading ? (
+                  "Exporting..."
+                ) : (
+                  <>
+                    <ClipboardIcon className="mr-2 h-5 w-5" />
+                    Export
+                  </>
+                )}
+              </button>
+
+              <button
+                type="button"
+                onClick={handlePrint}
+                className="inline-flex h-10 items-center justify-center rounded-10 border border-primary bg-transparent px-6 text-sm font-medium text-primary transition hover:bg-primary/5"
+              >
+                <PrinterIcon className="mr-2 h-5 w-5" />
+                {t("buttons.print")}
+              </button>
+            </div>
+          )}
         </div>
-
-        {allContactList?.length > 0 && (
-          <div className="flex justify-end items-center mt-4">
-            {/* <Button icon={<PrinterIcon />} title={t("buttons.print")} type="button" onClick={handlePrint} /> */}
-           <Button
-              icon={<ClipboardIcon />}
-              title={exportLoading ? "Exporting..." : "Export"}
-              type="button"
-              disabled={exportLoading}
-              onClick={handleExport}
-              loading={exportLoading}
-            />
-
-          </div>
-        )}
       </div>
     </>
   );

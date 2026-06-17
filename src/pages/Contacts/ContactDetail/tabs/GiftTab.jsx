@@ -77,7 +77,7 @@ const GiftTab = ({ data, t }) => {
                   requestGiftSort(sortKey);
                 }}
               >
-                <p className="font-inter cursor-pointer whitespace-nowrap text-xs font-semibold leading-5 3xl:text-sm">
+                <p className="font-inter cursor-pointer whitespace-nowrap text-sm font-semibold leading-5 3xl:text-sm">
                   {head}
                   {giftSortConfig.key ===
                     (head === "Date/Time" || head === t("contacts.dateTime")
@@ -111,21 +111,21 @@ const GiftTab = ({ data, t }) => {
             giftItems?.map((item, index) => (
               <tr key={index} className="cursor-pointer">
                 <td className="cursor-pointer py-3 pl-6 pr-4">
-                  <p className="text-xs font-normal text-primary-color 3xl:text-sm">
+                  <p className="text-sm font-normal text-primary-color 3xl:text-sm">
                     {item?.dateTime ? getLocalDateFromUnixTimestamp(item.dateTime, "DD MMM, YYYY") : "-"}
                   </p>
                 </td>
                 <td className="cursor-pointer py-3 pl-6 pr-4">
-                  <p className="text-xs font-normal text-primary-color 3xl:text-sm">{item?.ceremony}</p>
+                  <p className="text-sm font-normal text-primary-color 3xl:text-sm">{item?.ceremony}</p>
                 </td>
                 <td className="cursor-pointer py-3 pl-6 pr-4">
-                  <p className="text-xs font-normal text-primary-color 3xl:text-sm">{item?.giftName}</p>
+                  <p className="text-sm font-normal text-primary-color 3xl:text-sm">{item?.giftName}</p>
                 </td>
                 <td className="cursor-pointer py-3 pl-6 pr-4">
-                  <p className="text-xs font-normal text-primary-color 3xl:text-sm">{item?.quantity}</p>
+                  <p className="text-sm font-normal text-primary-color 3xl:text-sm">{item?.quantity}</p>
                 </td>
                 <td className="cursor-pointer py-3 pl-6 pr-4">
-                  <p className="text-xs font-normal text-primary-color 3xl:text-sm">{item?.notes}</p>
+                  <p className="text-sm font-normal text-primary-color 3xl:text-sm">{item?.notes}</p>
                 </td>
               </tr>
             ))

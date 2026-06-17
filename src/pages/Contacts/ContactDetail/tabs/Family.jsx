@@ -67,7 +67,7 @@ const FamilyTab = ({ data, userIdData, t }) => {
               <TitleValue title={t("contacts.contactNumber")} value={contactInfo.number} />
               <TitleValue title={t("contacts.countryCode")} value={contactInfo.countryCode} />
               <TitleValue title={t("contacts.adultStatus")} value={person?.isAdult ? t("contacts.adult") : t("contacts.minor")} />
-              <TitleValue title="Wedding Hall Seat" value={person?.wedding_hall_seat || "-"} />
+          <TitleValue title={t("contacts.weddingHallSeat")} value={person?.wedding_hall_seat || "-"} />
 
               <TitleValue
                 title={t("contacts.createdDate")}
@@ -82,16 +82,16 @@ const FamilyTab = ({ data, userIdData, t }) => {
         </div>
         <div>
           <div className="mb-5 flex items-center gap-x-4">
-            <h2 className="sub-heading">{t("Medicine")}</h2>
+            <h2 className="sub-heading">{t("contacts.medicine")}</h2>
           </div>
           <div className="grid grid-cols-2 gap-16">
             {person?.medicines?.map((medicine, index) => (
               <div className="card flex flex-wrap gap-x-5 gap-y-4">
-                <TitleValue title={t("Medicine Name")} value={medicine?.name || "-"} />
-                <TitleValue title={t("Problem/Ailment")} value={medicine?.ailment || "-"} />
-                <TitleValue title={t("Medicine Type")} value={medicine?.type || "-"} />
-                <TitleValue title={t("Medication Type")} value={medicine?.usage || "-"} />
-                <TitleValue title={t("Special Instructions")} value={medicine?.special_instructions || "-"} />
+                <TitleValue title={t("contacts.medicineName")} value={medicine?.name || "-"} />
+                <TitleValue title={t("contacts.problemAilment")} value={medicine?.ailment || "-"} />
+                <TitleValue title={t("contacts.medicineType")} value={medicine?.type || "-"} />
+                <TitleValue title={t("contacts.medicationType")} value={medicine?.usage || "-"} />
+                <TitleValue title={t("contacts.specialInstructions")} value={medicine?.special_instructions || "-"} />
               </div>
             ))}
           </div>

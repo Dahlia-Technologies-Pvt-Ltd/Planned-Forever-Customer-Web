@@ -360,7 +360,7 @@ export const protectedRoutes = [
     path: HOTELROOM,
     screen: HotelRoom,
     label: "Hotel Room",
-    permissions: ["hotel-room-delete", "hotel-room-view", "hotel-room-edit", "hotel-room-create"],
+    permissions: ["allocated-rooms-delete", "allocated-rooms-view", "allocated-rooms-edit", "allocated-rooms-create"],
   },
 
   {
@@ -407,6 +407,7 @@ export const protectedRoutes = [
     path: USER_TYPE,
     screen: UsersType,
     label: "User Type",
+    permissions: ["user-type-delete", "user-type-view", "user-type-edit", "user-type-create"],
   },
 
   {
@@ -502,6 +503,7 @@ export const protectedRoutes = [
     id: 38,
     path: ADD_USER_TYPE,
     screen: AddUserType,
+    permissions: ["user-type-delete", "user-type-view", "user-type-edit", "user-type-create"],
   },
 
   {
@@ -668,36 +670,47 @@ export const protectedRoutes = [
     id: 63,
     path: TICKET_CATEGORY,
     screen: TicketCategory,
+    permissions: ["ticket-category-delete", "ticket-category-view", "ticket-category-edit", "ticket-category-create"],
   },
 
   {
     id: 64,
     path: TICKET_SUB_CATEGORY,
     screen: TicketSubCategory,
+    permissions: ["ticket-sub-category-delete", "ticket-sub-category-view", "ticket-sub-category-edit", "ticket-sub-category-create"],
   },
 
   {
     id: 65,
     path: TICKET_FURTHER_CLASSIFICATION,
     screen: TicketFurtherClassification,
+    permissions: ["ticket-classification-delete", "ticket-classification-view", "ticket-classification-edit", "ticket-classification-create"],
   },
 
   {
     id: 66,
     path: TICKET_CUSTOM_FIELD,
     screen: CustomField,
+    permissions: ["ticket-custom-field-delete", "ticket-custom-field-view", "ticket-custom-field-edit", "ticket-custom-field-create"],
   },
 
   {
     id: 67,
     path: TICKET_CUSTOM_FIELD_DETAIL,
     screen: CustomFieldDetail,
+    permissions: ["ticket-custom-field-delete", "ticket-custom-field-view", "ticket-custom-field-edit", "ticket-custom-field-create"],
   },
 
   {
     id: 68,
     path: TICKET_CUSTOM_FIELD_LIBRARY,
     screen: CustomFieldLibrary,
+    permissions: [
+      "ticket-custom-field-library-delete",
+      "ticket-custom-field-library-view",
+      "ticket-custom-field-library-edit",
+      "ticket-custom-field-library-create",
+    ],
   },
   {
     id: 69,
@@ -708,6 +721,7 @@ export const protectedRoutes = [
     id: 70,
     path: CARD_SCHEDULE,
     screen: CardSchedule,
+    permissions: ["card-schedule-view", "card-schedule-create", "card-schedule-edit", "card-schedule-delete"],
   },
   {
     id: 71,
@@ -750,27 +764,31 @@ export const protectedRoutes = [
     id: 78,
     path: PANCHANG_CALENDAR,
     screen: PanchangCalendar,
-    permissions: ["panchang-caldendar-view"],
+    permissions: ["panchang-calendar-view"],
   },
   {
     id: 79,
     path: DOUBLE_TICK_LIST,
     screen: Templates,
+    permissions: ["double-tick-view", "double-tick-create", "double-tick-edit", "double-tick-delete"],
   },
   {
     id: 80,
     path: DOUBLE_TICK,
     screen: DoubleTick,
+    permissions: ["double-tick-view", "double-tick-create", "double-tick-edit", "double-tick-delete"],
   },
   {
     id: 81,
     path: GUEST_FLIGHTS,
     screen: GuestFlights,
+    permissions: ["guest-flights-delete", "guest-flights-view", "guest-flights-edit", "guest-flights-create"],
   },
   {
     id: 82,
     path: GUEST_TRAINS,
     screen: GuestTrains,
+    permissions: ["guest-trains-delete", "guest-trains-view", "guest-trains-edit", "guest-trains-create"],
   },
   {
     id: 83,
@@ -786,11 +804,13 @@ export const protectedRoutes = [
     id: 85,
     path: HOTEL_ROOM_SETUP,
     screen: HotelRoomSetup,
+    permissions: ["hotel-rooms-delete", "hotel-rooms-view", "hotel-rooms-edit", "hotel-rooms-create"],
   },
   {
     id: 86,
     path: QR_OVERVIEW,
     screen: QrOverview,
+    permissions: ["qr-code-overview-delete", "qr-code-overview-view", "qr-code-overview-edit", "qr-code-overview-create"],
   },
   {
     id: 87,

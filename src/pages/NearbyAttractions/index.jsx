@@ -17,6 +17,7 @@ import ConfirmationModal from "../../components/common/ConfirmationModal";
 import { ChevronDownIcon, ChevronLeftIcon, ChevronRightIcon, ChevronUpIcon } from "@heroicons/react/24/solid";
 import { mediaUrl } from "@utilities/config";
 import { useTranslation } from "react-i18next";
+import { hasPermission } from "../../utilities/permissions";
 
 const Venues = () => {
   const { t } = useTranslation("common");
@@ -147,8 +148,7 @@ const Venues = () => {
 
               <div className="flex w-full items-center justify-between">
                 <div className="flex items-center gap-x-3">
-                  {(userData?.role?.display_name === "web_admin" ||
-                    userData.role.permissions?.some((item) => item === "nearby-attractions-create")) && (
+                  {(hasPermission(userData, "nearby-attractions-create")) && (
                     <Button title={t("nearByAttraction.addNearByAttraction")} onClick={() => setAddNewModal(true)} />
                   )}
                 </div>
@@ -202,7 +202,7 @@ const Venues = () => {
                             requestSort(sortKey);
                           }}
                         >
-                          <p className="font-inter cursor-pointer whitespace-nowrap text-xs font-semibold leading-5 3xl:text-sm">
+                          <p className="font-inter cursor-pointer whitespace-nowrap text-sm font-semibold leading-5 3xl:text-sm">
                             {head}
                             {sortConfig.key ===
                               (head === "Venue Name"
@@ -325,8 +325,7 @@ const Venues = () => {
                     <div className="mb-5 flex items-center justify-between">
                       <h2 className="sub-heading">{t("headings.basicInfo")}</h2>
                       <div className="flex items-center gap-x-3">
-                        {(userData?.role?.display_name === "web_admin" ||
-                          userData.role.permissions?.some((item) => item === "nearby-attractions-edit")) && (
+                        {(hasPermission(userData, "nearby-attractions-edit")) && (
                           <button
                             className="border-b border-secondary text-sm font-medium text-secondary"
                             type="button"
@@ -338,8 +337,7 @@ const Venues = () => {
                             {t("buttons.edit")}
                           </button>
                         )}
-                        {(userData?.role?.display_name === "web_admin" ||
-                          userData.role.permissions?.some((item) => item === "nearby-attractions-delete")) && (
+                        {(hasPermission(userData, "nearby-attractions-delete")) && (
                           <button
                             onClick={() => setOpenDeleteModal({ open: true, data: detail })}
                             className="border-b border-red-500 text-sm font-medium text-red-500"

@@ -17,7 +17,7 @@ const AddHotelModal = ({ isOpen, setIsOpen, refreshData, data, setModalData }) =
   const { t } = useTranslation("common");
 
   // Context
-  const { eventSelect, setBtnLoading, btnLoading, openSuccessModal, closeSuccessModel } = useThemeContext();
+  const { eventSelect, eventDetail, setBtnLoading, btnLoading, openSuccessModal, closeSuccessModel } = useThemeContext();
 
   const [hotelName, setHotelName] = useState("");
   const [roomType, setRoomType] = useState("");
@@ -37,6 +37,17 @@ const AddHotelModal = ({ isOpen, setIsOpen, refreshData, data, setModalData }) =
   const [checkOutDateError, setCheckOutDateError] = useState("");
   const [hotelNoteError, setHotelNoteError] = useState("");
   const [location, setLocation] = useState({ address: "", lat: "", lng: "" });
+
+  const weddingWindowStart = eventDetail?.start_date ? moment.unix(eventDetail.start_date).subtract(72, "hours") : null;
+  const weddingWindowEnd = eventDetail?.end_date ? moment.unix(eventDetail.end_date).add(72, "hours") : null;
+  const weddingWindowStartValue = weddingWindowStart ? weddingWindowStart.format("YYYY-MM-DDTHH:mm") : "";
+  const weddingWindowEndValue = weddingWindowEnd ? weddingWindowEnd.format("YYYY-MM-DDTHH:mm") : "";
+
+  const isWithinWeddingWindow = (value) => {
+    if (!value || !weddingWindowStart || !weddingWindowEnd) return true;
+    const current = moment(value);
+    return current.isBetween(weddingWindowStart, weddingWindowEnd, undefined, "[]");
+  };
 
   const isValidForm = () => {
     let isValidData = true;
@@ -58,6 +69,26 @@ const AddHotelModal = ({ isOpen, setIsOpen, refreshData, data, setModalData }) =
     }
     if (checkOutDate === "") {
       setCheckOutDateError("Required");
+      isValidData = false;
+    }
+
+    if (checkInDate && !isWithinWeddingWindow(checkInDate)) {
+      setCheckInDateError(" Must be within 72 hours before wedding start and 72 hours after wedding end");
+      isValidData = false;
+    } else if (checkInDate !== "") {
+      setCheckInDateError("");
+    }
+
+    if (checkOutDate && !isWithinWeddingWindow(checkOutDate)) {
+      setCheckOutDateError(" Must be within 72 hours before wedding start and 72 hours after wedding end");
+      isValidData = false;
+    } else if (checkOutDate !== "") {
+      setCheckOutDateError("");
+    }
+
+    if (checkInDate && checkOutDate && moment(checkInDate).isAfter(moment(checkOutDate))) {
+      setCheckInDateError(" Check in must be before Check out");
+      setCheckOutDateError(" Check out must be after Check in");
       isValidData = false;
     }
 
@@ -185,10 +216,10 @@ const AddHotelModal = ({ isOpen, setIsOpen, refreshData, data, setModalData }) =
         numberOfRoom: item.no_of_rooms,
       }));
       setItems(currentItem);
-      setCheckInDate(moment.unix(data?.check_in).format("YYYY-MM-DD HH:mm"));
-      setCheckOutDate(moment.unix(data?.check_out).format("YYYY-MM-DD HH:mm"));
+      setCheckInDate(moment.unix(data?.check_in).format("YYYY-MM-DDTHH:mm"));
+      setCheckOutDate(moment.unix(data?.check_out).format("YYYY-MM-DDTHH:mm"));
     }
-  }, [isOpen]);
+  }, [isOpen, data]);
 
   console.log({ location });
 
@@ -289,7 +320,7 @@ const AddHotelModal = ({ isOpen, setIsOpen, refreshData, data, setModalData }) =
                     <XMarkIcon onClick={closeModal} className="h-8 w-8 cursor-pointer text-info-color" />
                   </div>
 
-                  <form onSubmit={handleSubmit}>
+                  <form onSubmit={handleSubmit} className="[&_.label]:text-xs [&_.label]:font-medium [&_.css-b62m3t-container]:text-sm [&_.css-13cymwt-control]:min-h-[36px] [&_.css-13cymwt-control]:text-sm [&_.css-13cymwt-control]:py-0 [&_.css-t3ipsp-control]:min-h-[36px] [&_.css-t3ipsp-control]:text-sm [&_.css-t3ipsp-control]:py-0 [&_.css-hlgwow]:min-h-[34px] [&_.css-hlgwow]:py-0 [&_.css-19bb58m]:my-0 [&_.css-1dimb5e-singleValue]:text-sm [&_.css-1dimb5e-singleValue]:leading-5 [&_.css-1jqq78o-placeholder]:text-sm [&_.css-1jqq78o-placeholder]:leading-5 [&_input]:h-9 [&_input]:text-sm [&_textarea]:text-sm">
                     <div className="h-[600px] overflow-y-auto p-2 md:h-[400px] lg:h-[400px] xl:h-[500px] 2xl:h-[600px]">
                       <div className="mb-5 ltr:text-left rtl:text-right">
                         <div>
@@ -339,9 +370,14 @@ const AddHotelModal = ({ isOpen, setIsOpen, refreshData, data, setModalData }) =
                           placeholder={t("hotels.checkInDate")}
                           value={checkInDate}
                           error={checkInDateError}
+                          min={weddingWindowStartValue}
+                          max={weddingWindowEndValue}
                           onChange={(e) => {
                             setCheckInDate(e.target.value);
                             setCheckInDateError("");
+                            if (checkOutDateError === " Check out must be after Check in") {
+                              setCheckOutDateError("");
+                            }
                           }}
                         />
 
@@ -352,9 +388,14 @@ const AddHotelModal = ({ isOpen, setIsOpen, refreshData, data, setModalData }) =
                           placeholder={t("hotels.checkOutDate")}
                           value={checkOutDate}
                           error={checkOutDateError}
+                          min={weddingWindowStartValue}
+                          max={weddingWindowEndValue}
                           onChange={(e) => {
                             setCheckOutDate(e.target.value);
                             setCheckOutDateError("");
+                            if (checkInDateError === " Check in must be before Check out") {
+                              setCheckInDateError("");
+                            }
                           }}
                         />
 

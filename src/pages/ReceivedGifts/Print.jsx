@@ -57,7 +57,7 @@ const ReceviedGiftPrint = () => {
   }, []);
 
   // Table headers with translations
-  const TABLE_HEAD = [t("receivedGifts.receivedGift"), t("receivedGifts.receivedGiftFrom"), t("receivedGifts.receivedOn"), t("receivedGifts.thankYouNoteSentTo"), t("receivedGifts.thankYouNoteSentOn")];
+  const TABLE_HEAD = [t("receivedGifts.receivedGift"), t("receivedGifts.receivedGiftFrom"), t("receivedGifts.receivedOn")];
 
   const PrintableEventList = React.forwardRef(({ allReceivedGiftList, loading, TABLE_HEAD }, ref) => (
     <div ref={ref} className="printableEventList pr-2">
@@ -66,7 +66,7 @@ const ReceviedGiftPrint = () => {
           <tr>
             {TABLE_HEAD.map((head) => (
               <th className="border-b border-gray-100 bg-white p-4 first:pl-6">
-                <p className="font-inter cursor-pointer whitespace-nowrap text-xs font-semibold leading-5 3xl:text-sm">{head}</p>
+                <p className="font-inter cursor-pointer whitespace-nowrap text-sm font-semibold leading-5 3xl:text-sm">{head}</p>
               </th>
             ))}
           </tr>
@@ -74,7 +74,7 @@ const ReceviedGiftPrint = () => {
         <tbody>
           {loading ? (
             <tr>
-              <td colSpan="6">
+              <td colSpan={TABLE_HEAD.length}>
                 <Skeleton count={5} height={50} />
               </td>
             </tr>
@@ -82,29 +82,21 @@ const ReceviedGiftPrint = () => {
             allReceivedGiftList.map((item, index) => (
               <tr key={item?.id}>
                 <td className="py-3 pl-6 pr-4">
-                  <p className="text-primary-color-200 text-xs font-normal 3xl:text-sm">{item?.gift_received || "-"}</p>
+                  <p className="text-primary-color-200 text-md font-normal 3xl:text-sm">{item?.gift_received || "-"}</p>
                 </td>
                 <td className="py-3 pl-4 pr-3 3xl:px-4">
-                  <p className="text-primary-color-200 text-xs font-normal 3xl:text-sm">
+                  <p className="text-primary-color-200 text-md font-normal 3xl:text-sm">
                     {item?.contact?.first_name + " " + item?.contact?.last_name || "-"}
                   </p>
                 </td>
                 <td className="py-3 pl-4 pr-3 3xl:px-4">
-                  <p className="text-primary-color-200 text-xs font-normal 3xl:text-sm">{`${moment.unix(item?.received_on).format("D MMM YYYY")}`}</p>
-                </td>
-                <td className="py-3 pl-4 pr-3 3xl:px-4">
-                  <p className="text-primary-color-200 text-xs font-normal 3xl:text-sm">
-                    {item?.contact?.first_name + " " + item?.contact?.last_name}
-                  </p>
-                </td>
-                <td className="py-3 pl-4 pr-3 3xl:px-4">
-                  <p className="text-primary-color-200 text-xs font-normal 3xl:text-sm">{`${moment.unix(item?.note_send_at).format("D MMM YYYY")}`}</p>
+                  <p className="text-primary-color-200 text-md font-normal 3xl:text-sm">{`${moment.unix(item?.received_on).format("D MMM YYYY")}`}</p>
                 </td>
               </tr>
             ))
           ) : (
             <tr className="h-[400px]">
-              <td colSpan="6">
+              <td colSpan={TABLE_HEAD.length}>
                 <Lottie options={emptyFolderAnimation} width={200} height={200} />
               </td>
             </tr>

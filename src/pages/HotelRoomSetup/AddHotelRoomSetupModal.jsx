@@ -170,7 +170,7 @@ const AddHotelRoomSetupModal = ({ isOpen, setIsOpen, data, setModalData, refresh
                   <XMarkIcon onClick={closeModal} className="h-8 w-8 cursor-pointer text-info-color" />
                 </div>
 
-                <form onSubmit={handleSubmit}>
+                <form onSubmit={handleSubmit} className="[&_.label]:text-xs [&_.label]:font-medium [&_.css-b62m3t-container]:text-sm [&_.css-13cymwt-control]:min-h-[36px] [&_.css-13cymwt-control]:text-sm [&_.css-13cymwt-control]:py-0 [&_.css-t3ipsp-control]:min-h-[36px] [&_.css-t3ipsp-control]:text-sm [&_.css-t3ipsp-control]:py-0 [&_.css-hlgwow]:min-h-[34px] [&_.css-hlgwow]:py-0 [&_.css-19bb58m]:my-0 [&_.css-1dimb5e-singleValue]:text-sm [&_.css-1dimb5e-singleValue]:leading-5 [&_.css-1jqq78o-placeholder]:text-sm [&_.css-1jqq78o-placeholder]:leading-5 [&_input]:h-9 [&_input]:text-sm [&_textarea]:text-sm">
                   <div className="h-[410px] overflow-y-auto p-2">
                     <div className="mb-5 ltr:text-left rtl:text-right">
                       <div className="label mb-2 text-secondary">{t("headings.basicInfo")}</div>
@@ -240,7 +240,7 @@ const AddHotelRoomSetupModal = ({ isOpen, setIsOpen, data, setModalData, refresh
                           id="fullyBooked"
                           checked={fullyBooked}
                           onChange={(e) => setFullyBooked(e.target.checked)}
-                          className="h-4 w-4 rounded border-gray-300 bg-gray-100 text-secondary focus:ring-secondary"
+                          className="!h-4 w-4 rounded border-gray-300 bg-gray-100 text-secondary focus:ring-secondary"
                         />
                         <label htmlFor="fullyBooked" className="ml-2 text-sm font-medium text-primary-color">
                           {t("hotels.fullyBooked")}

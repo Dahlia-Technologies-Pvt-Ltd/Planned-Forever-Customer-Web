@@ -1,6 +1,7 @@
 import React, { Fragment, useState, useEffect, useCallback } from "react";
 import { Dialog, Transition } from "@headlessui/react";
 import { XMarkIcon, CheckIcon, ArrowLeftIcon } from "@heroicons/react/24/solid";
+import { MinusIcon, SparklesIcon } from "@heroicons/react/24/outline";
 import { useTranslation } from "react-i18next";
 import { useDropzone } from "react-dropzone";
 import countriesCodeData from "../../utilities/countryCode.json";
@@ -227,6 +228,24 @@ useEffect(() => {
             })
         );
     };
+
+    const toTitleCase = (value = "") =>
+      String(value)
+        .trim()
+        .toLowerCase()
+        .replace(/\b\w/g, (character) => character.toUpperCase());
+
+    const handleAutoFix = () => {
+      setContacts((prev) =>
+        prev.map((contact) => ({
+          ...contact,
+          salutation: toTitleCase(contact.salutation),
+          first_name: toTitleCase(contact.first_name),
+          middle_name: toTitleCase(contact.middle_name),
+          last_name: toTitleCase(contact.last_name),
+        })),
+      );
+    };
     //for validation of all fields
     const [errors, setErrors] = useState({});
     const validateContacts = (contacts) => {
@@ -268,6 +287,8 @@ useEffect(() => {
     return str.startsWith("+") ? str : `+${str}`;
   };
 
+  const hasValidationErrors = Object.keys(errors).length > 0;
+
 //console.log(contacts);
 //   console.log(contacts[0].groups);
   /* ================= UI ================= */
@@ -277,11 +298,23 @@ useEffect(() => {
         <div className="fixed inset-0 bg-black/30" />
 
         <div className="fixed inset-0 flex items-center justify-center p-4">
-          <Dialog.Panel className="w-full max-w-xxl bg-white rounded-2xl shadow-xl">
+          <Dialog.Panel className="relative w-full max-w-6xl overflow-hidden rounded-2xl bg-white shadow-xl">
+            {btnLoading && (
+              <div className="absolute inset-0 z-30 flex items-center justify-center bg-white/95 backdrop-blur-[1px]">
+                <div className="flex flex-col items-center text-center">
+                  <div className="relative flex h-16 w-16 items-center justify-center rounded-full border border-secondary/30 bg-secondary/5">
+                    <CheckIcon className="h-7 w-7 text-secondary" />
+                    <span className="absolute inset-[-5px] animate-spin rounded-full border-2 border-transparent border-t-secondary" />
+                  </div>
+                  <p className="mt-4 text-base font-semibold text-black">{t("contacts.importingContacts")}</p>
+                  <p className="mt-1 text-sm text-[#667085]">{t("contacts.importingContactsDescription")}</p>
+                </div>
+              </div>
+            )}
 
             {/* HEADER */}
-            <div className="p-5 border-b flex justify-between items-center">
-              <Dialog.Title className="text-lg font-semibold">
+            <div className="flex items-center justify-between border-b p-5">
+              <Dialog.Title className="text-lg font-semibold text-black">
                 {t("contacts.addContacts")}
               </Dialog.Title>
               <XMarkIcon className="w-6 h-6 cursor-pointer" onClick={handleClose} />
@@ -291,7 +324,7 @@ useEffect(() => {
             <div className="p-5 max-h-[75vh] overflow-y-auto">
 
               {/* Back */}
-              <div className="flex items-center justify-between text-sm font-semibold mb-4">
+              <div className="mb-5 flex items-center justify-between gap-4 text-sm font-semibold">
   
                 {/* Left side (Back) */}
                 <div className="flex items-center gap-2 cursor-pointer">
@@ -305,12 +338,22 @@ useEffect(() => {
                     {t("contacts.backArrorw")}
                 </div>
 
-                {/* Right side (Button) */}
-                <Button
-                    title="Auto Generate Email"
-                    buttonColor="bg-blue-500"
+                <div className="flex items-center gap-3">
+                  <Button
+                      title={t("contacts.autoGenerateEmail")}
+                    buttonColor="border border-secondary bg-transparent"
+                    className="!h-9 !px-4 !text-secondary hover:bg-secondary/5"
                     onClick={handleAutoGenerateEmail}
-                />
+                  />
+                  <Button
+                    icon={<SparklesIcon />}
+                    title={t("contacts.autoFixCase")}
+                    type="button"
+                    buttonColor="border border-[#f4a62a] bg-transparent"
+                    className="!h-9 !px-4 !text-[#d98200] hover:bg-[#fff8ec] [&_span]:!text-[#d98200]"
+                    onClick={handleAutoFix}
+                  />
+                </div>
 
                 </div>
 
@@ -321,7 +364,7 @@ useEffect(() => {
                     <div className="flex-1">
                       <Dropdown
                         options={groupOptions}
-                        placeholder="Select groups"
+                        placeholder={t("contacts.selectGroup")}
                         value={
                             groupOptions.find(opt => opt.label === contacts?.[0]?.groups) || null
                           }
@@ -332,7 +375,7 @@ useEffect(() => {
                     <div className="flex-1">
                       <Dropdown
                           options={options}
-                          placeholder="Select family"
+                        placeholder={t("contacts.selectFamily")}
                           value={
                             options.find(opt => opt.label === contacts?.[0]?.family) || null
                           }
@@ -341,11 +384,10 @@ useEffect(() => {
                     </div>
                 </div>
                 </div>
-                <div className="overflow-x-auto mb-4">
-                    <div className="min-w-[950px]">
+                <div className="mb-4 overflow-x-auto">
+                    <div className="min-w-[1030px]">
                     {/* HEADER */}
-                    <div className="grid grid-cols-[40px_120px_140px_120px_1fr_1fr_1fr_1fr_44px] gap-2 text-sm font-semibold mb-2">
-                        <div>#</div>
+                    <div className="mb-2 grid grid-cols-[110px_140px_90px_150px_125px_150px_190px_44px] gap-2 text-sm font-semibold">
                         <div>{t("contacts.countryCode")}<span className="text-red-500">*</span></div>
                         <div>{t("contacts.contactNumber")}<span className="text-red-500">*</span></div>
                         <div>{t("contacts.salutation")}<span className="text-red-500">*</span></div>
@@ -353,39 +395,44 @@ useEffect(() => {
                         <div>{t("contacts.middleName")}</div>
                         <div>{t("contacts.lastName")}<span className="text-red-500">*</span></div>
                         <div>{t("contacts.email")}<span className="text-red-500">*</span></div>
-                        <div>Action</div>
+                        <div>{t("headings.actions")}</div>
                     </div>
                     {/* ROWS */}
                         {contacts.map((c, i) => (
                             <div
                             key={i}
-                            className="grid grid-cols-[40px_120px_140px_120px_1fr_1fr_1fr_1fr_44px] gap-2 mb-2 items-center"
+                            className="mb-2 grid grid-cols-[110px_140px_90px_150px_125px_150px_190px_44px] items-center gap-2"
                             >
-                            <div>{i + 1}</div>
-
-                            <select
-                                value={normalizeCountry(c.country)}
-                                onChange={(e) => handleChange(i, "country", e.target.value)}
-                                className={`border rounded px-2 py-1 w-full ${
-                                errors?.[i]?.country ? "border-red-500" : ""
-                                }`}
-                            >
-                            <option value="">
-                                {errors?.[i]?.country ? errors[i].country : "Select Country Code"}
-                            </option>
-                                {countriesCodeData?.countries?.map((country, index) => (
-                                <option key={index} value={`+${country.callingCodes[0]}`}>
-                                    +{country.callingCodes[0]} {country.name}
-                                </option>
-                                ))}
-                            </select>
+                            <Dropdown
+                              withoutTitle
+                              noMargin
+                              compact
+                              controlMinHeight="36px"
+                              withError={errors?.[i]?.country}
+                              placeholder={t("contacts.countryCode")}
+                              options={countriesCodeData?.countries?.map((country) => ({
+                                label: `+${country.callingCodes[0]} ${country.name}`,
+                                selectedLabel: `+${country.callingCodes[0]}`,
+                                value: `+${country.callingCodes[0]}`,
+                              }))}
+                              value={
+                                countriesCodeData?.countries
+                                  ?.map((country) => ({
+                                    label: `+${country.callingCodes[0]} ${country.name}`,
+                                    selectedLabel: `+${country.callingCodes[0]}`,
+                                    value: `+${country.callingCodes[0]}`,
+                                  }))
+                                  .find((option) => option.value === normalizeCountry(c.country)) || null
+                              }
+                              onChange={(option) => handleChange(i, "country", option?.value || "")}
+                            />
                             
                             <input
                                 value={c.number}
                                 onChange={(e) => handleChange(i, "number", e.target.value)}
                                 placeholder={errors?.[i]?.number || "Enter number"}
                                 className={`border rounded px-2 py-1 w-full ${
-                                errors?.[i]?.first_name ? "border-red-500" : ""
+                                errors?.[i]?.number ? "border-red-500 ring-1 ring-red-500" : ""
                                 }`}
                             />
                             
@@ -394,7 +441,7 @@ useEffect(() => {
                                 placeholder={errors?.[i]?.salutation || "Enter Salutation"}
                                 onChange={(e) => handleChange(i, "salutation", e.target.value)}
                                 className={`border rounded px-2 py-1 w-full ${
-                                errors?.[i]?.salutation ? "border-red-500" : ""
+                                errors?.[i]?.salutation ? "border-red-500 ring-1 ring-red-500" : ""
                                 }`}
                             />
                             
@@ -403,7 +450,7 @@ useEffect(() => {
                                 placeholder={errors?.[i]?.first_name || "Enter First Name"}
                                 onChange={(e) => handleChange(i, "first_name", e.target.value)}
                                 className={`border rounded px-2 py-1 w-full ${
-                                errors?.[i]?.first_name ? "border-red-500" : ""
+                                errors?.[i]?.first_name ? "border-red-500 ring-1 ring-red-500" : ""
                                 }`}
                             />
                             
@@ -418,7 +465,7 @@ useEffect(() => {
                                 placeholder={errors?.[i]?.last_name || "Enter Last Name"}
                                 onChange={(e) => handleChange(i, "last_name", e.target.value)}
                                 className={`border rounded px-2 py-1 w-full ${
-                                errors?.[i]?.last_name ? "border-red-500" : ""
+                                errors?.[i]?.last_name ? "border-red-500 ring-1 ring-red-500" : ""
                                 }`}
                             />
                             
@@ -427,17 +474,17 @@ useEffect(() => {
                                 onChange={(e) => handleChange(i, "email", e.target.value)}
                                 placeholder={errors?.[i]?.email || "Enter Email"}
                                 className={`border rounded px-2 py-1 w-full ${
-                                    errors?.[i]?.email ? "border-red-500" : ""
+                                    errors?.[i]?.email ? "border-red-500 ring-1 ring-red-500" : ""
                                     }`}
                             />
 
                             <button
                                 type="button"
                                 onClick={() => handleDeleteRow(i)}
-                                className="flex justify-center items-center border border-red-200 rounded px-2 py-2 text-red-500 hover:bg-red-50"
+                                className="flex h-6 w-6 items-center justify-center rounded-full border border-red-500 bg-transparent text-red-500 transition hover:bg-red-50"
                                 aria-label={`Delete row ${i + 1}`}
                             >
-                                <XMarkIcon className="w-4 h-4" />
+                                <MinusIcon className="h-3 w-3" />
                             </button>
                             
                             </div>
@@ -453,18 +500,23 @@ useEffect(() => {
               )}
 
               {/* ACTIONS */}
-              <div className="grid grid-cols-1 gap-2 mt-5 float-right">
+              <div className="mt-5 flex items-center justify-between gap-4">
                 {/* <Button
                   icon={<XMarkIcon />}
                   title={t("buttons.cancel")}
                   buttonColor="bg-red-500"
                   onClick={handleClose}
                 /> */}
+                {hasValidationErrors && (
+                  <p className="text-left text-sm font-medium text-red-500">
+                    {t("contacts.requiredImportFieldsMessage")}
+                  </p>
+                )}
+                {!hasValidationErrors && <span />}
                 <Button
                   icon={<CheckIcon />}
                   title={t("buttons.startImporting")}
-                  buttonColor="bg-green-500 float-right"
-                  loading={btnLoading}
+                  buttonColor="bg-secondary"
                   onClick={handleSubmit}
                 />
               </div>

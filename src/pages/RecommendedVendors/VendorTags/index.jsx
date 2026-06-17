@@ -179,7 +179,7 @@ const Tags = () => {
                             requestSort(sortKey);
                           }}
                         >
-                          <p className="font-inter cursor-pointer whitespace-nowrap text-xs font-semibold leading-5 3xl:text-sm">
+                          <p className="font-inter cursor-pointer whitespace-nowrap text-sm font-semibold leading-5 3xl:text-sm">
                             {head}
                             {sortConfig.key === (head === "Name" ? "name" : head.toLowerCase()) && sortConfig.direction === "asc" ? (
                               <ChevronUpIcon className="inline-block h-4 w-3.5" />

@@ -24,6 +24,7 @@ const AddArrivalModal = ({
   /* ================= CONTEXT ================= */
   const {
     eventSelect,
+    eventDetail,
     btnLoading,
     setBtnLoading,
     openSuccessModal,
@@ -52,9 +53,26 @@ const AddArrivalModal = ({
 
   const [serverError, setServerError] = useState("");
   const [openQuickImport, setOpenQuickImport] = useState(false);
+  const [arrivalDateError, setArrivalDateError] = useState("");
+  const [allocateFromError, setAllocateFromError] = useState("");
+  const [allocateToError, setAllocateToError] = useState("");
+
+  const pickUpOption = { label: "Pick Up", value: "pick_up" };
+  const weddingWindowStart = eventDetail?.start_date ? moment.unix(eventDetail.start_date).subtract(72, "hours") : null;
+  const weddingWindowEnd = eventDetail?.end_date ? moment.unix(eventDetail.end_date).add(72, "hours") : null;
+  const weddingWindowStartValue = weddingWindowStart ? weddingWindowStart.format("YYYY-MM-DDTHH:mm") : "";
+  const weddingWindowEndValue = weddingWindowEnd ? weddingWindowEnd.format("YYYY-MM-DDTHH:mm") : "";
+
+  const isWithinWeddingWindow = (value) => {
+    if (!value || !weddingWindowStart || !weddingWindowEnd) return true;
+    const current = moment(value);
+    return current.isBetween(weddingWindowStart, weddingWindowEnd, undefined, "[]");
+  };
 
   /* ================= VALIDATION ================= */
   const isValidForm = () => {
+    let isValid = true;
+
     if (
       !guest ||
       !arrivalDateAndTime ||
@@ -63,9 +81,37 @@ const AddArrivalModal = ({
       !arrivalFlightTrainNo ||
       !numberOfPeople
     ) {
-      return false;
+      isValid = false;
     }
-    return true;
+
+    if (!isWithinWeddingWindow(arrivalDateAndTime)) {
+      setArrivalDateError(" Must be within 72 hours before wedding start and 72 hours after wedding end");
+      isValid = false;
+    } else {
+      setArrivalDateError("");
+    }
+
+    if (allocateFromDate && !isWithinWeddingWindow(allocateFromDate)) {
+      setAllocateFromError(" Must be within the wedding allocation window");
+      isValid = false;
+    } else {
+      setAllocateFromError("");
+    }
+
+    if (allocateToDate && !isWithinWeddingWindow(allocateToDate)) {
+      setAllocateToError(" Must be within the wedding allocation window");
+      isValid = false;
+    } else {
+      setAllocateToError("");
+    }
+
+    if (allocateFromDate && allocateToDate && moment(allocateFromDate).isAfter(moment(allocateToDate))) {
+      setAllocateFromError(" From date must be before To date");
+      setAllocateToError(" To date must be after From date");
+      isValid = false;
+    }
+
+    return isValid;
   };
 
   /* ================= SUBMIT ================= */
@@ -159,6 +205,8 @@ const AddArrivalModal = ({
             }
           : null
       );
+      setAllocateFromDate(data?.car_from ? moment.unix(data.car_from).format("YYYY-MM-DDTHH:mm") : "");
+      setAllocateToDate(data?.car_to ? moment.unix(data.car_to).format("YYYY-MM-DDTHH:mm") : "");
     }
   }, [data]);
 
@@ -166,13 +214,20 @@ const AddArrivalModal = ({
     if (isOpen) {
       getContacts();
       getCarListing();
+      setServerError("");
+      setArrivalDateError("");
+      setAllocateFromError("");
+      setAllocateToError("");
+      if (!data) {
+        setCarAllocationType(pickUpOption);
+      }
     }
-  }, [isOpen]);
+  }, [isOpen, data]);
 
   const handleChildData = (form, to, deparaturedate,fligh_train_no) => {
     setArrivingFrom(form);
     setArrivingAt(to);
-    setArrivalDateAndTime(moment(deparaturedate, "YYYY-MM-DD HH:mm").format("YYYY-MM-DD HH:mm"));
+    setArrivalDateAndTime(moment(deparaturedate, "YYYY-MM-DD HH:mm").format("YYYY-MM-DDTHH:mm"));
     setArrivalFlightTrainNo(fligh_train_no);
   };
 
@@ -183,10 +238,10 @@ const AddArrivalModal = ({
         <Dialog as="div" className="relative z-40" onClose={closeModal}>
           <div className="fixed inset-0 bg-black/25" />
           <div className="fixed inset-0 flex items-center justify-center p-4">
-            <Dialog.Panel className="flex max-h-[90vh] w-full max-w-3xl flex-col overflow-hidden rounded-2xl bg-white shadow-xl">
+            <Dialog.Panel className="flex max-h-[90vh] w-full max-w-[760px] flex-col overflow-hidden rounded-2xl bg-white shadow-xl">
               {/* HEADER */}
-              <div className="flex items-center justify-between border-b p-6">
-                <Dialog.Title className="text-lg font-semibold">
+              <div className="flex items-center justify-between border-b px-5 py-4">
+                <Dialog.Title className="text-base font-semibold">
                   {data ? t("arrival.updateArrival") : t("arrival.addArrival")}
                 </Dialog.Title>
                 <div className="flex gap-3">
@@ -194,27 +249,36 @@ const AddArrivalModal = ({
                     title="Quick Import"
                     type="button"
                     onClick={() => setOpenQuickImport(true)}
+                    className="h-9 px-4 text-xs"
                   />
                   <XMarkIcon
-                    className="h-6 w-6 cursor-pointer"
+                    className="h-5 w-5 cursor-pointer"
                     onClick={closeModal}
                   />
                 </div>
               </div>
               {/* BODY */}
-              <div className="flex-1 overflow-y-auto p-6">
-                <form className="grid grid-cols-2 gap-6">
+              <div className="flex-1 overflow-y-auto px-5 py-4">
+                <form className="grid grid-cols-2 gap-4 [&_.label]:text-xs [&_.label]:font-medium [&_.css-b62m3t-container]:text-sm [&_.css-13cymwt-control]:min-h-[36px] [&_.css-13cymwt-control]:text-sm [&_.css-13cymwt-control]:py-0 [&_.css-t3ipsp-control]:min-h-[36px] [&_.css-t3ipsp-control]:text-sm [&_.css-t3ipsp-control]:py-0 [&_.css-hlgwow]:min-h-[34px] [&_.css-hlgwow]:py-0 [&_.css-19bb58m]:my-0 [&_.css-1dimb5e-singleValue]:text-sm [&_.css-1dimb5e-singleValue]:leading-5 [&_.css-1jqq78o-placeholder]:text-sm [&_.css-1jqq78o-placeholder]:leading-5 [&_input]:h-9 [&_input]:text-sm [&_textarea]:text-sm">
                   <Dropdown
                     title={t("arrival.guestName")}
                     options={allContact}
                     value={guest}
                     onChange={setGuest}
+                    controlMinHeight="36px"
+                    compact
                   />
                   <Input
                     type="datetime-local"
                     label={t("arrival.arrivalDateTime")}
                     value={arrivalDateAndTime}
-                    onChange={(e) => setArrivalDateAndTime(e.target.value)}
+                    error={arrivalDateError}
+                    min={weddingWindowStartValue}
+                    max={weddingWindowEndValue}
+                    onChange={(e) => {
+                      setArrivalDateAndTime(e.target.value);
+                      setArrivalDateError("");
+                    }}
                   />
                   <Input
                     label={t("arrival.arrivingFrom")}
@@ -244,27 +308,47 @@ const AddArrivalModal = ({
                     options={allCars}
                     value={car}
                     onChange={setCar}
+                    controlMinHeight="36px"
+                    compact
                   />
                   <Dropdown
                     title="Car Allocation Type"
-                    options={[
-                      { label: "Pick Up", value: "pick_up" },
-                      { label: "Drop Off", value: "drop_off" },
-                    ]}
+                    options={[pickUpOption]}
                     value={carAllocationType}
                     onChange={setCarAllocationType}
+                    disabled
+                    controlMinHeight="36px"
+                    compact
                   />
                   <Input
                     type="datetime-local"
                     label={t("arrival.fromDate")}
                     value={allocateFromDate}
-                    onChange={(e) => setAllocateFromDate(e.target.value)}
+                    error={allocateFromError}
+                    min={weddingWindowStartValue}
+                    max={weddingWindowEndValue}
+                    onChange={(e) => {
+                      setAllocateFromDate(e.target.value);
+                      setAllocateFromError("");
+                      if (allocateToError === " To date must be after From date") {
+                        setAllocateToError("");
+                      }
+                    }}
                   />
                   <Input
                     type="datetime-local"
                     label={t("arrival.toDate")}
                     value={allocateToDate}
-                    onChange={(e) => setAllocateToDate(e.target.value)}
+                    error={allocateToError}
+                    min={weddingWindowStartValue}
+                    max={weddingWindowEndValue}
+                    onChange={(e) => {
+                      setAllocateToDate(e.target.value);
+                      setAllocateToError("");
+                      if (allocateFromError === " From date must be before To date") {
+                        setAllocateFromError("");
+                      }
+                    }}
                   />
                   <div className="col-span-2">
                     <Input
@@ -274,23 +358,26 @@ const AddArrivalModal = ({
                       onChange={(e) => setNotes(e.target.value)}
                     />
                   </div>
-                  <div className="col-span-2 flex items-center gap-2">
+                  <div className="col-span-2 flex items-center gap-2 pt-1">
                     <input
                       type="checkbox"
                       checked={hasArrived}
                       onChange={(e) => setHasArrived(e.target.checked)}
+                      className="!h-4 !w-4 rounded border-gray-300 text-secondary-color focus:ring-secondary-color"
                     />
-                    <label>{t("arrival.hasArrived")}</label>
+                    <label className="text-sm font-medium text-primary-color">
+                      {t("arrival.hasArrived")}
+                    </label>
                   </div>
                   {serverError && (
-                    <p className="col-span-2 text-sm text-red-500">
+                    <p className="col-span-2 text-xs text-red-500">
                       {serverError}
                     </p>
                   )}
                 </form>
               </div>
               {/* FOOTER */}
-              <div className="flex justify-center gap-6 border-t p-6">
+              <div className="flex justify-center gap-4 border-t px-5 py-4 [&_button]:h-10 [&_button]:text-sm">
                 <Button
                   loading={btnLoading}
                   icon={<CheckIcon />}

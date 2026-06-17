@@ -1,11 +1,18 @@
 import React, { Fragment, useState, useEffect, useCallback } from "react";
 import ApiServices from "../../api/services";
-import { mediaUrl } from "../../utilities/config";
+import Axios from "axios";
+import { loginBaseUrl, mediaUrl } from "../../utilities/config";
 import Button from "../../components/common/Button";
 import { Dialog, Transition } from "@headlessui/react";
 import Dropdown from "../../components/common/Dropdown";
 import { useThemeContext } from "../../context/GlobalContext";
 import { XMarkIcon, CheckIcon } from "@heroicons/react/24/solid";
+import {
+  ArrowRightIcon,
+  ArrowUpTrayIcon,
+  DocumentArrowUpIcon,
+  ListBulletIcon,
+} from "@heroicons/react/24/outline";
 import { useTranslation } from "react-i18next";
 import { useDropzone } from "react-dropzone";
 import QuickImportText from "./QuickImportText";
@@ -512,19 +519,20 @@ const QuickImportContactModal = ({ isOpen, setIsOpen, refreshData }) => {
   const readApiOcrContacts = async (file) => {
     const formData = new FormData();
     formData.append("file", file);
+    const token = localStorage.getItem("token");
 
-    const response = await fetch("http://127.0.0.1:8000/v1/ocr/upload", {
-      method: "POST",
-      body: formData,
+    const response = await Axios.post(`${loginBaseUrl}ocr/upload`, formData, {
       headers: {
         Accept: "application/json",
+        "Content-Type": "multipart/form-data",
+        ...(token ? { Authorization: `Bearer ${token}` } : {}),
       },
     });
 
-    const responseData = await response.json();
+    const responseData = response?.data;
     console.log("Quick import OCR API response:", responseData);
 
-    if (!response.ok || responseData?.status !== true) {
+    if (responseData?.status !== true) {
       throw new Error(responseData?.message || "OCR API failed");
     }
 
@@ -739,80 +747,134 @@ const QuickImportContactModal = ({ isOpen, setIsOpen, refreshData }) => {
 
   return (
     <>
-        <Transition appear show={isOpen} as={Fragment}>
+      <Transition appear show={isOpen} as={Fragment}>
         <Dialog as="div" className="relative z-50" onClose={handleClose}>
-            <div className="fixed inset-0 bg-black bg-opacity-25" />
+          <div className="fixed inset-0 bg-black/35" />
 
-            <div className="overflow-y-auto fixed inset-0">
-            <div className="flex justify-center items-center p-4 min-h-full text-center">
-                <Dialog.Panel className="p-8 w-full max-w-xl bg-white rounded-2xl shadow-xl">
-                <div className="flex justify-between items-center mb-5">
-                    <Dialog.Title className="text-lg font-semibold">
-                    {t("contacts.importContacts")}
+          <div className="fixed inset-0 overflow-y-auto">
+            <div className="flex min-h-full items-center justify-center p-4 text-center">
+              <Dialog.Panel className="relative w-full max-w-2xl overflow-hidden rounded-2xl bg-white p-5 text-left shadow-2xl">
+                {loading && (
+                  <div className="absolute inset-0 z-20 flex items-center justify-center rounded-2xl bg-white/95 backdrop-blur-[1px]">
+                    <div className="flex max-w-xs flex-col items-center text-center">
+                      <div className="relative flex h-16 w-16 items-center justify-center rounded-full border border-secondary/30 bg-secondary/5">
+                        <DocumentArrowUpIcon className="h-7 w-7 text-secondary" />
+                        <span className="absolute inset-[-5px] animate-spin rounded-full border-2 border-transparent border-t-secondary" />
+                      </div>
+                      <p className="mt-4 text-base font-semibold text-black">
+                        {t("contacts.readingContacts")}
+                      </p>
+                      <p className="mt-1 text-sm leading-5 text-[#667085]">
+                        {t("contacts.readingContactsDescription")}
+                      </p>
+                      <div className="mt-4 h-1.5 w-48 overflow-hidden rounded-full bg-gray-100">
+                        <div className="h-full w-2/3 animate-pulse rounded-full bg-secondary" />
+                      </div>
+                    </div>
+                  </div>
+                )}
+                <div className="flex items-start justify-between gap-5">
+                  <div>
+                    <Dialog.Title className="text-lg font-semibold text-black">
+                      {t("contacts.importContacts")}
                     </Dialog.Title>
-                    <XMarkIcon onClick={handleClose} className="w-8 h-8 cursor-pointer" />
+                    <p className="mt-1 text-sm text-[#667085]">
+                      {t("contacts.importContactsDescription")}
+                    </p>
+                  </div>
+                  <button
+                    type="button"
+                    onClick={handleClose}
+                    className="rounded-full p-1 text-primary-color transition hover:bg-gray-100"
+                    aria-label={t("buttons.cancel")}
+                  >
+                    <XMarkIcon className="h-6 w-6" />
+                  </button>
                 </div>
 
-                <hr />
+                <div className="mt-5 grid items-stretch gap-4 md:grid-cols-2">
+                  <section className="flex min-h-[245px] flex-col items-center rounded-xl border border-gray-200 p-5 text-center">
+                    <div className="group relative flex h-12 w-12 items-center justify-center rounded-full border border-secondary bg-transparent text-secondary">
+                      <DocumentArrowUpIcon className="h-6 w-6 text-secondary" />
+                      <span className="pointer-events-none absolute bottom-full left-1/2 z-30 mb-2 w-64 -translate-x-1/2 rounded-md bg-secondary px-3 py-2 text-center text-xs font-medium leading-5 text-white opacity-0 shadow-lg transition-opacity group-hover:opacity-100">
+                        {t("contacts.importFromFileDescription")}
+                      </span>
+                    </div>
+                    <h3 className="group relative mt-3 text-base font-semibold text-black">
+                      {t("contacts.importFromFile")}
+                      <span className="pointer-events-none absolute bottom-full left-1/2 z-30 mb-2 w-64 -translate-x-1/2 rounded-md bg-secondary px-3 py-2 text-center text-xs font-medium leading-5 text-white opacity-0 shadow-lg transition-opacity group-hover:opacity-100">
+                        {t("contacts.importFromFileDescription")}
+                      </span>
+                    </h3>
+                    <p className="mt-4 max-w-[18rem] px-4 text-sm leading-6 text-[#667085]">
+                      {t("contacts.supportedImportFiles")}
+                    </p>
 
-                <form onSubmit={handleSubmit}>
-                    <div className="p-2">
-
-                    {/* ================= DROP ZONE ================= */}
-                    <div
+                    <div className="mt-auto w-full pt-4">
+                      <div
                         {...getRootProps()}
-                        className="border-2 border-dashed border-gray-300 rounded-lg p-6 text-center cursor-pointer mt-5"
-                        >
+                        className={`flex h-10 cursor-pointer items-center justify-between rounded-lg border bg-transparent px-4 text-sm font-semibold transition ${
+                          isDragActive
+                            ? "border-secondary bg-secondary/5 text-secondary"
+                            : "border-secondary/50 text-secondary hover:border-secondary hover:bg-secondary/5"
+                        }`}
+                      >
                         <input {...getInputProps()} />
-
-                        {isDragActive ? (
-                            <p className="text-sm text-blue-500">Drop the file here...</p>
-                        ) : (
-                            <p className="text-sm text-gray-500">
-                            Drag & drop file here, or click to browse
-                            </p>
-                        )}
-
-                        {selectedFilePath && (
-                            <p className="text-xs mt-2 text-green-600">
-                            Selected File: {selectedFilePath.name}
-                            </p>
-                        )}
-
-                        {selectedFilePathError && (
-                            <p className="text-xs text-red-500 mt-1">
-                            {selectedFilePathError}
-                            </p>
-                        )}
-                        </div>
-                    {/* ============================================== */}
-
-                    <div className="grid grid-cols-1 gap-7 mx-auto mt-10 w-12/12">
-                        <div style={{ display: "flex", alignItems: "center", width: "100%" }}>
-                        <hr style={{ flex: 1 }} />
-                        <span style={{ margin: "0 10px", fontSize: "12px" }}>OR</span>
-                        <hr style={{ flex: 1 }} />
-                        </div>
-                    </div>
-
-                    {errorMessage && (
-                        <span className="text-sm font-medium text-red-500">
-                        {errorMessage}
+                        <span className="max-w-[85%] truncate">
+                          {selectedFilePath?.name || t("buttons.chooseFile")}
                         </span>
-                    )}
+                        <ArrowUpTrayIcon className="h-5 w-5 shrink-0" />
+                      </div>
 
-                    <div className="grid grid-cols-2 gap-1 mx-auto mt-10 w-12/12">
-                        <Button type="button" onClick={downloadFile} title={t("contacts.downloadSampleFile")} />
-                        <Button title={t("buttons.quickImport")} type="submit" buttonColor="bg-blue-500" onClick={() => {setOpenQuickImport(true); setIsOpen(false);}} />
-                    </div>
+                      {selectedFilePathError && (
+                        <p className="mt-2 text-left text-xs text-red-500">{selectedFilePathError}</p>
+                      )}
+                      {errorMessage && (
+                        <p className="mt-2 text-left text-xs font-medium text-red-500">{errorMessage}</p>
+                      )}
 
+                      <button
+                        type="button"
+                        onClick={downloadFile}
+                        className="mt-3 text-xs font-medium text-secondary underline underline-offset-4"
+                      >
+                        {t("contacts.downloadSampleFile")}
+                      </button>
                     </div>
-                </form>
-                </Dialog.Panel>
+                  </section>
+
+                  <section className="flex min-h-[245px] flex-col items-center rounded-xl border border-gray-200 p-5 text-center">
+                    <div className="flex h-12 w-12 items-center justify-center rounded-full border border-secondary bg-transparent text-secondary">
+                      <ListBulletIcon className="h-6 w-6 text-secondary" />
+                    </div>
+                    <h3 className="mt-3 text-base font-semibold text-black">
+                      {t("contacts.quickImport")}
+                    </h3>
+                    <p className="mt-4 max-w-[18rem] px-8 text-sm leading-6 text-[#667085]">
+                      {t("contacts.quickImportDescription")}
+                    </p>
+
+                    <div className="mt-auto w-full pt-4">
+                      <button
+                        type="button"
+                        onClick={() => {
+                          setOpenQuickImport(true);
+                          setIsOpen(false);
+                        }}
+                        className="flex h-10 w-full items-center justify-between rounded-lg border border-secondary bg-transparent px-4 text-sm font-semibold text-secondary transition hover:bg-secondary/5"
+                      >
+                        <span>{t("contacts.quickImport")}</span>
+                        <ArrowRightIcon className="h-5 w-5" />
+                      </button>
+                      <div className="mt-3 h-5" />
+                    </div>
+                  </section>
+                </div>
+              </Dialog.Panel>
             </div>
-            </div>
+          </div>
         </Dialog>
-        </Transition>
+      </Transition>
         <QuickImportText isOpen={openQuickImport} setIsOpen={setOpenQuickImport} refreshData={refreshData} />
          <QuickImportDisplayText isOpen={openQuickImportDisplayText} setOpenQuickImportDisplayText={setOpenQuickImportDisplayText} refreshData={refreshData} contacts={contacts} setContacts={setContacts} setIsOpen={setIsOpen}/>
     </>

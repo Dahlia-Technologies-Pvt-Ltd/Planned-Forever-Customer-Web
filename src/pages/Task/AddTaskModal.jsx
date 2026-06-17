@@ -24,8 +24,8 @@ const AddTaskModal = ({ isOpen, setIsOpen, refreshData, data, setModalData }) =>
   const { t } = useTranslation("common");
 
   // Context
-  const { eventSelect, setBtnLoading, btnLoading, openSuccessModal, closeSuccessModel, allUsers, getUsers , userData} = useThemeContext();
- console.log("userData",userData)
+  const { eventSelect, eventDetail, setBtnLoading, btnLoading, openSuccessModal, closeSuccessModel, allUsers, getUsers, userData } =
+    useThemeContext();
   // useStates
   const [tags, setTags] = useState([]);
   const [files, setFiles] = useState([]);
@@ -49,6 +49,18 @@ const AddTaskModal = ({ isOpen, setIsOpen, refreshData, data, setModalData }) =>
   const [descriptionError, setDescriptionError] = useState("");
   // const [collabratorsError, setCollabratorsError] = useState("");
 
+  const isValidTaskDateRange = startDate && dueDate ? moment(startDate).isSameOrBefore(moment(dueDate)) : true;
+  const eventWindowStart = eventDetail?.start_date ? moment.unix(eventDetail.start_date).subtract(120, "hours") : null;
+  const eventWindowEnd = eventDetail?.end_date ? moment.unix(eventDetail.end_date).add(120, "hours") : null;
+  const eventWindowStartValue = eventWindowStart ? eventWindowStart.format("YYYY-MM-DDTHH:mm") : "";
+  const eventWindowEndValue = eventWindowEnd ? eventWindowEnd.format("YYYY-MM-DDTHH:mm") : "";
+
+  const isWithinEventWindow = (value) => {
+    if (!value || !eventWindowStart || !eventWindowEnd) return true;
+    const current = moment(value);
+    return current.isBetween(eventWindowStart, eventWindowEnd, undefined, "[]");
+  };
+
   // Handle Image Change
   const handleImageChange = async (event) => {
     const file = event.target.files[0];
@@ -60,11 +72,12 @@ const AddTaskModal = ({ isOpen, setIsOpen, refreshData, data, setModalData }) =>
         formData.append("file", file);
 
         const res = await ApiServices.contact.contactProfileUpload(formData);
-        const { data, message } = res;
+        const { code, data } = res;
 
-        if (res.code === 200) {
+        if (code === 200) {
           setTaskFile(file);
-          setFiles((prevFiles) => [...prevFiles, data]);
+          setFiles(data ? [data] : []);
+          setTaskFileError("");
           event.target.value = null;
         }
       } catch (err) {}
@@ -76,6 +89,7 @@ const AddTaskModal = ({ isOpen, setIsOpen, refreshData, data, setModalData }) =>
   // Handle cancel selected image
   const handleCrossClick = () => {
     setTaskFile(null);
+    setFiles([]);
   };
 
   // Vaidations
@@ -101,6 +115,19 @@ const AddTaskModal = ({ isOpen, setIsOpen, refreshData, data, setModalData }) =>
       setDueDateError("Required");
       isValidData = false;
     }
+    if (startDate !== "" && dueDate !== "" && !isValidTaskDateRange) {
+      setStartDateError(" Start date must be before end date");
+      setDueDateError(" End date must be after start date");
+      isValidData = false;
+    }
+    if (startDate !== "" && !isWithinEventWindow(startDate)) {
+      setStartDateError(" Must be within 120 hours before event start and 120 hours after event end");
+      isValidData = false;
+    }
+    if (dueDate !== "" && !isWithinEventWindow(dueDate)) {
+      setDueDateError(" Must be within 120 hours before event start and 120 hours after event end");
+      isValidData = false;
+    }
     if (priority === null) {
       setPriorityError("Required");
       isValidData = false;
@@ -123,6 +150,7 @@ const AddTaskModal = ({ isOpen, setIsOpen, refreshData, data, setModalData }) =>
           assign_by: userData?.uuid,
           start_date: toUTCUnixTimestamp(startDate),
           end_date: toUTCUnixTimestamp(dueDate),
+          status: data?.status || "pending",
           priority: priority?.label,
           tags: tags,
           attachments: files,
@@ -165,7 +193,8 @@ const AddTaskModal = ({ isOpen, setIsOpen, refreshData, data, setModalData }) =>
     setTitleError("");
     setDescription("");
     setTaskFile(null);
-    setCollabrators("");
+    setAssignTo(null);
+    setCollabrators(null);
     setDueDateError("");
     // setAssignToError("");
     setTaskFileError("");
@@ -188,16 +217,19 @@ const AddTaskModal = ({ isOpen, setIsOpen, refreshData, data, setModalData }) =>
   useEffect(() => {
     if (data !== null) {
       setTags(data?.tags);
+      setFiles(data?.attachments || []);
       setTitle(data?.title);
       setDescription(data?.description);
       setTaskFile(data?.attachments[0]);
-      setDueDate(moment.unix(data?.end_date).format("YYYY-MM-DD HH:mm"));
-      setStartDate(moment.unix(data?.start_date).format("YYYY-MM-DD HH:mm"));
+      setDueDate(moment.unix(data?.end_date).format("YYYY-MM-DDTHH:mm"));
+      setStartDate(moment.unix(data?.start_date).format("YYYY-MM-DDTHH:mm"));
       setPriority({ label: data?.priority, value: data?.priority ? data.priority.toLowerCase() : "" });
       setAssignTo({ label: data?.assign_to?.first_name + " " + data?.assign_to?.last_name, value: data?.assign_to?.uuid });
       setCollabrators({ label: data?.assign_by?.first_name + " " + data?.assign_by?.last_name, value: data?.assign_by?.uuid });
+    } else if (isOpen) {
+      clearAllData();
     }
-  }, [isOpen]);
+  }, [isOpen, data]);
 
   useEffect(() => {
     if (isOpen) {
@@ -240,7 +272,7 @@ const AddTaskModal = ({ isOpen, setIsOpen, refreshData, data, setModalData }) =>
                     <XMarkIcon onClick={closeModal} className="h-8 w-8 cursor-pointer text-info-color" />
                   </div>
 
-                  <form onSubmit={handleSubmit}>
+                  <form onSubmit={handleSubmit} className="[&_.label]:text-xs [&_.label]:font-medium [&_.css-b62m3t-container]:text-sm [&_.css-13cymwt-control]:min-h-[36px] [&_.css-13cymwt-control]:text-sm [&_.css-13cymwt-control]:py-0 [&_.css-t3ipsp-control]:min-h-[36px] [&_.css-t3ipsp-control]:text-sm [&_.css-t3ipsp-control]:py-0 [&_.css-hlgwow]:min-h-[34px] [&_.css-hlgwow]:py-0 [&_.css-19bb58m]:my-0 [&_.css-1dimb5e-singleValue]:text-sm [&_.css-1dimb5e-singleValue]:leading-5 [&_.css-1jqq78o-placeholder]:text-sm [&_.css-1jqq78o-placeholder]:leading-5 [&_input]:h-9 [&_input]:text-sm [&_textarea]:text-sm">
                     <div className="h-[600px] space-y-7 overflow-y-auto p-2 md:h-[400px] lg:h-[400px] xl:h-[500px] 2xl:h-[600px]">
                       <h2 className="label text-secondary">{t("headings.basicInfo")}</h2>
 
@@ -290,9 +322,17 @@ const AddTaskModal = ({ isOpen, setIsOpen, refreshData, data, setModalData }) =>
                           placeholder="Select Start Date"
                           value={startDate}
                           error={startDateError}
+                          min={eventWindowStartValue || undefined}
+                          max={eventWindowEndValue || undefined}
                           onChange={(e) => {
                             setStartDate(e.target.value);
                             setStartDateError("");
+                            if (dueDateError === " End date must be after start date") {
+                              setDueDateError("");
+                            }
+                            if (dueDateError === " Must be within 120 hours before event start and 120 hours after event end") {
+                              setDueDateError("");
+                            }
                           }}
                         />
 
@@ -303,9 +343,17 @@ const AddTaskModal = ({ isOpen, setIsOpen, refreshData, data, setModalData }) =>
                           placeholder="Select Due Date"
                           value={dueDate}
                           error={dueDateError}
+                          min={startDate || eventWindowStartValue || undefined}
+                          max={eventWindowEndValue || undefined}
                           onChange={(e) => {
                             setDueDate(e.target.value);
                             setDueDateError("");
+                            if (startDateError === " Start date must be before end date") {
+                              setStartDateError("");
+                            }
+                            if (startDateError === " Must be within 120 hours before event start and 120 hours after event end") {
+                              setStartDateError("");
+                            }
                           }}
                         />
                       </div>

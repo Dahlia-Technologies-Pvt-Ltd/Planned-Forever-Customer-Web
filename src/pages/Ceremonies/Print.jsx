@@ -25,7 +25,7 @@ const CeremoniesPrint = () => {
     t("ceremonies.endDateAndTime"),
     t("ceremonies.personIncharge"),
     t("ceremonies.countryCode"),
-    t("Number"),
+    t("ceremonies.number"),
   ];
   const TABLE_HEAD_Ceremonies_BY_GIFT = [
     t("ceremonies.ceremonyName"),
@@ -36,8 +36,8 @@ const CeremoniesPrint = () => {
     t("ceremonies.endDateAndTime"),
     t("ceremonies.personIncharge"),
     t("ceremonies.countryCode"),
-    t("Number"),
-    "Gifts",
+    t("ceremonies.number"),
+    t("ceremonies.gift"),
   ];
   const TABLE_HEAD_Ceremonies_BY_Samagri = [
     t("ceremonies.ceremonyName"),
@@ -48,8 +48,8 @@ const CeremoniesPrint = () => {
     t("ceremonies.endDateAndTime"),
     t("ceremonies.personIncharge"),
     t("ceremonies.countryCode"),
-    t("Number"),
-    "Samagri",
+    t("ceremonies.number"),
+    t("ceremonies.samagri"),
   ];
   const TABLE_HEAD_Ceremonies_BY_BOTH = [
     t("ceremonies.ceremonyName"),
@@ -61,8 +61,8 @@ const CeremoniesPrint = () => {
     t("ceremonies.personIncharge"),
     t("ceremonies.countryCode"),
     t("ceremonies.number"),
-    "Gifts",
-    "Samagri",
+    t("ceremonies.gift"),
+    t("ceremonies.samagri"),
   ];
 
   // useContext
@@ -135,7 +135,7 @@ const CeremoniesPrint = () => {
             <tr>
               {TABLE_HEAD_Ceremonies_BY_GIFT.map((head) => (
                 <th className="p-4 bg-white border-b border-gray-100 first:pl-6" key={head}>
-                  <p className="text-xs font-semibold leading-5 whitespace-nowrap cursor-pointer font-inter 3xl:text-sm">{head}</p>
+                  <p className="text-sm font-semibold leading-5 whitespace-nowrap cursor-pointer font-inter 3xl:text-sm">{head}</p>
                 </th>
               ))}
             </tr>
@@ -143,7 +143,7 @@ const CeremoniesPrint = () => {
             <tr>
               {TABLE_HEAD_Ceremonies_BY_Samagri.map((head) => (
                 <th className="p-4 bg-white border-b border-gray-100 first:pl-6" key={head}>
-                  <p className="text-xs font-semibold leading-5 whitespace-nowrap cursor-pointer font-inter 3xl:text-sm">{head}</p>
+                  <p className="text-sm font-semibold leading-5 whitespace-nowrap cursor-pointer font-inter 3xl:text-sm">{head}</p>
                 </th>
               ))}
             </tr>
@@ -151,7 +151,7 @@ const CeremoniesPrint = () => {
             <tr>
               {TABLE_HEAD_Ceremonies_BY_BOTH.map((head) => (
                 <th className="p-4 bg-white border-b border-gray-100 first:pl-6" key={head}>
-                  <p className="text-xs font-semibold leading-5 whitespace-nowrap cursor-pointer font-inter 3xl:text-sm">{head}</p>
+                  <p className="text-sm font-semibold leading-5 whitespace-nowrap cursor-pointer font-inter 3xl:text-sm">{head}</p>
                 </th>
               ))}
             </tr>
@@ -159,7 +159,7 @@ const CeremoniesPrint = () => {
             <tr>
               {TABLE_HEAD_Ceremonies.map((head) => (
                 <th className="p-4 bg-white border-b border-gray-100 first:pl-6" key={head}>
-                  <p className="text-xs font-semibold leading-5 whitespace-nowrap cursor-pointer font-inter 3xl:text-sm">{head}</p>
+                  <p className="text-sm font-semibold leading-5 whitespace-nowrap cursor-pointer font-inter 3xl:text-sm">{head}</p>
                 </th>
               ))}
             </tr>
@@ -176,35 +176,35 @@ const CeremoniesPrint = () => {
             allCeremonyList.map((item, index) => (
               <tr key={item?.id}>
                 <td className="py-3 pr-4 pl-6">
-                  <p className="text-xs font-normal text-primary-color-200 3xl:text-sm">{item?.name || "-"}</p>
+                  <p className="text-sm font-normal text-primary-color-200 3xl:text-sm">{item?.name || "-"}</p>
                 </td>
                 <td className="py-3 pr-3 pl-4 3xl:px-4">
-                  <p className="text-xs font-normal text-primary-color-200 3xl:text-sm">{item?.venue?.name || "-"}</p>
+                  <p className="text-sm font-normal text-primary-color-200 3xl:text-sm">{item?.venue?.name || "-"}</p>
                 </td>
                 <td className="py-3 pr-3 pl-4 3xl:px-4">
-                  <p className="text-xs font-normal text-primary-color-200 3xl:text-sm">{item?.held_at?.name || "-"}</p>
+                  <p className="text-sm font-normal text-primary-color-200 3xl:text-sm">{item?.held_at?.name || "-"}</p>
                 </td>
                 <td className="py-3 pr-3 pl-4 3xl:px-4">
-                  <p className="text-xs font-normal text-primary-color-200 3xl:text-sm">{item?.dress_code || "-"}</p>
+                  <p className="text-sm font-normal text-primary-color-200 3xl:text-sm">{item?.dress_code || "-"}</p>
                 </td>
                 <td className="py-3 pr-3 pl-4 3xl:px-4">
-                  <p className="text-xs font-normal text-primary-color-200 3xl:text-sm">
+                  <p className="text-sm font-normal text-primary-color-200 3xl:text-sm">
                     {moment.unix(item?.start_date).format("D MMM YYYY h:mm A") || "-"}
                   </p>
                 </td>
                 <td className="py-3 pr-3 pl-4 3xl:px-4">
-                  <p className="text-xs font-normal text-primary-color-200 3xl:text-sm">
+                  <p className="text-sm font-normal text-primary-color-200 3xl:text-sm">
                     {moment.unix(item?.end_date).format("D MMM YYYY h:mm A") || "-"}
                   </p>
                 </td>
                 <td className="py-3 pr-3 pl-4 3xl:px-4">
-                  <p className="text-xs font-normal text-primary-color-200 3xl:text-sm">{item?.incharge_name || "-"}</p>
+                  <p className="text-sm font-normal text-primary-color-200 3xl:text-sm">{item?.incharge_name || "-"}</p>
                 </td>
                 <td className="py-3 pr-3 pl-4 3xl:px-4">
-                  <p className="text-xs font-normal text-primary-color-200 3xl:text-sm">{item?.incharge_contact_number?.code || "-"}</p>
+                  <p className="text-sm font-normal text-primary-color-200 3xl:text-sm">{item?.incharge_contact_number?.code || "-"}</p>
                 </td>
                 <td className="py-3 pr-3 pl-4 3xl:px-4">
-                  <p className="text-xs font-normal text-primary-color-200 3xl:text-sm">{item?.incharge_contact_number?.phone_number || "-"}</p>
+                  <p className="text-sm font-normal text-primary-color-200 3xl:text-sm">{item?.incharge_contact_number?.phone_number || "-"}</p>
                 </td>
                 {isCheckedGift && (
                   <td className="py-3 pr-3 pl-4 3xl:px-4">
@@ -222,18 +222,18 @@ const CeremoniesPrint = () => {
                         {" "}
                         {item?.samagri?.map((samagriItem) => (
                           <div key={samagriItem.id}>
-                            <p className="text-xs font-normal text-primary-color-200 3xl:text-sm">{samagriItem.title || "-"}</p>
+                            <p className="text-sm font-normal text-primary-color-200 3xl:text-sm">{samagriItem.title || "-"}</p>
                             {samagriItem?.items?.map((samagriItems) => (
                               <div key={samagriItems.id} className="flex gap-x-1 items-center">
-                                <p className="text-xs font-normal text-primary-color-200 3xl:text-sm">{samagriItems?.qty || "-"}</p>
-                                <p className="text-xs font-normal text-primary-color-200 3xl:text-sm">{samagriItems?.name || "N"}</p>
+                                <p className="text-sm font-normal text-primary-color-200 3xl:text-sm">{samagriItems?.qty || "-"}</p>
+                                <p className="text-sm font-normal text-primary-color-200 3xl:text-sm">{samagriItems?.name || "N"}</p>
                               </div>
                             ))}
                           </div>
                         ))}{" "}
                       </>
                     ) : (
-                      <p className="text-xs font-normal text-primary-color-200 3xl:text-sm">-</p>
+                      <p className="text-sm font-normal text-primary-color-200 3xl:text-sm">-</p>
                     )}
                   </td>
                 )}
@@ -257,17 +257,17 @@ const CeremoniesPrint = () => {
       {(userData?.role === "superAdmin" || userData?.role?.permissions?.includes("Ceremonies")) && (
         <div onClick={() => navigate(CEREMONIES)} className={`flex mb-5 text-base font-medium cursor-pointer text-secondary hover:underline`}>
           <ArrowLeftIcon className="mr-2 w-4 h-6 text-secondary" />
-          <span> Back to Ceremonies list</span>
+          <span> {t("ceremonies.backToCeremonies")}</span>
         </div>
       )}
       <div className="card min-h-[76vh]">
-        <h3 className="heading">Print Ceremonies</h3>
+        <h3 className="heading">{t("ceremonies.printCeremonies")}</h3>
         <div className="grid grid-cols-6 gap-8 mt-5 xl:grid-cols-12">
           {/* <div className="col-span-3">
             <Dropdown
               isRequired
               withoutTitle
-              placeholder="Select Event Type"
+            placeholder={t("ceremonies.selectEventType")}
               options={allEvents}
               value={selectedEventItem}
               onChange={(e) => {
@@ -277,8 +277,8 @@ const CeremoniesPrint = () => {
             />
           </div> */}
           <div className="flex col-span-4 gap-x-12 items-center">
-            <h3 className="text-base font-medium">{t("ceremonies.includes")}:</h3>
-            <div className="flex gap-x-2 items-center pl-2">
+            {/* <h3 className="text-base font-medium">{t("ceremonies.includes")}:</h3> */}
+            {/* <div className="flex gap-x-2 items-center pl-2">
               <input
                 onChange={handleCheckboxChangeGift}
                 type="checkbox"
@@ -303,7 +303,7 @@ const CeremoniesPrint = () => {
               <label htmlFor="addressCheckbox" className="label">
                 {t("ceremonies.samagri")}
               </label>
-            </div>
+            </div> */}
           </div>
         </div>
 

@@ -42,6 +42,7 @@ const AllocateHotelRoomModal = ({ label, isOpen, setIsOpen, refreshData, data, s
   const [roomType, setRoomType] = useState("");
   const [allRoomType, setAllRoomType] = useState([]);
   const [allRooms, setAllRooms] = useState([]);
+  const [selectedHotelWindow, setSelectedHotelWindow] = useState({ checkIn: null, checkOut: null });
 
   const [occupantAdult, setOccupantsAdult] = useState("");
   const [occupantChildren, setOccupantChildren] = useState("");
@@ -78,9 +79,22 @@ const AllocateHotelRoomModal = ({ label, isOpen, setIsOpen, refreshData, data, s
     allocatedMembers: [],
   });
 
+  const hotelWindowStart = selectedHotelWindow.checkIn ? moment.unix(selectedHotelWindow.checkIn).subtract(24, "hours") : null;
+  const hotelWindowEnd = selectedHotelWindow.checkOut ? moment.unix(selectedHotelWindow.checkOut).add(24, "hours") : null;
+  const hotelWindowStartValue = hotelWindowStart ? hotelWindowStart.format("YYYY-MM-DDTHH:mm") : "";
+  const hotelWindowEndValue = hotelWindowEnd ? hotelWindowEnd.format("YYYY-MM-DDTHH:mm") : "";
+
+  const isWithinHotelWindow = (value) => {
+    if (!value || !hotelWindowStart || !hotelWindowEnd) return true;
+    const current = moment(value);
+    return current.isBetween(hotelWindowStart, hotelWindowEnd, undefined, "[]");
+  };
+
   const isValidForm = () => {
     let isValidData = true;
-    if (guestName === "") {
+    setErrorMessage("");
+
+    if (!guestName) {
       setGuestNameError(" Required");
       isValidData = false;
     }
@@ -92,12 +106,37 @@ const AllocateHotelRoomModal = ({ label, isOpen, setIsOpen, refreshData, data, s
       setCheckOutDateError("Required");
       isValidData = false;
     }
-    if (hotel === null) {
+    if (!hotel) {
       setHotelError(" Required");
       isValidData = false;
     }
-    if (roomType === "") {
+    if (!roomType) {
       setRoomTypeError(" Required");
+      isValidData = false;
+    }
+
+    if (checkInDate && !isWithinHotelWindow(checkInDate)) {
+      setCheckInDateError(" Must be within 24 hours before hotel check in and 24 hours after hotel check out");
+      isValidData = false;
+    } else if (checkInDate !== "") {
+      setCheckInDateError("");
+    }
+
+    if (checkOutDate && !isWithinHotelWindow(checkOutDate)) {
+      setCheckOutDateError(" Must be within 24 hours before hotel check in and 24 hours after hotel check out");
+      isValidData = false;
+    } else if (checkOutDate !== "") {
+      setCheckOutDateError("");
+    }
+
+    if (checkInDate && checkOutDate && moment(checkInDate).isAfter(moment(checkOutDate))) {
+      setCheckInDateError(" Check in must be before Check out");
+      setCheckOutDateError(" Check out must be after Check in");
+      isValidData = false;
+    }
+
+    if (data === null && !familyAllocationStatus.allAllocated && Object.keys(roomAllocations).length === 0) {
+      setErrorMessage("Please allocate at least one room before saving");
       isValidData = false;
     }
 
@@ -320,6 +359,7 @@ const AllocateHotelRoomModal = ({ label, isOpen, setIsOpen, refreshData, data, s
       unallocatedMembers: [],
       allocatedMembers: [],
     });
+    setSelectedHotelWindow({ checkIn: null, checkOut: null });
   };
 
   // Close Modal
@@ -344,13 +384,17 @@ const AllocateHotelRoomModal = ({ label, isOpen, setIsOpen, refreshData, data, s
         label: data?.hotel?.name,
         value: data?.hotel?.id,
       });
+      setSelectedHotelWindow({
+        checkIn: data?.hotel?.check_in || null,
+        checkOut: data?.hotel?.check_out || null,
+      });
       setEvent({
         label: data?.event?.name,
         value: data?.event?.id,
       });
       setHotelRoomNote(data?.notes);
-      setCheckInDate(moment.unix(data?.check_in).format("YYYY-MM-DD HH:mm"));
-      setCheckOutDate(moment.unix(data?.check_out).format("YYYY-MM-DD HH:mm"));
+      setCheckInDate(moment.unix(data?.check_in).format("YYYY-MM-DDTHH:mm"));
+      setCheckOutDate(moment.unix(data?.check_out).format("YYYY-MM-DDTHH:mm"));
       setHasArrived(data?.hasArrived);
 
       // Set room type from the room data
@@ -414,6 +458,54 @@ const AllocateHotelRoomModal = ({ label, isOpen, setIsOpen, refreshData, data, s
       });
     }
   }, [guestName, withOutformattedContact]);
+
+  useEffect(() => {
+    if (!isOpen || !hotel?.value) {
+      if (!hotel?.value) {
+        setSelectedHotelWindow({ checkIn: null, checkOut: null });
+      }
+      return;
+    }
+
+    ApiServices.hotelRoom
+      .getHotelById(hotel.value)
+      .then((res) => {
+        const hotelData = res?.data?.data || res?.data?.hotel || null;
+        const nextCheckIn = hotelData?.check_in || null;
+        const nextCheckOut = hotelData?.check_out || null;
+
+        setSelectedHotelWindow({
+          checkIn: nextCheckIn,
+          checkOut: nextCheckOut,
+        });
+
+        if (nextCheckIn && (!data || data?.hotel?.id !== hotel.value)) {
+          setCheckInDate(moment.unix(nextCheckIn).format("YYYY-MM-DDTHH:mm"));
+        }
+
+        if (nextCheckOut && (!data || data?.hotel?.id !== hotel.value)) {
+          setCheckOutDate(moment.unix(nextCheckOut).format("YYYY-MM-DDTHH:mm"));
+        }
+      })
+      .catch(() => {
+        setSelectedHotelWindow({ checkIn: null, checkOut: null });
+      });
+  }, [hotel?.value, isOpen]);
+
+  useEffect(() => {
+    if (!hotelWindowStart || !hotelWindowEnd) return;
+
+    const defaultCheckIn = selectedHotelWindow.checkIn ? moment.unix(selectedHotelWindow.checkIn).format("YYYY-MM-DDTHH:mm") : "";
+    const defaultCheckOut = selectedHotelWindow.checkOut ? moment.unix(selectedHotelWindow.checkOut).format("YYYY-MM-DDTHH:mm") : "";
+
+    if (checkInDate && !isWithinHotelWindow(checkInDate)) {
+      setCheckInDate(defaultCheckIn);
+    }
+
+    if (checkOutDate && !isWithinHotelWindow(checkOutDate)) {
+      setCheckOutDate(defaultCheckOut);
+    }
+  }, [selectedHotelWindow.checkIn, selectedHotelWindow.checkOut, hotelWindowStartValue, hotelWindowEndValue]);
 
   // Automatically populate occupant fields based on selected contact
   useEffect(() => {
@@ -640,7 +732,7 @@ const AllocateHotelRoomModal = ({ label, isOpen, setIsOpen, refreshData, data, s
                 leaveFrom="opacity-100 scale-100"
                 leaveTo="opacity-0 scale-75"
               >
-                <Dialog.Panel className="relative w-full max-w-5xl overflow-hidden rounded-2xl bg-white p-8 shadow-xl transition-all">
+                <Dialog.Panel className="relative w-full max-w-4xl overflow-hidden rounded-2xl bg-white p-8 shadow-xl transition-all">
                   <div className="mb-5 flex items-center justify-between">
                     <Dialog.Title as="h3" className="font-poppins text-lg font-semibold leading-7 text-secondary-color">
                       {data === null ? t("hotelRoom.allocateHotelRoom") : t("hotelRoom.updateAllocateHotelRoom")}
@@ -670,7 +762,7 @@ const AllocateHotelRoomModal = ({ label, isOpen, setIsOpen, refreshData, data, s
                     </div>
                   )}
 
-                  <form onSubmit={handleSubmit} className="grid grid-cols-12 gap-5">
+                  <form onSubmit={handleSubmit} className="grid grid-cols-12 gap-5 [&_.label]:text-xs [&_.label]:font-medium [&_.css-b62m3t-container]:text-sm [&_.css-13cymwt-control]:min-h-[36px] [&_.css-13cymwt-control]:text-sm [&_.css-13cymwt-control]:py-0 [&_.css-t3ipsp-control]:min-h-[36px] [&_.css-t3ipsp-control]:text-sm [&_.css-t3ipsp-control]:py-0 [&_.css-hlgwow]:min-h-[34px] [&_.css-hlgwow]:py-0 [&_.css-19bb58m]:my-0 [&_.css-1dimb5e-singleValue]:text-sm [&_.css-1dimb5e-singleValue]:leading-5 [&_.css-1jqq78o-placeholder]:text-sm [&_.css-1jqq78o-placeholder]:leading-5 [&_input]:h-9 [&_input]:text-sm [&_textarea]:text-sm">
                     <div className="col-span-7 h-[600px] overflow-y-auto p-2 md:h-[400px] lg:h-[400px] xl:h-[500px] 2xl:h-[600px]">
                       <div className="mb-5 ltr:text-left rtl:text-right">
                         <div>
@@ -688,6 +780,7 @@ const AllocateHotelRoomModal = ({ label, isOpen, setIsOpen, refreshData, data, s
                           onChange={(e) => {
                             setGuestName(e);
                             setGuestNameError("");
+                            setErrorMessage("");
                           }}
                         />
                         <Dropdown
@@ -700,6 +793,7 @@ const AllocateHotelRoomModal = ({ label, isOpen, setIsOpen, refreshData, data, s
                           onChange={(e) => {
                             setHotel(e);
                             setHotelError("");
+                            setErrorMessage("");
                           }}
                         />
                       </div>
@@ -711,9 +805,16 @@ const AllocateHotelRoomModal = ({ label, isOpen, setIsOpen, refreshData, data, s
                           placeholder="Select Check-in-Date"
                           value={checkInDate}
                           error={checkInDateError}
+                          min={hotelWindowStartValue}
+                          max={hotelWindowEndValue}
+                          disabled={!hotel}
                           onChange={(e) => {
                             setCheckInDate(e.target.value);
                             setCheckInDateError("");
+                            setErrorMessage("");
+                            if (checkOutDateError === " Check out must be after Check in") {
+                              setCheckOutDateError("");
+                            }
                           }}
                         />
 
@@ -724,11 +825,25 @@ const AllocateHotelRoomModal = ({ label, isOpen, setIsOpen, refreshData, data, s
                           placeholder="Select Check-out Date"
                           value={checkOutDate}
                           error={checkOutDateError}
+                          min={hotelWindowStartValue}
+                          max={hotelWindowEndValue}
+                          disabled={!hotel}
                           onChange={(e) => {
                             setCheckOutDate(e.target.value);
                             setCheckOutDateError("");
+                            setErrorMessage("");
+                            if (checkInDateError === " Check in must be before Check out") {
+                              setCheckInDateError("");
+                            }
                           }}
                         />
+                        {/* {hotelWindowStartValue && hotelWindowEndValue && (
+                          <div className="col-span-2 -mt-3 text-left text-xs text-gray-500">
+                            Check in and check out can only be selected from{" "}
+                            {moment(hotelWindowStartValue).format("DD MMM YYYY hh:mm A")} to{" "}
+                            {moment(hotelWindowEndValue).format("DD MMM YYYY hh:mm A")} based on hotel information.
+                          </div>
+                        )} */}
 
                         <Dropdown
                           isRequired
@@ -740,6 +855,7 @@ const AllocateHotelRoomModal = ({ label, isOpen, setIsOpen, refreshData, data, s
                           onChange={(e) => {
                             setRoomType(e);
                             setRoomTypeError("");
+                            setErrorMessage("");
                           }}
                         />
                         <div></div>
@@ -890,6 +1006,7 @@ const AllocateHotelRoomModal = ({ label, isOpen, setIsOpen, refreshData, data, s
                             setHasArrived(e.target.checked);
                             setHasArrivedError("");
                           }}
+                          className="!h-4 !w-4 rounded border-gray-300 text-secondary-color focus:ring-secondary-color"
                         />
                         <label htmlFor="remember" className="label ps-2">
                           {t("hotelRoom.hasCheckedIn")}

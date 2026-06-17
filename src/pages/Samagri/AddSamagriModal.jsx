@@ -1,4 +1,4 @@
-import React from "react";
+﻿import React from "react";
 import ApiServices from "../../api/services";
 import Input from "../../components/common/Input";
 import Button from "../../components/common/Button";
@@ -515,7 +515,7 @@ const onDrop = useCallback((acceptedFiles) => {
       setSelectedFilePath(file);
       setSelectedFilePathError(null);
 
-      // 🔥 OCR / PDF / Excel / Word processing
+      // ðŸ”¥ OCR / PDF / Excel / Word processing
       handleFile(file);
   }
 }, []);
@@ -559,17 +559,18 @@ const { getRootProps, getInputProps, isDragActive } = useDropzone({
                 leaveFrom="opacity-100 scale-100"
                 leaveTo="opacity-0 scale-75"
               >
-                <Dialog.Panel className="w-full max-w-5xl overflow-hidden rounded-2xl bg-white p-8 shadow-xl transition-all">
-                  <div className="mb-10 flex items-center justify-between">
-                    <Dialog.Title as="h3" className="font-poppins text-lg font-semibold leading-7 text-secondary-color">
+                <Dialog.Panel className="w-full max-w-3xl overflow-hidden rounded-2xl bg-white p-3 shadow-xl transition-all xl:max-w-4xl xl:p-4">
+                  <div className="mb-5 flex items-center justify-between">
+                    <Dialog.Title as="h3" className="font-poppins text-sm font-semibold leading-6 text-secondary-color xl:text-[15px]">
                       {data === null ? t("samagri.addNewSamagri") : t("samagri.updateSamagri")}
                     </Dialog.Title>
-                    <XMarkIcon onClick={closeModal} className="h-8 w-8 cursor-pointer text-info-color" />
+                    <XMarkIcon onClick={closeModal} className="h-5 w-5 cursor-pointer text-info-color" />
                   </div>
 
-                  <form onSubmit={handleSubmit}>
-                    <div className=" h-[600px] overflow-y-auto p-2 md:h-[400px] lg:h-[400px] xl:h-[500px] 2xl:h-[610px]">
-                      <div className="grid grid-cols-1 gap-5">
+                  <form onSubmit={handleSubmit} className="[&_.label]:text-xs [&_.label]:font-medium [&_input]:h-9 [&_input]:min-h-[36px] [&_input]:text-sm [&_input]:py-1 [&_input[type='datetime-local']]:h-9 [&_textarea]:text-sm [&_.css-b62m3t-container]:text-sm [&_.css-13cymwt-control]:h-9 [&_.css-13cymwt-control]:min-h-[36px] [&_.css-13cymwt-control]:py-0 [&_.css-t3ipsp-control]:h-9 [&_.css-t3ipsp-control]:min-h-[36px] [&_.css-t3ipsp-control]:py-0 [&_.css-hlgwow]:h-9 [&_.css-hlgwow]:min-h-[36px] [&_.css-hlgwow]:py-0 [&_.css-hlgwow]:px- [&_.css-1jqq78o-placeholder]:text-sm [&_.css-1jqq78o-placeholder]:leading-none [&_.css-1dimb5e-singleValue]:text-sm [&_.css-1dimb5e-singleValue]:leading-none [&_.css-1wy0on6]:h-9 [&_.css-19bb58m]:my-0">
+                    <div className="h-[360px] overflow-y-auto p-1 md:h-[350px] lg:h-[370px] xl:h-[400px] 2xl:h-[460px]">
+                      <div className="grid grid-cols-1 gap-4">
+                        <div className="[&_input]:h-10 [&_input]:text-sm [&_input]:leading-5 [&_textarea]:text-sm [&_textarea]:leading-5 [&_label]:text-sm">
                         <Input
                           isRequired
                           label={t("samagri.samagriFor")}
@@ -584,6 +585,7 @@ const { getRootProps, getInputProps, isDragActive } = useDropzone({
                         />
                       
 
+                        <div className="[&_label]:text-sm [&_.css-b62m3t-container]:text-sm [&_.css-13cymwt-control]:min-h-[40px] [&_.css-13cymwt-control]:text-sm [&_.css-t3ipsp-control]:min-h-[40px] [&_.css-t3ipsp-control]:text-sm [&_.css-1dimb5e-singleValue]:text-sm [&_.css-1jqq78o-placeholder]:text-sm">
                         <Dropdown
                           title={t("samagri.ceremonyName")}
                           placeholder="Select Ceremony"
@@ -596,7 +598,9 @@ const { getRootProps, getInputProps, isDragActive } = useDropzone({
                           }}
                           isRequired
                         />
+                        </div>
 
+                        <div className="[&_label]:text-sm [&_.css-b62m3t-container]:text-sm [&_.css-13cymwt-control]:min-h-[40px] [&_.css-13cymwt-control]:text-sm [&_.css-t3ipsp-control]:min-h-[40px] [&_.css-t3ipsp-control]:text-sm [&_.css-1dimb5e-singleValue]:text-sm [&_.css-1jqq78o-placeholder]:text-sm">
                         <Dropdown
                           title={t("samagri.handoverName")}
                           placeholder={t("samagri.handoverName")}
@@ -606,13 +610,14 @@ const { getRootProps, getInputProps, isDragActive } = useDropzone({
                             setUser(e);
                           }}
                         />
+                        </div>
 
                        
 
                         <Input
                           isRequired
                           type="datetime-local"
-                          label={t("samagri.handoverDate")}
+                          label="Handover Date and Time"
                           placeholder="Select Start Date & Time"
                           value={handoverDate ? handoverDate : ""}
                           error={ceremonyDateError}
@@ -622,21 +627,21 @@ const { getRootProps, getInputProps, isDragActive } = useDropzone({
                           }}
                          
                         />
+                        </div>
 
                         <div className="ltr:text-left rtl:text-right">
-                          <div className="label">Samagri Items</div>
+                          <div className="label text-xs xl:text-sm">Samagri Items</div>
                           <div className="w-full flex items-start gap-4">
-                            {/* Upload box */}
                             <div
                               {...getRootProps()}
-                              className="border-2 border-dashed border-gray-300 rounded-lg p-6 text-center cursor-pointer mt-5 max-w-xl flex-1"
+                              className="mt-4 max-w-xl flex-1 cursor-pointer rounded-lg border-2 border-dashed border-gray-300 p-3 text-center"
                             >
                               <input {...getInputProps()} />
 
                               {isDragActive ? (
-                                <p className="text-sm text-blue-500">Drop the file here...</p>
+                                <p className="text-xs text-blue-500">Drop the file here...</p>
                               ) : (
-                                <p className="text-sm text-gray-500">
+                                <p className="text-xs text-gray-500">
                                   Drag & drop file here, or click to browse
                                 </p>
                               )}
@@ -652,16 +657,15 @@ const { getRootProps, getInputProps, isDragActive } = useDropzone({
                                       e.stopPropagation();
                                       setItemFile(null);
                                     }}
-                                    className="text-red-500 text-xs ml-2"
+                                    className="text-red-500 text-[11px] ml-2"
                                   >
-                                    ✕
+                                    âœ•
                                   </button>
                                 </div>
                               )}
                             </div>
 
-                            {/* Download button */}
-                            <div className="mt-8 flex justify-end items-center">
+                            <div className="mt-6 flex items-center justify-end">
                               <Button
                                 type="button"
                                 onClick={downloadFile}
@@ -672,7 +676,7 @@ const { getRootProps, getInputProps, isDragActive } = useDropzone({
 
                           <div>
                             {items.map((item, index) => (
-                              <div key={index} className="mb-2 mt-3 flex w-full flex-wrap items-center gap-y-3 space-x-2">
+                              <div key={index} className="mb-2 mt-3 flex w-full flex-wrap items-center gap-y-2 space-x-2 [&_.label]:text-sm [&_input]:h-10 [&_input]:text-sm">
                                 <Input
                                   placeholder={t("samagri.item")}
                                   label={`${index === 0 ? t("samagri.item") : ""}`}
@@ -702,10 +706,10 @@ const { getRootProps, getInputProps, isDragActive } = useDropzone({
                                   isRequired={index === 0 ? true : false}
                                 />
 
-                                <div className="relative mt-8 flex h-12 items-center justify-between gap-x-1 rounded-10 border border-dashed p-2">
+                                <div className="relative mt-5 flex h-9 items-center justify-between gap-x-1 rounded-10 border border-dashed p-2">
                                   <label
-                                    for={`fileInput-${index}`}
-                                    className="bg-secondary-color-400 text-8 w-20 cursor-pointer rounded-md border border-secondary p-2 text-center font-medium text-secondary md:text-10 lg:w-24"
+                                    htmlFor={`fileInput-${index}`}
+                                    className="bg-secondary-color-400 w-20 cursor-pointer rounded-md border border-secondary p-1.5 text-center text-[11px] font-medium text-secondary lg:w-24"
                                   >
                                     Choose Image
                                   </label>
@@ -716,15 +720,13 @@ const { getRootProps, getInputProps, isDragActive } = useDropzone({
                                     <img
                                       src={item?.imgPreview ? item?.imgPreview : mediaUrl + item?.img}
                                       alt="Preview"
-                                      className="h-24 w-24 rounded-xl object-cover"
+                                      className="h-10 w-10 rounded-xl object-cover"
                                     />
                                   )}
                                 </div>
 
-                                {data !== null && (
+                                {/* {data !== null && (
                                   <div className="relative text-left">
-                                    {/* <div className="mb-2">{index === 0 ? <p className="label">Purchase </p> : ""}</div> */}
-                                    {/* <div className={`${index === 0 ? "mt-7" : ""}`}> */}
                                     <Switch
                                       checked={item?.purchase}
                                       onChange={(e) => handleInputChange(e, index, "purchase")}
@@ -736,18 +738,17 @@ const { getRootProps, getInputProps, isDragActive } = useDropzone({
                                       />
                                     </Switch>
                                   </div>
-                                  // </div>
-                                )}
+                                )} */}
                                 {index > 0 && (
                                   <MinusCircleIcon
-                                    className="ml-1.5 inline-block h-10 w-10 mt-7 cursor-pointer text-red-500"
+                                    className="ml-1.5 mt-2 inline-block h-8 w-8 cursor-pointer text-red-500"
                                     onClick={() => handleDeleteItem(index)}
                                   />
                                 )}
                               </div>
                             ))}
 
-                            <button className="mt-4 rounded-lg bg-secondary px-4 py-2 text-white" onClick={addNewFieldSet}>
+                            <button className="mt-3 rounded-lg bg-secondary px-3 py-1.5 text-xs text-white" onClick={addNewFieldSet}>
                               Add another
                             </button>
                           </div>
@@ -756,8 +757,7 @@ const { getRootProps, getInputProps, isDragActive } = useDropzone({
 
                       <div className="mb-5 mt-5 text-left ">
                         <div>
-                          <h2 className="label mb-2 text-secondary">{t("headings.otherInfo")}</h2>
-                          {/* <div className="rounded-full border-[1.5px] border-solid border-secondary"></div> */}
+                          <h2 className="label mb-2 text-sm text-secondary">{t("headings.otherInfo")}</h2>
                         </div>
                       </div>
                       <div>
@@ -771,14 +771,13 @@ const { getRootProps, getInputProps, isDragActive } = useDropzone({
                             setNotes(e.target.value);
                             setNotesError("");
                           }}
-                          // isRequired
                         />
                       </div>
                     </div>
                     <div className="flex justify-center">
-                      <p className="text-sm text-red-500">{message}</p>
+                      <p className="text-xs text-red-500">{message}</p>
                     </div>
-                    <div className="mx-auto mt-10 grid w-8/12 grid-cols-2 gap-7">
+                    <div className="mx-auto mt-5 grid w-6/12 grid-cols-2 gap-4 [&_button]:text-sm">
                       <Button
                         icon={<CheckIcon />}
                         title={data === null ? t("samagri.addNewSamagri") : t("samagri.updateSamagri")}
@@ -799,3 +798,5 @@ const { getRootProps, getInputProps, isDragActive } = useDropzone({
 };
 
 export default AddSamagriModal;
+
+

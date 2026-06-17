@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useEffect, useRef, useState } from "react";
 import Header from "../components/Header";
 import { Link, Outlet, useLocation } from "react-router-dom";
 import Sidebar from "../components/Sidebar";
@@ -33,6 +33,13 @@ const Dashboard = () => {
   const isTablet = useMediaQuery({ maxWidth: 1024 });
 
   const location = useLocation();
+  const bodyScrollRef = useRef(null);
+
+  useEffect(() => {
+    if (bodyScrollRef.current) {
+      bodyScrollRef.current.scrollTo({ top: 0, left: 0, behavior: "auto" });
+    }
+  }, [location.pathname]);
 
   const sidebarMenuItems = [
     {
@@ -174,7 +181,7 @@ const Dashboard = () => {
   // };
 
   return (
-    <>
+    <div className="dashboard-shell h-screen overflow-hidden bg-white">
       {/* Sidebar */}
       {/* <div
         className={`transform border-r border-gray-200 transition-all duration-300 ${removeFromScreen ? "absolute -left-68 top-0 w-0" : sidebarWithTitle ? "w-64" : "w-20"}`}
@@ -241,12 +248,17 @@ const Dashboard = () => {
 
       {/* Outlet */}
       <div
-        className={`${location.pathname === "/event-screen" ? "flex min-h-[90vh] w-full items-center justify-center" : `${isSidebarOpenWithTitle ? "xl:ltr:pl-68 xl:rtl:pr-68" : "xl:ltr:pl-28 xl:rtl:pr-28"} h-full overflow-y-auto  p-8`}`}
+        ref={bodyScrollRef}
+        className={`${
+          location.pathname === "/event-screen"
+            ? "dashboard-body dashboard-scroll-area flex h-[calc(100vh-5rem)] w-full items-center justify-center overflow-y-auto"
+            : `dashboard-body dashboard-scroll-area ${isSidebarOpenWithTitle ? "xl:ltr:pl-68 xl:rtl:pr-68" : "xl:ltr:pl-28 xl:rtl:pr-28"} h-[calc(100vh-5rem)] overflow-y-auto p-8`
+        }`}
       >
         <Outlet />
       </div>
       {/* </div> */}
-    </>
+    </div>
   );
 };
 

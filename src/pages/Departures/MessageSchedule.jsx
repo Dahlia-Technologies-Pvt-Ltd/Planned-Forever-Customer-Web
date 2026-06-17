@@ -1,239 +1,49 @@
-import React from "react";
-import Input from "../../components/common/Input";
-import Button from "../../components/common/Button";
-import { Fragment, useState, useEffect } from "react";
+import React, { Fragment, useEffect, useMemo, useState } from "react";
 import { Dialog, Transition } from "@headlessui/react";
-import Dropdown from "../../components/common/Dropdown";
-import DateAndTime from "../../components/common/DateAndTime";
-import { useThemeContext } from "../../context/GlobalContext";
-import { XMarkIcon, CheckIcon } from "@heroicons/react/24/solid";
+import {
+  XMarkIcon,
+  MagnifyingGlassIcon,
+  FunnelIcon,
+  ChevronDownIcon,
+  ChevronUpIcon,
+  PaperAirplaneIcon,
+} from "@heroicons/react/24/outline";
+import { CheckIcon } from "@heroicons/react/24/solid";
 import ApiServices from "../../api/services";
-import { toUTCUnixTimestamp } from "../../utilities/HelperFunctions";
-import moment from "moment";
+import { useThemeContext } from "../../context/GlobalContext";
 import { useTranslation } from "react-i18next";
 
-const MessageSchedule = ({ label, isOpen, setIsOpen, refreshData, data, setModalData, type}) => {
-  // translation
+const MessageSchedule = ({ isOpen, setIsOpen, refreshData, data, setModalData }) => {
   const { t } = useTranslation("common");
+  const { eventSelect, setBtnLoading, btnLoading, openSuccessModal, closeSuccessModel, setErrorMessage } = useThemeContext();
 
-  // Context
-  const { eventSelect, setBtnLoading, btnLoading, openSuccessModal, closeSuccessModel, setErrorMessage, allContactGroup, getEventList, allEvents } =
-    useThemeContext();
-
-  // useStates
-  const [event, setEvent] = useState(null);
-  const [smsTitle, setSmsTitle] = useState("");
-  const [message, setMessage] = useState("");
-  const [smsOption, setSmsOption] = useState("");
-  const [sendOption, setSendOption] = useState("");
+  const [sendOption, setSendOption] = useState("sendNow");
   const [contactOption, setContactOption] = useState("");
-  const [selectDateTime, setSelectDateTime] = useState("");
 
-  const [eventError, setEventError] = useState("");
-  const [messageError, setMessageError] = useState("");
-  const [smsTitleError, setSmsTitleError] = useState("");
-  const [smsOptionError, setSmsOptionError] = useState("");
-  const [sendOptionError, setSendOptionError] = useState("");
   const [contactOptionError, setContactOptionError] = useState("");
-  const [selectDateTimeError, setSelectDateTimeError] = useState("");
 
   const [groupOptions, setGroupOptions] = useState([]);
   const [groupContacts, setGroupContacts] = useState({});
-  const [selectedGroupID, setSelectedGroupID] = useState(null);
   const [selectedContactsByGroup, setSelectedContactsByGroup] = useState({});
-  const [selectedContacts, setSelectedContacts] = useState([]);
-  const [groupId, setGroupID] = useState("");
+  const [expandedGroups, setExpandedGroups] = useState([]);
+  const [searchTerm, setSearchTerm] = useState("");
+  const [pendingSelectAllGroup, setPendingSelectAllGroup] = useState(null);
+  const [loadedGroupCounts, setLoadedGroupCounts] = useState({});
+  const [allEventContacts, setAllEventContacts] = useState([]);
 
-  const [btnLoading2, setBtnLoading2] = useState(false);
-  // const [showError, setShowError] = useState(false);
-
-
-  const fetchAndSelectAllContacts = async () => {
-  let allSelected = {};
-
-  for (const group of groupOptions) {
-    const groupId = group.value;
-
-    // Fetch contacts for group if not already loaded
-    if (!groupContacts[groupId]) {
-      await ApiServices.contact.getGroupContactArrival(groupId, { event_id: eventSelect })
-        .then((res) => {
-          if (res.data?.code === 200) {
-            const contacts = res.data.data;
-
-            // Save contacts in state
-            setGroupContacts((prev) => ({
-              ...prev,
-              [groupId]: contacts
-            }));
-
-            // Select all users
-            allSelected[groupId] = contacts.map(c => c.uuid);
-          }
-        });
-    } else {
-      // Contacts already loaded → just select them
-      allSelected[groupId] = groupContacts[groupId].map(c => c.uuid);
-    }
-  }
-
-  // After all contacts fetched → update selection
-  setSelectedContactsByGroup(allSelected);
-};
-
-
-  const getLocalDateTime = () => {
-    const now = new Date();
-    now.setMinutes(now.getMinutes() - now.getTimezoneOffset()); // Adjust for timezone offset
-    return now.toISOString().slice(0, 16);
-  };
-
-  const handleDateTimeChange = (e) => {
-    const selectedDateTime = e.target.value;
-    const currentDateTime = getLocalDateTime();
-
-    if (selectedDateTime < currentDateTime) {
-      setSelectDateTimeError("You cannot select a past date and time.");
-      setSelectDateTime(""); // Reset invalid selection
-    } else {
-      setSelectDateTime(selectedDateTime);
-      setSelectDateTimeError("");
-    }
-  };
-  
-  // Function to handle changes in Send option
-  const handleSendOptionChange = (value) => {
-    setSendOption(value);
-    setSendOptionError("");
-    if (value === "sendNow") {
-      setSelectDateTime("");
-      setSelectDateTimeError("");
-    }
-  };
-
-  // Function to handle changes in Contact option
-  const handleContactOptionChange = async(value) => {
-    setContactOption(value);
-    setContactOptionError("");
-    if (value === "allContacts") {
-    await fetchAndSelectAllContacts();
-  }
-    //setShowError(false); // Hide error if event is selected
-  };
-
-  // Function to handle changes in Sms option
-  const handleSmsOptionChange = (value) => {
-    setSmsOption(value);
-    setSmsOptionError("");
-  };
-
-  const isValidForm = () => {
-    let isValidData = true;
-
-    if (sendOption.trim() === "") {
-      setSendOptionError("Required");
-      isValidData = false;
-    }
-
-    if (contactOption.trim() === "") {
-      setContactOptionError("Required");
-      isValidData = false;
-    }
-
-
-    if (contactOption === "selectedContacts") {
-      // Validate that at least one contact is selected in any group
-      const isAnyCheckboxSelected = Object.values(selectedContactsByGroup).some((groupSelectedContacts) => groupSelectedContacts.length > 0);
-
-      if (!isAnyCheckboxSelected) {
-        setContactOptionError("At least one checkbox is required");
-        isValidData = false;
-      }
-    }
-
-    if (sendOption === "sendLater" && !selectDateTime) {
-      setSelectDateTimeError("Required");
-      isValidData = false;
-    }
-
-    return isValidData;
-  };
-
-  // console.log({ sendOption, contactOption });
-
-  // Handle Submit
-  const handleSubmit = async (e) => {
-    e.preventDefault();
-    
-    if (isValidForm()) {
-      
-      setBtnLoading(true);
-      const requestData = {
-        // message: message,
-        // group_id: selectedContacts,
-        event_id: eventSelect,
-        send_at: selectDateTime ? toUTCUnixTimestamp(selectDateTime) : "",
-        send_now: selectDateTime ? false : true,
-        // title: smsTitle,
-        send_to: selectedUsers,
-        event_id: eventSelect,
-        request_type:'departure'
-      };
-      // console.log("values---", requestData); return false;
-      ApiServices.arrivalDeparture.SendArrivalDepartureMessage(requestData)
-        .then((res) => {
-          // console.log("result---------", res); return false;
-          const { data, message } = res;
-          if (data?.code === 200) {
-            // refreshData(); 
-            clearAllData();
-            setSelectedContactsByGroup({});
-            setGroupContacts({});
-            setSelectedContacts({});
-            setSelectedGroupID(null);
-            openSuccessModal({
-              open:true,
-              title: t("message.success"),
-              message: "Departure Message Sent",
-              onClickDone: closeSuccessModel,
-            });
-            setIsOpen(false);
-            setBtnLoading(false);
-          }
-        })
-        .catch((err) => {
-          setBtnLoading(false);
-        });
-    }
-  };
-
-
-  //
-
-  // Clear States
   const clearAllData = () => {
-    setEvent(null);
-    setSendOption("");
+    setSendOption("sendNow");
     setContactOption("");
-    setSmsOption("");
-    setSelectedContacts({});
-    setSmsTitle("");
-    setMessage("");
-    setSelectDateTime("");
-
-    setEventError("");
-    setMessageError("");
-    setSendOptionError("");
     setContactOptionError("");
-    setSmsOptionError("");
-    setSmsTitleError("");
-
     setSelectedContactsByGroup({});
     setGroupContacts({});
-    setSelectedGroupID(null);
+    setExpandedGroups([]);
+    setSearchTerm("");
+    setPendingSelectAllGroup(null);
+    setLoadedGroupCounts({});
+    setAllEventContacts([]);
   };
 
-  // Close Modal
   const closeModal = () => {
     setIsOpen(false);
     clearAllData();
@@ -242,78 +52,223 @@ const MessageSchedule = ({ label, isOpen, setIsOpen, refreshData, data, setModal
     setErrorMessage("");
   };
 
-  const getGroupNames = () => {
-    let payload = {
-      event_id: eventSelect,
-      from:'departure'
-    };
-    ApiServices.contact
-      .getGroup(payload)
-      .then((res) => {
-        const { data } = res;
-        if (data?.code === 200) {
-          const groupNames = data?.data?.data?.map((name) => ({
-            value: name?.id,
-            label: name?.name,
-            count: name?.user_count,
-          }));
-          setGroupOptions(groupNames);
-        }
-      })
-      .catch((err) => {
-        console.error("Error fetching group names:", err);
-      });
+  const isValidForm = () => {
+    let isValidData = true;
+
+    if (contactOption.trim() === "") {
+      setContactOptionError("Required");
+      isValidData = false;
+    }
+
+    if (contactOption === "selectedContacts") {
+      const isAnyCheckboxSelected = Object.values(selectedContactsByGroup).some((groupSelectedContacts) => groupSelectedContacts.length > 0);
+
+      if (!isAnyCheckboxSelected) {
+        setContactOptionError("At least one checkbox is required");
+        isValidData = false;
+      }
+    }
+
+    return isValidData;
   };
 
-  const getGroupContact = (groupId) => {
-    let payload = {
-      event_id: eventSelect,
-      from:'departure'
-    };
-    // console.log("event----------", payload); return false;
-    ApiServices.contact
-      .getGroupContactArrival(groupId, payload)
-      .then((res) => {
-        const { data } = res;
-        if (data?.code === 200) {
-          setGroupContacts((prevGroupContacts) => ({
-            ...prevGroupContacts,
-            [groupId]: data?.data,
-          }));
-          // Update selected contacts based on fetched contacts
-          setSelectedContactsByGroup((prevSelectedContactsByGroup) => {
-            const groupSelectedContacts = prevSelectedContactsByGroup[groupId] || [];
-            const contactIds = data?.data.map((contact) => contact.uuid);
-            const updatedGroupSelectedContacts = groupSelectedContacts.filter((id) => contactIds.includes(id));
-            return {
-              ...prevSelectedContactsByGroup,
-              [groupId]: updatedGroupSelectedContacts,
-            };
-          });
-        }
-      })
-      .catch((err) => {
-        console.error("Error fetching group contacts:", err);
-      });
+  const getSelectedUsersByGroup = () =>
+    Object.entries(selectedContactsByGroup)
+      .filter(([, userIds]) => userIds.length > 0)
+      .map(([groupId, userIds]) => ({
+        group_id: groupId,
+        user_ids: userIds,
+      }));
+
+  const selectedUsers = getSelectedUsersByGroup();
+
+  const handleSubmit = async (e) => {
+    e.preventDefault();
+
+    if (!isValidForm()) return;
+
+    try {
+      setBtnLoading(true);
+
+      const requestData = {
+        event_id: eventSelect,
+        send_at: "",
+        send_now: true,
+        send_to: selectedUsers,
+        request_type: "departure",
+      };
+
+      const res = await ApiServices.arrivalDeparture.SendArrivalDepartureMessage(requestData);
+      const { data: responseData } = res;
+
+      if (responseData?.code === 200) {
+        refreshData();
+        clearAllData();
+        openSuccessModal({
+          open: true,
+          title: t("message.success"),
+          message: "Departure Message Sent",
+          onClickDone: closeSuccessModel,
+        });
+        setIsOpen(false);
+      }
+    } catch (err) {
+      setErrorMessage(err?.response?.data?.message || "Something went wrong");
+    } finally {
+      setBtnLoading(false);
+    }
+  };
+
+  const buildGroupsFromContacts = (contacts) => {
+    const grouped = contacts.reduce((accumulator, contact) => {
+      const groupId = contact?.group?.id || contact?.group_id;
+      const groupLabel = contact?.group?.name || "Ungrouped";
+
+      if (!groupId) {
+        return accumulator;
+      }
+
+      if (!accumulator[groupId]) {
+        accumulator[groupId] = {
+          value: groupId,
+          label: groupLabel,
+          count: 0,
+          contacts: [],
+        };
+      }
+
+      accumulator[groupId].contacts.push(contact);
+      accumulator[groupId].count += 1;
+
+      return accumulator;
+    }, {});
+
+    const nextGroupOptions = Object.values(grouped);
+    const nextGroupContacts = nextGroupOptions.reduce((accumulator, group) => {
+      accumulator[group.value] = group.contacts;
+      return accumulator;
+    }, {});
+    const nextLoadedCounts = nextGroupOptions.reduce((accumulator, group) => {
+      accumulator[group.value] = group.count;
+      return accumulator;
+    }, {});
+
+    setGroupOptions(nextGroupOptions);
+    setGroupContacts(nextGroupContacts);
+    setLoadedGroupCounts(nextLoadedCounts);
+  };
+
+  const fetchEventContacts = async () => {
+    try {
+      const payload = {
+        event_id: eventSelect,
+        records_no: 1000,
+      };
+
+      const res = await ApiServices.contact.GetAllContact(payload);
+      const { data: responseData } = res;
+
+      if (responseData?.code === 200) {
+        const contacts = responseData?.data?.data || responseData?.data || [];
+        setAllEventContacts(contacts);
+        buildGroupsFromContacts(contacts);
+      }
+    } catch (err) {
+      console.error("Error fetching contacts:", err);
+    }
+  };
+
+  const getGroupContact = async (groupId) => {
+    try {
+      const contacts = groupContacts[groupId] || allEventContacts.filter((contact) => (contact?.group?.id || contact?.group_id) === groupId);
+
+      setGroupContacts((prevGroupContacts) => ({
+        ...prevGroupContacts,
+        [groupId]: contacts,
+      }));
+
+      setLoadedGroupCounts((prevLoadedCounts) => ({
+        ...prevLoadedCounts,
+        [groupId]: contacts.length,
+      }));
+
+      if (pendingSelectAllGroup === groupId) {
+        setSelectedContactsByGroup((prevSelectedContactsByGroup) => ({
+          ...prevSelectedContactsByGroup,
+          [groupId]: contacts.map((contact) => contact.uuid),
+        }));
+        setPendingSelectAllGroup(null);
+      } else {
+        setSelectedContactsByGroup((prevSelectedContactsByGroup) => {
+          const groupSelectedContacts = prevSelectedContactsByGroup[groupId] || [];
+          const contactIds = contacts.map((contact) => contact.uuid);
+
+          return {
+            ...prevSelectedContactsByGroup,
+            [groupId]: groupSelectedContacts.filter((id) => contactIds.includes(id)),
+          };
+        });
+      }
+
+      return contacts;
+    } catch (err) {
+      console.error("Error fetching group contacts:", err);
+      return [];
+    }
+  };
+
+  const fetchAndSelectAllContacts = async () => {
+    const allSelected = {};
+
+    for (const group of groupOptions) {
+      const groupId = group.value;
+      const contacts = groupContacts[groupId] || (await getGroupContact(groupId));
+      allSelected[groupId] = contacts.map((contact) => contact.uuid);
+    }
+
+    setSelectedContactsByGroup(allSelected);
+    setExpandedGroups([]);
+  };
+
+  const handleContactOptionChange = async (value) => {
+    setContactOption(value);
+    setContactOptionError("");
+
+    if (value === "allContacts") {
+      await fetchAndSelectAllContacts();
+    }
+  };
+
+  const toggleExpandedGroup = (groupId) => {
+    setExpandedGroups((prevExpandedGroups) =>
+      prevExpandedGroups.includes(groupId)
+        ? prevExpandedGroups.filter((id) => id !== groupId)
+        : [...prevExpandedGroups, groupId],
+    );
   };
 
   const handleGroupClick = (groupId) => {
-    setSelectedGroupID(groupId);
+    setContactOption("selectedContacts");
+    setContactOptionError("");
+    toggleExpandedGroup(groupId);
+
     if (!groupContacts[groupId]) {
       getGroupContact(groupId);
     }
   };
 
   const handleCheckboxChange = (groupId, contactId) => {
+    setContactOption("selectedContacts");
+    setContactOptionError("");
+
     setSelectedContactsByGroup((prevSelectedContactsByGroup) => {
       const groupSelectedContacts = prevSelectedContactsByGroup[groupId] || [];
       const updatedGroupSelectedContacts = groupSelectedContacts.includes(contactId)
         ? groupSelectedContacts.filter((id) => id !== contactId)
         : [...groupSelectedContacts, contactId];
 
-      // Remove the group from selectedContactsByGroup if no contacts are selected
       if (updatedGroupSelectedContacts.length === 0) {
-        const { [groupId]: _, ...rest } = prevSelectedContactsByGroup;
+        const { [groupId]: removedGroupId, ...rest } = prevSelectedContactsByGroup;
         return rest;
       }
 
@@ -324,374 +279,464 @@ const MessageSchedule = ({ label, isOpen, setIsOpen, refreshData, data, setModal
     });
   };
 
-  // NEW: Handle group checkbox change (select/deselect all users in group)
   const handleGroupCheckboxChange = (groupId) => {
+    setContactOption("selectedContacts");
+    setContactOptionError("");
+
+    if (!groupContacts[groupId]) {
+      setPendingSelectAllGroup(groupId);
+      setExpandedGroups((prevExpandedGroups) =>
+        prevExpandedGroups.includes(groupId) ? prevExpandedGroups : [...prevExpandedGroups, groupId],
+      );
+      getGroupContact(groupId);
+      return;
+    }
+
     const groupContactsList = groupContacts[groupId] || [];
     const currentSelectedContacts = selectedContactsByGroup[groupId] || [];
-    const allContactIds = groupContactsList.map(contact => contact.uuid);
-    
-    // If all contacts are selected, deselect all; otherwise, select all
-    const isAllSelected = allContactIds.length > 0 && allContactIds.every(id => currentSelectedContacts.includes(id));
-    
+    const allContactIds = groupContactsList.map((contact) => contact.uuid);
+    const isAllSelected = allContactIds.length > 0 && allContactIds.every((id) => currentSelectedContacts.includes(id));
+
     setSelectedContactsByGroup((prevSelectedContactsByGroup) => {
       if (isAllSelected) {
-        // Deselect all contacts in this group
-        const { [groupId]: _, ...rest } = prevSelectedContactsByGroup;
+        const { [groupId]: removedGroupId, ...rest } = prevSelectedContactsByGroup;
         return rest;
-      } else {
-        // Select all contacts in this group
-        return {
-          ...prevSelectedContactsByGroup,
-          [groupId]: allContactIds,
-        };
       }
+
+      return {
+        ...prevSelectedContactsByGroup,
+        [groupId]: allContactIds,
+      };
     });
   };
 
-  // NEW: Check if group checkbox should be checked/indeterminate
   const getGroupCheckboxState = (groupId) => {
     const groupContactsList = groupContacts[groupId] || [];
     const currentSelectedContacts = selectedContactsByGroup[groupId] || [];
-    const allContactIds = groupContactsList.map(contact => contact.uuid);
-    
+    const allContactIds = groupContactsList.map((contact) => contact.uuid);
+
     if (allContactIds.length === 0) {
       return { checked: false, indeterminate: false };
     }
-    
+
     const selectedCount = currentSelectedContacts.length;
     const totalCount = allContactIds.length;
-    
+
     if (selectedCount === 0) {
       return { checked: false, indeterminate: false };
-    } else if (selectedCount === totalCount) {
-      return { checked: true, indeterminate: false };
-    } else {
-      return { checked: false, indeterminate: true };
     }
+
+    if (selectedCount === totalCount) {
+      return { checked: true, indeterminate: false };
+    }
+
+    return { checked: false, indeterminate: true };
   };
 
-  const getSelectedUsersByGroup = () => {
-    return Object.entries(selectedContactsByGroup).map(([groupId, userIds]) => ({
-      group_id: groupId,
-      user_ids: userIds,
-    }));
+  const getResolvedGroupCount = (group) => {
+    if (typeof loadedGroupCounts[group.value] === "number") {
+      return loadedGroupCounts[group.value];
+    }
+
+    return Number(group.count || 0);
   };
 
-  const selectedUsers = getSelectedUsersByGroup();
+  const filteredGroups = useMemo(() => {
+    const term = searchTerm.trim().toLowerCase();
 
-  // Use Effects
+    if (!term) {
+      return groupOptions;
+    }
 
-  // useEffect(() => {
-  //   if (data !== null) {
-  //     setEvent({ label: data?.event?.name, value: data?.event_id });
-  //     setSmsOption(data?.event_id ? "selectedContactsInvited" : "allContactsSelectedAbove");
-  //     setSendOption(data?.send_at ? "sendLater" : "sendNow");
-  //     setContactOption(data?.send_to?.length > 0 ? "selectedContacts" : "allContacts");
-  //     setSelectedContactsByGroup(data?.send_to);
-  //     setSmsTitle(data?.title);
-  //     setMessage(data?.message);
-  //     setSelectDateTime(moment.unix(data?.send_at).format("YYYY-MM-DD HH:mm"));
-  //   }
-  // }, [isOpen]);
+    return groupOptions.filter((group) => {
+      const groupMatches = group.label?.toLowerCase().includes(term);
+      const contacts = groupContacts[group.value] || [];
+      const contactMatches = contacts.some((contact) =>
+        `${contact.first_name || ""} ${contact.last_name || ""} ${contact.contact_numbers?.[0]?.contact_number || ""}`
+          .toLowerCase()
+          .includes(term),
+      );
+
+      return groupMatches || contactMatches;
+    });
+  }, [groupContacts, groupOptions, searchTerm]);
+
+  const totalGuestCount = useMemo(() => {
+    return Object.values(selectedContactsByGroup).reduce((count, contacts) => count + contacts.length, 0);
+  }, [selectedContactsByGroup]);
+
+  const selectedGroupCount = useMemo(() => {
+    return Object.values(selectedContactsByGroup).filter((contacts) => contacts.length > 0).length;
+  }, [selectedContactsByGroup]);
+
+  const quickSelectCards = useMemo(
+    () => [
+      {
+        id: "allGuests",
+        label: "All Guests",
+        count: groupOptions.reduce((count, group) => count + getResolvedGroupCount(group), 0),
+        isSelected: contactOption === "allContacts",
+        onClick: () => handleContactOptionChange("allContacts"),
+      },
+      ...groupOptions.slice(0, 4).map((group) => ({
+        id: group.value,
+        label: group.label,
+        count: getResolvedGroupCount(group),
+        isSelected: (selectedContactsByGroup[group.value] || []).length > 0,
+        onClick: () => handleGroupCheckboxChange(group.value),
+      })),
+    ],
+    [contactOption, groupOptions, loadedGroupCounts, selectedContactsByGroup],
+  );
 
   useEffect(() => {
-    if (data !== null) {
-      setEvent({ label: data?.event?.name, value: data?.event_id });
-      setSmsOption(data?.event_id ? "selectedContactsInvited" : "allContactsSelectedAbove");
-      setSendOption(data?.send_at ? "sendLater" : "sendNow");
+    if (isOpen && eventSelect) {
+      fetchEventContacts();
+      if (data === null) {
+        setSendOption("sendNow");
+      }
+    }
+  }, [eventSelect, isOpen]);
+
+  useEffect(() => {
+    if (data !== null && isOpen) {
+      setSendOption("sendNow");
       setContactOption(data?.send_to?.length > 0 ? "selectedContacts" : "allContacts");
 
-      // Create a temporary state for storing contacts to be selected based on data
       const tempSelectedContactsByGroup = {};
-
-      // Loop through send_to to get the group_id and user_ids
       data?.send_to?.forEach((group) => {
-        const { group_id, user_ids } = group;
-        tempSelectedContactsByGroup[group_id] = user_ids;
+        tempSelectedContactsByGroup[group.group_id] = group.user_ids;
       });
 
-      // Set selected contacts by group state with temp data
       setSelectedContactsByGroup(tempSelectedContactsByGroup);
+      setExpandedGroups(data?.send_to?.map((group) => group.group_id) || []);
 
-      setSmsTitle(data?.title);
-      setMessage(data?.message);
-      setSelectDateTime(moment.unix(data?.send_at).format("YYYY-MM-DD HH:mm"));
-
-      // Fetch and set contacts for each group in send_to
       data?.send_to?.forEach((group) => {
-        const { group_id } = group;
-        if (!groupContacts[group_id]) {
-          getGroupContact(group_id);
+        if (!groupContacts[group.group_id]) {
+          getGroupContact(group.group_id);
         }
       });
     }
-  }, [isOpen, data]);
-
-  console.log({ data });
+  }, [data, isOpen]);
 
   useEffect(() => {
-    getEventList();
-  }, []);
-
-  useEffect(() => {
-    getGroupNames();
-  }, []);
-
-  useEffect(() => {
-    if (groupId) {
-      getGroupContact();
-    }
-  }, [groupId]);
-
-  // NEW: useEffect to handle indeterminate state for group checkboxes
-  useEffect(() => {
-    Object.keys(groupContacts).forEach(groupId => {
-      const checkbox = document.getElementById(`group-${groupId}`);
+    Object.keys(groupContacts).forEach((groupId) => {
+      const checkbox = document.getElementById(`departure-group-${groupId}`);
       if (checkbox) {
         const { indeterminate } = getGroupCheckboxState(groupId);
         checkbox.indeterminate = indeterminate;
       }
     });
-  }, [selectedContactsByGroup, groupContacts]);
+  }, [groupContacts, selectedContactsByGroup]);
 
   return (
-    <>
-      <Transition appear show={isOpen} as={Fragment}>
-        <Dialog as="div" className="relative z-50" onClose={closeModal}>
-          <Transition.Child
-            as={Fragment}
-            enter="ease-out duration-300"
-            enterFrom="opacity-0"
-            enterTo="opacity-100"
-            leave="ease-in duration-200"
-            leaveFrom="opacity-100"
-            leaveTo="opacity-0"
-          >
-            <div className="fixed inset-0 bg-black bg-opacity-25" />
-          </Transition.Child>
+    <Transition appear show={isOpen} as={Fragment}>
+      <Dialog as="div" className="relative z-50" onClose={closeModal}>
+        <Transition.Child
+          as={Fragment}
+          enter="ease-out duration-300"
+          enterFrom="opacity-0"
+          enterTo="opacity-100"
+          leave="ease-in duration-200"
+          leaveFrom="opacity-100"
+          leaveTo="opacity-0"
+        >
+          <div className="fixed inset-0 bg-slate-950/35 backdrop-blur-[2px]" />
+        </Transition.Child>
 
-          <div className="fixed inset-0 overflow-y-auto">
-            <div className="flex min-h-full items-center justify-center p-4 text-center">
-              <Transition.Child
-                as={Fragment}
-                enter="ease-out duration-300"
-                enterFrom="opacity-0 scale-75"
-                enterTo="opacity-100 scale-100"
-                leave="ease-in duration-200"
-                leaveFrom="opacity-100 scale-100"
-                leaveTo="opacity-0 scale-75"
-              >
-                <Dialog.Panel className="w-full max-w-3xl overflow-hidden rounded-2xl bg-white p-8 shadow-xl transition-all">
-                  <div className="mb-5 flex items-center justify-between">
-                    <Dialog.Title as="h3" className="font-poppins text-lg font-semibold leading-7 text-secondary-color">
-                     
-                   {t("arrival.messageSchedule")}
-                    </Dialog.Title>
-                    <XMarkIcon onClick={closeModal} className="h-8 w-8 cursor-pointer text-info-color" />
+        <div className="fixed inset-0 overflow-y-auto">
+          <div className="flex min-h-full items-center justify-center p-3 lg:p-4">
+            <Transition.Child
+              as={Fragment}
+              enter="ease-out duration-300"
+              enterFrom="opacity-0 scale-95"
+              enterTo="opacity-100 scale-100"
+              leave="ease-in duration-200"
+              leaveFrom="opacity-100 scale-100"
+              leaveTo="opacity-0 scale-95"
+            >
+              <Dialog.Panel className="relative w-full max-w-[960px] overflow-hidden rounded-[24px] bg-white shadow-[0_24px_70px_rgba(15,23,42,0.16)] transition-all">
+                <div className="absolute inset-x-0 top-0 h-20 bg-gradient-to-r from-rose-50 via-white to-white" />
+
+                <div className="relative p-5 lg:p-6">
+                  <div className="mb-6 flex items-start justify-between gap-4 border-b border-slate-100 pb-5">
+                    <div className="flex items-start gap-4">
+                      <div className="flex h-12 w-12 items-center justify-center rounded-full bg-rose-50 text-rose-700 shadow-inner">
+                        <PaperAirplaneIcon className="h-5 w-5" />
+                      </div>
+                      <div>
+                        <Dialog.Title className="text-[20px] font-semibold tracking-tight text-slate-800">Schedule Card / Message</Dialog.Title>
+                        <p className="mt-1 text-sm text-slate-500">Choose your guests and send your message</p>
+                      </div>
+                    </div>
+
+                    <button
+                      type="button"
+                      onClick={closeModal}
+                      className="rounded-full p-2 text-slate-400 transition hover:bg-slate-100 hover:text-slate-700"
+                    >
+                      <XMarkIcon className="h-6 w-6" />
+                    </button>
                   </div>
 
-                  {/* <form onSubmit={data === null ? handleSubmit : updateSubmit}> */}
-                  <form onSubmit={handleSubmit}>
-                    <div className="h-[400px]  overflow-y-auto p-2 md:h-[400px] lg:h-[400px] xl:h-[400px] 2xl:h-[400px]">
-                      {/* <Input
-                        isRequired
-                        label="Sms Title"
-                        placeholder="Sms Title"
-                        value={smsTitle}
-                        error={smsTitleError}
-                        onChange={(e) => {
-                          setSmsTitle(e.target.value);
-                          setSmsTitleError("");
-                        }}
-                      /> */}
+                  <form onSubmit={handleSubmit} className="[&_.label]:text-xs [&_.label]:font-medium [&_input]:h-9 [&_input]:min-h-[36px] [&_input]:text-sm [&_input]:py-1 [&_input[type='datetime-local']]:h-9 [&_textarea]:text-sm [&_.css-b62m3t-container]:text-sm [&_.css-13cymwt-control]:h-9 [&_.css-13cymwt-control]:min-h-[36px] [&_.css-13cymwt-control]:py-0 [&_.css-t3ipsp-control]:h-9 [&_.css-t3ipsp-control]:min-h-[36px] [&_.css-t3ipsp-control]:py-0 [&_.css-hlgwow]:h-9 [&_.css-hlgwow]:min-h-[36px] [&_.css-hlgwow]:py-0 [&_.css-hlgwow]:px- [&_.css-1jqq78o-placeholder]:text-sm [&_.css-1jqq78o-placeholder]:leading-none [&_.css-1dimb5e-singleValue]:text-sm [&_.css-1dimb5e-singleValue]:leading-none [&_.css-1wy0on6]:h-9 [&_.css-19bb58m]:my-0">
+                    <div className="grid gap-5 lg:grid-cols-[minmax(0,1fr)_290px]">
+                      <div className="space-y-4">
+                        <div className="inline-flex border-b-2 border-rose-700 pb-2 text-sm font-semibold text-rose-700">Select Guests</div>
 
-                      {/* <Dropdown
-                        isRequired
-                        title="Events"
-                        placeholder="Events"
-                        withError={eventError}
-                        options={allEvents}
-                        value={event}
-                        onChange={(e) => {
-                          setEvent(e);
-                          setEventError("");
-                        }}
-                      /> */}
-
-                      <div className="my-5 w-full space-y-3">
-                        <div className="label ltr:text-left rtl:text-right">
-                          {t("arrival.selectContact")} <span className="text-red-500">*</span>
-                          {contactOptionError && <span className="text-xs text-red-500">{contactOptionError}</span>}
-                        </div>
-
-                        <div className="flex items-center">
-                          <input
-                            id="allContacts"
-                            type="radio"
-                            value="allContacts"
-                            name="contact-radio"
-                            checked={contactOption === "allContacts"}
-                            onChange={() => handleContactOptionChange("allContacts")}
-                            className="h-4 w-4 border-gray-300 bg-gray-100 text-blue-600"
-                          />
-                          <label htmlFor="allContacts" className="ms-2 text-sm font-medium text-gray-900">
-                            {t("arrival.allContacts")}
-                          </label>
-                        </div>
-
-                        <div className="flex items-center">
-                          <input
-                            id="selectedContacts"
-                            type="radio"
-                            value="selectedContacts"
-                            name="contact-radio"
-                            checked={contactOption === "selectedContacts"}
-                            onChange={() => handleContactOptionChange("selectedContacts")}
-                            className="h-4 w-4 border-gray-300 bg-gray-100 text-blue-600"
-                          />
-                          <label htmlFor="selectedContacts" className="ms-2 text-sm font-medium text-gray-900">
-                            {t("arrival.selectedContacts")}
-                          </label>
-                        </div>
-                      </div>
-
-                      {/* {showError && <div className="mt-2 text-sm text-red-500">Please select an event to choose a contact option.</div>} */}
-
-                      {contactOption === "selectedContacts" && (
-                        <div className="mt-5">
-                          <div className="label mb-5 ml-6 text-left">
-                            <div className="flex items-center gap-x-2">
-                              <div className="h-3 w-3 rounded-full bg-black"></div>
-                              <div className="font-medium">{t("arrival.groups")}</div>
-                            </div>
-                            {contactOptionError && <span className="text-xs text-red-500">* {contactOptionError}</span>}
+                        <div className="flex flex-col gap-3 md:flex-row">
+                          <div className="relative flex-1">
+                            <MagnifyingGlassIcon className="pointer-events-none absolute left-4 top-1/2 h-5 w-5 -translate-y-1/2 text-slate-400" />
+                            <input
+                              type="text"
+                              value={searchTerm}
+                              onChange={(e) => setSearchTerm(e.target.value)}
+                              placeholder="Search groups or guests..."
+                              className="h-11 w-full rounded-2xl border border-slate-200 bg-white pl-11 pr-4 text-sm text-slate-700 shadow-sm outline-none transition focus:border-rose-300 focus:ring-2 focus:ring-rose-100"
+                            />
                           </div>
-                          <div className="ml-14 flex flex-col space-y-3">
-                            {groupOptions?.map((item, index) => {
-                              const { checked, indeterminate } = getGroupCheckboxState(item.value);
-                              return (
-                                <div className="" key={item?.value}>
-                                  <div className="flex items-center text-left">
-                                    <span className="text-sm font-medium">{index + 1})</span>
-                                    
-                                    {/* Group Checkbox */}
-                                    <input
-                                      id={`group-${item.value}`}
-                                      type="checkbox"
-                                      checked={checked}
-                                      onChange={() => handleGroupCheckboxChange(item.value)}
-                                      className="ml-2 h-4 w-4 border-gray-300 bg-gray-100 text-blue-600"
-                                    />
-                                    
-                                    <label
-                                      htmlFor={item?.value}
-                                      onClick={() => handleGroupClick(item.value)}
-                                      className="ms-2 flex cursor-pointer items-center gap-x-2 text-left text-sm font-medium text-gray-900"
-                                    >
-                                      {item?.label}
-                                      <span className="text-xs font-semibold text-red-500">({item?.count})</span>
-                                      {/* <span className="text-xs text-red-500 ms-2">see contacts</span> */}
-                                    </label>
-                                  </div>
 
-                                  {selectedGroupID === item.value && (
-                                    <div className="mt-2 flex flex-col gap-y-3 pl-2">
-                                      {groupContacts[item.value] && groupContacts[item.value].length > 0 ? (
-                                        groupContacts[item.value]?.map((contact) => (
-                                          <div key={contact?.uuid} className="ml-8 flex items-center ">
-                                            <input
-                                              id={contact?.uuid}
-                                              type="checkbox"
-                                              checked={(selectedContactsByGroup[item.value] || []).includes(contact?.uuid)}
-                                              onChange={() => handleCheckboxChange(item.value, contact?.uuid)}
-                                              className="h-4 w-4 border-gray-300 bg-gray-100 text-blue-600"
-                                            />
-                                            <span className="ms-2 text-xs">{contact.first_name + " " + contact.last_name}</span>
-                                          </div>
-                                        ))
-                                      ) : (
-                                        <div className="text-xs text-gray-500">No contacts available</div>
-                                      )}
-                                    </div>
-                                  )}
+                          <button
+                            type="button"
+                            className="inline-flex h-11 items-center justify-center gap-2 rounded-2xl border border-slate-200 bg-white px-4 text-sm font-medium text-slate-700 shadow-sm transition hover:border-slate-300 hover:bg-slate-50"
+                          >
+                            <FunnelIcon className="h-5 w-5" />
+                            Filters
+                          </button>
+                        </div>
+
+                        <div>
+                          <div className="mb-3 text-sm font-semibold text-slate-700">Quick Select</div>
+                          <div className="flex flex-wrap items-stretch gap-3">
+                            {quickSelectCards.map((card) => (
+                              <button
+                                key={card.id}
+                                type="button"
+                                onClick={card.onClick}
+                                className={`inline-flex min-w-[150px] flex-1 items-center justify-between gap-3 rounded-2xl border px-4 py-3 text-left shadow-sm transition ${
+                                  card.isSelected
+                                    ? "border-rose-300 bg-rose-50/70 shadow-[0_10px_35px_rgba(190,24,93,0.10)]"
+                                    : "border-slate-200 bg-white hover:border-slate-300 hover:bg-slate-50"
+                                }`}
+                              >
+                                <div>
+                                  <div className="text-sm font-semibold text-slate-800">{card.label}</div>
+                                  <div className="mt-1 text-sm text-slate-500">{card.count} Guests</div>
                                 </div>
-                              );
-                            })}
+                                <span
+                                  className={`flex h-5 w-5 shrink-0 items-center justify-center rounded-md border ${
+                                    card.isSelected ? "border-rose-700 bg-rose-700 text-white" : "border-slate-300 text-transparent"
+                                  }`}
+                                >
+                                  <CheckIcon className="h-3.5 w-3.5" />
+                                </span>
+                              </button>
+                            ))}
+                            <button
+                              type="button"
+                              className="inline-flex min-h-[76px] w-[54px] items-center justify-center rounded-2xl border border-slate-200 bg-white text-slate-500 shadow-sm transition hover:border-slate-300 hover:bg-slate-50"
+                            >
+                              <ChevronDownIcon className="h-5 w-5 -rotate-90" />
+                            </button>
                           </div>
                         </div>
-                      )}
 
-                      <div className="mt-5 w-full">
-                        <div className="label mb-5 ltr:text-left rtl:text-right">
-                          {t("arrival.sendSMS")} <span className="text-red-500">*</span>
-                          {sendOptionError && <span className="text-xs text-red-500">{sendOptionError}</span>}
+                        <div className="rounded-[20px] border border-slate-200 bg-white shadow-sm">
+                          <div className="border-b border-slate-100 px-5 py-4">
+                            <div className="text-sm font-semibold text-slate-700">Groups</div>
+                            {contactOptionError && <div className="mt-1 text-xs text-rose-600">{contactOptionError}</div>}
+                          </div>
+
+                          <div className="max-h-[360px] overflow-y-auto px-4 py-3">
+                            <div className="space-y-3">
+                              {filteredGroups.map((group) => {
+                                const isExpanded = expandedGroups.includes(group.value);
+                                const visibleContacts = (groupContacts[group.value] || []).filter((contact) =>
+                                  `${contact.first_name || ""} ${contact.last_name || ""} ${contact.contact_numbers?.[0]?.contact_number || ""}`
+                                    .toLowerCase()
+                                    .includes(searchTerm.trim().toLowerCase()),
+                                );
+                                const hasSearch = searchTerm.trim() !== "";
+                                const shownContacts = hasSearch ? visibleContacts : visibleContacts.slice(0, 4);
+                                const groupCheckboxState = getGroupCheckboxState(group.value);
+
+                                return (
+                                  <div key={group.value} className="overflow-hidden rounded-2xl border border-slate-200 bg-white">
+                                    <div className="flex items-center gap-3 px-4 py-4">
+                                      <input
+                                        id={`departure-group-${group.value}`}
+                                        type="checkbox"
+                                        checked={groupCheckboxState.checked}
+                                        onChange={() => handleGroupCheckboxChange(group.value)}
+                                        className="h-5 w-5 rounded border-slate-300 text-rose-700 focus:ring-rose-200"
+                                        style={{
+                                          minHeight: "unset",
+                                          height: "16px",
+                                          width: "16px",
+                                        }}
+                                      />
+
+                                      <button
+                                        type="button"
+                                        onClick={() => handleGroupClick(group.value)}
+                                        className="flex flex-1 items-center justify-between gap-4 text-left"
+                                      >
+                                        <div className="text-sm font-semibold text-slate-800">
+                                          {group.label} <span className="font-medium text-slate-500">({getResolvedGroupCount(group)} Guests)</span>
+                                        </div>
+                                        {isExpanded ? (
+                                          <ChevronUpIcon className="h-5 w-5 text-slate-500" />
+                                        ) : (
+                                          <ChevronDownIcon className="h-5 w-5 text-slate-500" />
+                                        )}
+                                      </button>
+                                    </div>
+
+                                    {isExpanded && (
+                                      <div className="border-t border-slate-100 bg-slate-50/50">
+                                        {shownContacts.length > 0 ? (
+                                          <>
+                                            {shownContacts.map((contact) => (
+                                              <label
+                                                key={contact.uuid}
+                                                className="flex cursor-pointer items-center justify-between gap-3 border-b border-slate-100 px-4 py-3 last:border-b-0 hover:bg-white"
+                                              >
+                                                <div className="flex items-center gap-3">
+                                                  <input
+                                                    type="checkbox"
+                                                    checked={(selectedContactsByGroup[group.value] || []).includes(contact.uuid)}
+                                                    onChange={() => handleCheckboxChange(group.value, contact.uuid)}
+                                                    className="h-5 w-5 rounded border-slate-300 text-rose-700 focus:ring-rose-200"
+                                                    style={{
+                                                      minHeight: "unset",
+                                                      height: "16px",
+                                                      width: "16px",
+                                                    }}
+                                                  />
+                                                  <span className="text-sm font-medium text-slate-700">
+                                                    {contact.first_name} {contact.last_name}
+                                                  </span>
+                                                </div>
+                                                <span className="text-sm text-slate-500">
+                                                  {contact.contact_numbers?.[0]?.contact_number || contact.contact_number?.[0] || "-"}
+                                                </span>
+                                              </label>
+                                            ))}
+
+                                            {!hasSearch && visibleContacts.length > shownContacts.length && (
+                                              <div className="flex items-center justify-between px-4 py-3 text-sm">
+                                                <span className="text-rose-700">+ {visibleContacts.length - shownContacts.length} more guests</span>
+                                                <button
+                                                  type="button"
+                                                  onClick={() => handleGroupCheckboxChange(group.value)}
+                                                  className="font-medium text-rose-700 transition hover:text-rose-800"
+                                                >
+                                                  Select All
+                                                </button>
+                                              </div>
+                                            )}
+                                          </>
+                                        ) : (
+                                          <div className="px-4 py-5 text-sm text-slate-500">
+                                            {groupContacts[group.value] ? "No guests found for this search." : "Open the group to load guests."}
+                                          </div>
+                                        )}
+                                      </div>
+                                    )}
+                                  </div>
+                                );
+                              })}
+                            </div>
+                          </div>
                         </div>
-
-                        <div className="mb-3 flex items-center">
-                          <input
-                            id="sendNow"
-                            type="radio"
-                            value="sendNow"
-                            name="send-radio"
-                            checked={sendOption === "sendNow"}
-                            onChange={(e) => handleSendOptionChange(e.target.value)}
-                            className="h-4 w-4 border-gray-300 bg-gray-100 text-blue-600"
-                          />
-                          <label htmlFor="sendNow" className="ms-2 text-sm font-medium text-gray-900">
-                            {t("arrival.sendNow")}
-                          </label>
-                        </div>
-
-                        {/* <div className="flex items-center">
-                          <input
-                            id="sendLater"
-                            type="radio"
-                            value="sendLater"
-                            name="send-radio"
-                            checked={sendOption === "sendLater"}
-                            onChange={() => handleSendOptionChange("sendLater")}
-                            className="h-4 w-4 border-gray-300 bg-gray-100 text-blue-600"
-                          />
-                          <label htmlFor="sendLater" className="ms-2 text-sm font-medium text-gray-900">
-                            {t("arrival.sendLater")}
-                          </label>
-                        </div> */}
                       </div>
 
-                      {/* Send Sms Later */}
-                      {sendOption === "sendLater" && (
-                        <div className="mt-5">
-                          <Input
-                            isRequired
-                            type="datetime-local"
-                            label={t("scheduledOn")}
-                            placeholder="Select Date & Time"
-                            value={selectDateTime}
-                            min={getLocalDateTime()} // Prevent past selection in supported browsers
-                            onChange={handleDateTimeChange} // Manual validation for all cases
-                            error={selectDateTimeError}
-                          />
-                        </div>
-                      )}
+                      <div className="flex min-w-0 flex-col gap-4 rounded-[20px] border border-slate-200 bg-white p-5 shadow-sm">
+                        <div>
+                          <div className="text-[14px] font-semibold text-rose-800">Selection Summary</div>
 
-                      <div className="mx-auto mt-10 grid w-8/12 grid-cols-2 gap-7">
-                        <Button
-                          icon={<CheckIcon />}
-                          title={data === null ? t("arrival.proceed") : t("arrival.sendOrSchedule")}
+                          <div className="mt-5 space-y-4 text-slate-700">
+                            <div>
+                              <div className="text-sm text-slate-500">Groups Selected</div>
+                              <div className="mt-2 text-[30px] font-semibold leading-none text-slate-900">
+                                {contactOption === "allContacts" ? groupOptions.length : selectedGroupCount}
+                              </div>
+                            </div>
+
+                            <div>
+                              <div className="text-sm text-slate-500">Individual Guests</div>
+                              <div className="mt-2 text-[30px] font-semibold leading-none text-slate-900">{totalGuestCount}</div>
+                            </div>
+                          </div>
+
+                          <div className="my-5 h-px bg-slate-200" />
+
+                          <div>
+                            <div className="text-sm text-slate-500">Total Guests</div>
+                            <div className="mt-2 text-[42px] font-semibold leading-none tracking-tight text-rose-700">{totalGuestCount}</div>
+                          </div>
+
+                          <div className="mt-5 rounded-2xl bg-rose-50 px-4 py-3 text-sm leading-6 text-slate-600">
+                            You can select entire groups or individual guests.
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+
+                    <div className="mt-5 flex flex-col gap-4 border-t border-slate-100 pt-5 lg:flex-row lg:items-end lg:justify-between">
+                      <div className="min-w-0 flex-1">
+                        <div className="text-sm font-semibold text-slate-700">Send Timing</div>
+                        <div className="mt-4 max-w-[320px] rounded-2xl border border-rose-200 bg-rose-50/40 px-4 py-3">
+                          <div className="flex items-start gap-3">
+                            <input
+                              id="sendNowFooter"
+                              type="radio"
+                              value="sendNow"
+                              name="send-radio-footer"
+                              checked={true}
+                              readOnly
+                              style={{
+                                minHeight: "unset",
+                                height: "16px",
+                                width: "16px",
+                              }}
+                              className="mt-1 h-4 w-4 border-slate-300 text-rose-700 focus:ring-rose-200"
+                            />
+                            <div>
+                              <div className="text-sm font-semibold text-slate-800">Send Now</div>
+                              <div className="mt-1 text-sm text-slate-500">Send message immediately</div>
+                            </div>
+                          </div>
+                        </div>
+                      </div>
+
+                      <div className="flex flex-col gap-3 sm:flex-row lg:shrink-0">
+                        <button
+                          type="button"
+                          onClick={closeModal}
+                          className="inline-flex h-11 items-center justify-center rounded-2xl border border-slate-300 bg-white px-6 text-base font-medium text-slate-700 transition hover:bg-slate-50"
+                        >
+                          Cancel
+                        </button>
+
+                        <button
                           type="submit"
-                          loading={data === null ? btnLoading : btnLoading2}
-                        />
-                        <Button icon={<XMarkIcon />} title={t("buttons.cancel")} type="button" buttonColor="bg-red-500" onClick={closeModal} />
+                          disabled={btnLoading}
+                          className="inline-flex h-11 min-w-[220px] items-center justify-center gap-2 rounded-2xl bg-gradient-to-r from-rose-700 to-rose-600 px-6 text-base font-medium text-white shadow-[0_16px_30px_rgba(190,24,93,0.16)] transition hover:shadow-[0_18px_34px_rgba(190,24,93,0.22)] disabled:cursor-not-allowed disabled:opacity-70"
+                        >
+                          <PaperAirplaneIcon className="h-4 w-4 shrink-0" />
+                          <span className="text-center leading-4">{`Send to ${totalGuestCount} Guests`}</span>
+                        </button>
                       </div>
                     </div>
                   </form>
-                </Dialog.Panel>
-              </Transition.Child>
-            </div>
+                </div>
+              </Dialog.Panel>
+            </Transition.Child>
           </div>
-        </Dialog>
-      </Transition>
-    </>
+        </div>
+      </Dialog>
+    </Transition>
   );
 };
 

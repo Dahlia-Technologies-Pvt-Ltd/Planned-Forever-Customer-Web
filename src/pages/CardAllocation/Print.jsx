@@ -1,4 +1,4 @@
-import Lottie from "react-lottie";
+﻿import Lottie from "react-lottie";
 import { useNavigate } from "react-router";
 import ApiServices from "../../api/services";
 import { CARD_ALLOCATION } from "../../routes/Names";
@@ -51,41 +51,30 @@ const CardAllocationPrint = () => {
   }, []);
 
   const PrintableCardAllocationList = React.forwardRef(({ allCardAllocationList, loading }, ref) => {
-    // Compute dynamic card columns based on the maximum number of cards allocated to any contact
-    // Updated to use 'allocated_cards' instead of 'card_allocation' based on API response
-    const maxCards = Math.max(0, ...(allCardAllocationList || []).map(c => (c?.allocated_cards?.length || 0)));
-
-    // Base headers
-    const baseHeaders = ["Guest Name"];
-
-    // Dynamic card headers
-    const cardHeaders = [];
-    for (let i = 1; i <= maxCards; i++) {
-      cardHeaders.push(`Allocated Card ${i}`);
-    }
-
-    const allColumns = [...baseHeaders, ...cardHeaders];
+    const allColumns = ["Guest Name", "Mobile Number", "Allocated Card"];
 
     const renderCell = (item, header) => {
       if (header === "Guest Name") {
         return `${item?.first_name || ""} ${item?.last_name || ""}`.trim() || "-";
       }
 
-      // Dynamic card mapping - Updated to handle the correct API structure
-      if (header.startsWith("Allocated Card ")) {
-        const match = header.match(/^Allocated Card (\d+)$/);
-        if (match) {
-          const idx = parseInt(match[1], 10) - 1;
-          // Updated to use 'allocated_cards' array from API response
-          const cardAllocation = item?.allocated_cards?.[idx];
-          if (cardAllocation) {
-            // Display card name and name on card for better information
-            const cardName = cardAllocation?.card?.name || "Unknown Card";
-            const nameOnCard = cardAllocation?.name_on_card;
-            return nameOnCard ? `${cardName}` : cardName;
-          }
+      if (header === "Mobile Number") {
+        const primaryContact = item?.contact_numbers?.[0];
+        const countryCode = primaryContact?.country_code || "";
+        const contactNumber = primaryContact?.contact_number || "";
+        const mobileNumber = `${countryCode} ${contactNumber}`.trim();
+        return mobileNumber || "-";
+      }
+
+      if (header === "Allocated Card") {
+        const allocatedCards = item?.allocated_cards || [];
+        if (!allocatedCards.length) {
           return "-";
         }
+
+        return allocatedCards
+          .map((cardAllocation) => cardAllocation?.card?.name || "Unknown Card")
+          .join(", ");
       }
 
       return "-";
@@ -98,7 +87,7 @@ const CardAllocationPrint = () => {
             <tr>
               {allColumns.map((head) => (
                 <th key={head} className="p-4 bg-white border-b border-gray-100 first:pl-6">
-                  <p className="text-xs font-semibold leading-5 whitespace-nowrap cursor-pointer font-inter 3xl:text-sm">{head}</p>
+                  <p className="text-sm font-semibold leading-5 whitespace-nowrap cursor-pointer font-inter 3xl:text-sm">{head}</p>
                 </th>
               ))}
             </tr>
@@ -116,7 +105,7 @@ const CardAllocationPrint = () => {
                 <tr key={item?.uuid}>
                   {allColumns.map((head) => (
                     <td key={head} className="py-3 pr-3 pl-4 first:pl-6 3xl:px-4">
-                      <p className="text-xs font-normal text-primary-color-200 3xl:text-sm">{renderCell(item, head)}</p>
+                      <p className="text-md font-normal text-primary-color-200 3xl:text-sm">{renderCell(item, head)}</p>
                     </td>
                   ))}
                 </tr>

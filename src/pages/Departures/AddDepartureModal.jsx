@@ -1,525 +1,374 @@
-import React from "react";
+import React, { Fragment, useEffect, useState } from "react";
 import moment from "moment";
+import { Dialog, Transition } from "@headlessui/react";
+import { XMarkIcon, CheckIcon } from "@heroicons/react/24/solid";
+import { useTranslation } from "react-i18next";
+
 import ApiServices from "../../api/services";
 import Input from "../../components/common/Input";
 import Button from "../../components/common/Button";
-import { Fragment, useState, useEffect } from "react";
-import { Dialog, Transition } from "@headlessui/react";
 import Dropdown from "../../components/common/Dropdown";
 import { useThemeContext } from "../../context/GlobalContext";
-import { XMarkIcon, CheckIcon } from "@heroicons/react/24/solid";
 import { toUTCUnixTimestamp } from "../../utilities/HelperFunctions";
-import { useTranslation } from "react-i18next";
 import QuickImportArrivalModal from "./QuickImportArrivalModal";
 
-const AddDepartureModal = ({ isOpen, setIsOpen, data, refreshData, setModalData }) => {
+const AddDepartureModal = ({
+  isOpen,
+  setIsOpen,
+  data,
+  refreshData,
+  setModalData,
+}) => {
   const { t } = useTranslation("common");
 
-  // Context
   const {
     eventSelect,
-    setBtnLoading,
+    eventDetail,
     btnLoading,
+    setBtnLoading,
     openSuccessModal,
-    allEvents,
     closeSuccessModel,
     allContact,
-    getEventList,
-    getContacts,
     allCars,
+    getContacts,
     getCarListing,
   } = useThemeContext();
 
-  // useState
-  const [notes, setNotes] = useState("");
   const [guest, setGuest] = useState(null);
-  const [event, setEvent] = useState(null);
+  const [departureDateAndTime, setDepartureDateAndTime] = useState("");
+  const [departingFrom, setDepartingFrom] = useState("");
   const [departingTo, setDepartingTo] = useState("");
-  const [hasDeparted, setHasDeparted] = useState(false);
-  const [flightTrainNo, setFlightTrainNo] = useState("");
+  const [departureFlightTrainNo, setDepartureFlightTrainNo] = useState("");
   const [numberOfPeople, setNumberOfPeople] = useState("");
-  const [departingPoint, setDepartingPoint] = useState("");
-  const [departureDateAndTime, setDepartureDateAndtime] = useState("");
-  const [allocateToDate, setAllocateToDate] = useState("");
-  const [allocateFromDate, setAllocateFromDate] = useState("");
-  const [car, setCar] = useState("");
+  const [notes, setNotes] = useState("");
+  const [hasDeparted, setHasDeparted] = useState(false);
+
+  const [car, setCar] = useState(null);
   const [carAllocationType, setCarAllocationType] = useState(null);
-
-  // validation states
-  const [notesError, setNotesError] = useState("");
-  const [guestError, setGuestError] = useState("");
-  const [eventError, setEventError] = useState("");
-  const [hasDepartedError, setHasDepartedError] = useState("");
-  const [departingToError, setDepartingToError] = useState("");
-  const [departingPointError, setDepartingPointError] = useState("");
-  const [numberOfPeopleError, setNumberOfPeopleError] = useState("");
-  const [departureDateAndTimeError, setDepartureDateAndtimeError] = useState("");
-  const [departureFlightTrainNoError, setDepartureFlightTrainNoError] = useState("");
-
-  const [allocateToDateError, setAllocateToDateError] = useState("");
-  const [carError, setCarError] = useState("");
-  const [allocateFromDateError, setAllocateFromDateError] = useState("");
+  const [allocateFromDate, setAllocateFromDate] = useState("");
+  const [allocateToDate, setAllocateToDate] = useState("");
 
   const [serverError, setServerError] = useState("");
   const [openQuickImport, setOpenQuickImport] = useState(false);
-  // departingTo,departingPoint
-  const handleChildData = (form, to, deparaturedate,fligh_train_no) => {
-    setDepartingTo(form);
-    setDepartingPoint(to);
-    console.log(deparaturedate);
-    setDepartureDateAndtime(moment(deparaturedate, "YYYY-MM-DD HH:mm").format("YYYY-MM-DD HH:mm"));
-    setFlightTrainNo(fligh_train_no);
+  const [departureDateError, setDepartureDateError] = useState("");
+  const [allocateFromError, setAllocateFromError] = useState("");
+  const [allocateToError, setAllocateToError] = useState("");
+
+  const dropOffOption = { label: "Drop Off", value: "drop_off" };
+  const weddingWindowStart = eventDetail?.start_date ? moment.unix(eventDetail.start_date).subtract(72, "hours") : null;
+  const weddingWindowEnd = eventDetail?.end_date ? moment.unix(eventDetail.end_date).add(72, "hours") : null;
+  const weddingWindowStartValue = weddingWindowStart ? weddingWindowStart.format("YYYY-MM-DDTHH:mm") : "";
+  const weddingWindowEndValue = weddingWindowEnd ? weddingWindowEnd.format("YYYY-MM-DDTHH:mm") : "";
+
+  const isWithinWeddingWindow = (value) => {
+    if (!value || !weddingWindowStart || !weddingWindowEnd) return true;
+    const current = moment(value);
+    return current.isBetween(weddingWindowStart, weddingWindowEnd, undefined, "[]");
   };
 
-  // Validation
   const isValidForm = () => {
-    let isValidData = true;
+    let isValid = true;
 
-    if (!guest) {
-      setGuestError("Required");
-      isValidData = false;
+    if (
+      !guest ||
+      !departureDateAndTime ||
+      !departingFrom ||
+      !departingTo ||
+      !departureFlightTrainNo ||
+      !numberOfPeople
+    ) {
+      isValid = false;
+    }
+
+    if (!isWithinWeddingWindow(departureDateAndTime)) {
+      setDepartureDateError(" Must be within 72 hours before wedding start and 72 hours after wedding end");
+      isValid = false;
     } else {
-      setGuestError("");
+      setDepartureDateError("");
     }
 
-    // if (!car) {
-    //   setCarError("Required");
-    //   isValidData = false;
-    // } else {
-    //   setCarError("");
-    // }
-    if (car) {
-      if (!allocateFromDate) {
-        setAllocateFromDateError("Required");
-        isValidData = false;
-      } else {
-        setAllocateFromDateError("");
-      }
-    }
-    if (car) {
-      if (!allocateToDate) {
-        setAllocateToDateError("Required");
-        isValidData = false;
-      } else {
-        setAllocateToDateError("");
-      }
-    }
-
-    // if (event === null) {
-    //   setEventError("Required");
-    //   isValidData = false;
-    // } else {
-    //   setEventError("");
-    // }
-
-    if (!departingPoint) {
-      setDepartingPointError("Required");
-      isValidData = false;
+    if (allocateFromDate && !isWithinWeddingWindow(allocateFromDate)) {
+      setAllocateFromError(" Must be within the wedding allocation window");
+      isValid = false;
     } else {
-      setDepartingPointError("");
+      setAllocateFromError("");
     }
 
-    if (!departingTo) {
-      setDepartingToError("Required");
-      isValidData = false;
+    if (allocateToDate && !isWithinWeddingWindow(allocateToDate)) {
+      setAllocateToError(" Must be within the wedding allocation window");
+      isValid = false;
     } else {
-      setDepartingToError("");
+      setAllocateToError("");
     }
 
-    if (!numberOfPeople) {
-      setNumberOfPeopleError("Required");
-      isValidData = false;
-    } else {
-      setNumberOfPeopleError("");
+    if (allocateFromDate && allocateToDate && moment(allocateFromDate).isAfter(moment(allocateToDate))) {
+      setAllocateFromError(" From date must be before To date");
+      setAllocateToError(" To date must be after From date");
+      isValid = false;
     }
 
-    if (!departureDateAndTime) {
-      setDepartureDateAndtimeError("Required");
-      isValidData = false;
-    } else {
-      setDepartureDateAndtimeError("");
-    }
-
-    if (!flightTrainNo) {
-      setDepartureFlightTrainNoError("Required");
-      isValidData = false;
-    } else {
-      setDepartureFlightTrainNoError("");
-    }
-
-    return isValidData;
+    return isValid;
   };
 
-  // Handle Submit
   const handleSubmit = async (e) => {
     e.preventDefault();
-    if (isValidForm()) {
-      try {
-        setBtnLoading(true);
+    if (!isValidForm()) return;
 
-        let payload = {
-          user_id: guest?.value,
-          date: toUTCUnixTimestamp(departureDateAndTime),
-          from: departingTo,
-          to: departingPoint,
-          no_of_person: numberOfPeople,
-          notes: notes,
-          fligh_train_no: flightTrainNo,
-          status: hasDeparted,
-          type: "departure",
-          car_id: car?.value,
-          car_allocation_type:carAllocationType?.value,
-          ...(allocateFromDate &&
-            allocateToDate && {
-              car_from: toUTCUnixTimestamp(allocateFromDate),
-              car_to: toUTCUnixTimestamp(allocateToDate),
-            }),
-          event_id: eventSelect,
-        };
+    try {
+      setBtnLoading(true);
 
-        const response =
-          data === null
-            ? await ApiServices.arrivalDeparture.addArrivalDeparture(payload)
-            : await ApiServices.arrivalDeparture.updateArrivalDeparture(data?.id, payload);
+      const payload = {
+        event_id: eventSelect,
+        user_id: guest?.value,
+        date: toUTCUnixTimestamp(departureDateAndTime),
+        from: departingFrom,
+        to: departingTo,
+        no_of_person: numberOfPeople,
+        fligh_train_no: departureFlightTrainNo,
+        notes,
+        status: hasDeparted,
+        type: "departure",
+        car_id: car?.value,
+        car_allocation_type: carAllocationType?.value,
+        ...(allocateFromDate &&
+          allocateToDate && {
+            car_from: toUTCUnixTimestamp(allocateFromDate),
+            car_to: toUTCUnixTimestamp(allocateToDate),
+          }),
+      };
 
-        if (response?.data?.code === 200) {
-          setBtnLoading(false);
-          setIsOpen(false);
-          setModalData(null);
-          clearAllData();
-          setServerError("");
-          refreshData();
-          openSuccessModal({
-            title: t("message.success"),
-            message: data === null ? t("departure.departureAddedSuccess") : t("departure.departureUpdatedSucess"),
-            onClickDone: closeSuccessModel,
-          });
-        } else {
-          setBtnLoading(false);
-        }
-      } catch (err) {
-        setServerError(err?.response?.data?.message);
-        setBtnLoading(false);
+      const response = data
+        ? await ApiServices.arrivalDeparture.updateArrivalDeparture(data.id, payload)
+        : await ApiServices.arrivalDeparture.addArrivalDeparture(payload);
+
+      if (response?.data?.code === 200) {
+        closeModal();
+        refreshData();
+        openSuccessModal({
+          title: t("message.success"),
+          message: data ? t("departure.departureUpdatedSucess") : t("departure.departureAddedSuccess"),
+          onClickDone: closeSuccessModel,
+        });
       }
-    } else {
+    } catch (err) {
+      setServerError(err?.response?.data?.message || "Something went wrong");
+    } finally {
+      setBtnLoading(false);
     }
   };
 
-  // Clear States
-  const clearAllData = () => {
-    setServerError("");
-    setNotes("");
-    setGuest(null);
-    setEvent(null);
-    setNotesError("");
-    setEventError("");
-    setGuestError("");
-    setDepartingTo(null);
-    setFlightTrainNo("");
-    setNumberOfPeople("");
-    setHasDeparted(false);
-    setDepartingPoint(null);
-    setDepartingToError("");
-    setDepartingPointError("");
-    setNumberOfPeopleError("");
-    setDepartureDateAndtime("");
-    setDepartureDateAndtimeError("");
-    setDepartureFlightTrainNoError("");
-    setCar("");
-    setAllocateFromDate("");
-    setAllocateToDate("");
-    setCarError("");
-    setAllocateFromDateError("");
-    setAllocateToDateError("");
-    setCarAllocationType(null)
-  };
-
-  // Close Modal
   const closeModal = () => {
     if (openQuickImport) return;
     setIsOpen(false);
-    clearAllData();
     setModalData(null);
-    setBtnLoading(false);
+    setServerError("");
   };
 
-  // Use Effects
   useEffect(() => {
-    if (data !== null) {
-      setEvent({ label: data?.event?.name, value: data?.event?.id });
-      setGuest({ label: data?.contact?.first_name + " " + data?.contact?.last_name, value: data?.contact?.uuid });
-      setDepartingPoint(data?.to);
-      setDepartingTo(data?.from);
-      setNumberOfPeople(data?.no_of_person);
-      setDepartureDateAndtime(moment.unix(data?.date).format("YYYY-MM-DD HH:mm"));
-      setFlightTrainNo(data?.fligh_train_no);
-      setNotes(data?.notes);
-      setHasDeparted(data?.status === 1 ? true : false);
-      setCar(data?.car?.make_and_model ? { label: data?.car?.make_and_model, value: data?.car?.id } : "");
-      setAllocateFromDate(data?.car_from ? moment.unix(data?.car_from).format("YYYY-MM-DD HH:mm:ss") : "");
-      setAllocateToDate(data?.car_to ? moment.unix(data?.car_to).format("YYYY-MM-DD HH:mm:ss") : "");
-      setCarAllocationType({
-        label:data?.car_allocation_type === "pick_up" ? "Pick Up" : "Drop Off",
-        value:data?.car_allocation_type === "pick_up" ? "pick_up": "drop_off"
-      })
+    if (data) {
+      setGuest({
+        label: `${data?.contact?.first_name} ${data?.contact?.last_name}`,
+        value: data?.contact?.uuid,
+      });
+      setDepartingFrom(data.from);
+      setDepartingTo(data.to);
+      setNumberOfPeople(data.no_of_person);
+      setDepartureDateAndTime(moment.unix(data.date).format("YYYY-MM-DDTHH:mm"));
+      setDepartureFlightTrainNo(data.fligh_train_no);
+      setNotes(data.notes || "");
+      setHasDeparted(data.status === 1 || data.status === "1" || data.status === true);
+      setCar(data?.car ? { label: data.car.make_and_model, value: data.car.id } : null);
+      setCarAllocationType(
+        data?.car_allocation_type
+          ? {
+              label: data.car_allocation_type === "pick_up" ? "Pick Up" : "Drop Off",
+              value: data.car_allocation_type,
+            }
+          : dropOffOption,
+      );
+      setAllocateFromDate(data?.car_from ? moment.unix(data.car_from).format("YYYY-MM-DDTHH:mm") : "");
+      setAllocateToDate(data?.car_to ? moment.unix(data.car_to).format("YYYY-MM-DDTHH:mm") : "");
     }
-  }, [isOpen]);
+  }, [data]);
 
-  // useEffects
   useEffect(() => {
     if (isOpen) {
       getContacts();
       getCarListing();
+      setServerError("");
+      setDepartureDateError("");
+      setAllocateFromError("");
+      setAllocateToError("");
+      if (!data) {
+        setCarAllocationType(dropOffOption);
+      }
     }
-  }, [isOpen]);
+  }, [isOpen, data]);
+
+  const handleChildData = (from, to, departureDate, flighTrainNo) => {
+    setDepartingFrom(from);
+    setDepartingTo(to);
+    setDepartureDateAndTime(moment(departureDate, "YYYY-MM-DD HH:mm").format("YYYY-MM-DDTHH:mm"));
+    setDepartureFlightTrainNo(flighTrainNo);
+  };
 
   return (
     <>
       <Transition appear show={isOpen} as={Fragment}>
-        <Dialog as="div" className="relative z-50" onClose={closeModal}>
-          <Transition.Child
-            as={Fragment}
-            enter="ease-out duration-300"
-            enterFrom="opacity-0"
-            enterTo="opacity-100"
-            leave="ease-in duration-200"
-            leaveFrom="opacity-100"
-            leaveTo="opacity-0"
-          >
-            <div className="fixed inset-0 bg-black bg-opacity-25" />
-          </Transition.Child>
+        <Dialog as="div" className="relative z-40" onClose={closeModal}>
+          <div className="fixed inset-0 bg-black/25" />
+          <div className="fixed inset-0 flex items-center justify-center p-4">
+            <Dialog.Panel className="flex max-h-[90vh] w-full max-w-[760px] flex-col overflow-hidden rounded-2xl bg-white shadow-xl">
+              <div className="flex items-center justify-between border-b px-5 py-4">
+                <Dialog.Title className="text-base font-semibold">
+                  {data ? t("departure.updateDeparture") : t("departure.addDeparture")}
+                </Dialog.Title>
+                <div className="flex gap-3">
+                  <Button
+                    title="Quick Import"
+                    type="button"
+                    onClick={() => setOpenQuickImport(true)}
+                    className="h-9 px-4 text-xs"
+                  />
+                  <XMarkIcon className="h-5 w-5 cursor-pointer" onClick={closeModal} />
+                </div>
+              </div>
 
-          <div className="fixed inset-0 overflow-y-auto">
-            <div className="flex min-h-full items-center justify-center p-4 text-center">
-              <Transition.Child
-                as={Fragment}
-                enter="ease-out duration-300"
-                enterFrom="opacity-0 scale-75"
-                enterTo="opacity-100 scale-100"
-                leave="ease-in duration-200"
-                leaveFrom="opacity-100 scale-100"
-                leaveTo="opacity-0 scale-75"
-              >
-                <Dialog.Panel className="w-full max-w-3xl overflow-hidden rounded-2xl bg-white p-8 shadow-xl transition-all">
-                  <div className="mb-10 flex items-center justify-between">
-                    <Dialog.Title as="h3" className="font-poppins text-lg font-semibold leading-7 text-secondary-color">
-                      {data === null ? t("departure.addDeparture") : t("departure.updateDeparture")}
-                    </Dialog.Title>
-                    <div className="flex gap-3">
-                    <Button
-                      title="Quick Import"
-                      type="button"
-                      onClick={() => setOpenQuickImport(true)}
-                    />
-                    <XMarkIcon
-                      className="h-6 w-6 cursor-pointer"
-                      onClick={closeModal}
+              <div className="flex-1 overflow-y-auto px-5 py-4">
+                <form className="grid grid-cols-2 gap-4 [&_.label]:text-xs [&_.label]:font-medium [&_.css-b62m3t-container]:text-sm [&_.css-13cymwt-control]:min-h-[36px] [&_.css-13cymwt-control]:text-sm [&_.css-13cymwt-control]:py-0 [&_.css-t3ipsp-control]:min-h-[36px] [&_.css-t3ipsp-control]:text-sm [&_.css-t3ipsp-control]:py-0 [&_.css-hlgwow]:min-h-[34px] [&_.css-hlgwow]:py-0 [&_.css-19bb58m]:my-0 [&_.css-1dimb5e-singleValue]:text-sm [&_.css-1dimb5e-singleValue]:leading-5 [&_.css-1jqq78o-placeholder]:text-sm [&_.css-1jqq78o-placeholder]:leading-5 [&_input]:h-9 [&_input]:text-sm [&_textarea]:text-sm">
+                  <Dropdown
+                    title={t("departure.guestName")}
+                    options={allContact}
+                    value={guest}
+                    onChange={setGuest}
+                    controlMinHeight="36px"
+                    compact
+                  />
+                  <Input
+                    type="datetime-local"
+                    label={t("departure.departureDateTime")}
+                    value={departureDateAndTime}
+                    error={departureDateError}
+                    min={weddingWindowStartValue}
+                    max={weddingWindowEndValue}
+                    onChange={(e) => {
+                      setDepartureDateAndTime(e.target.value);
+                      setDepartureDateError("");
+                    }}
+                  />
+                  <Input
+                    label={t("departure.departingFrom")}
+                    value={departingFrom}
+                    onChange={(e) => setDepartingFrom(e.target.value)}
+                  />
+                  <Input
+                    label={t("departure.departureAt")}
+                    value={departingTo}
+                    onChange={(e) => setDepartingTo(e.target.value)}
+                  />
+                  <Input
+                    label={t("departure.flightTrainNo")}
+                    value={departureFlightTrainNo}
+                    onChange={(e) => setDepartureFlightTrainNo(e.target.value)}
+                  />
+                  <Input
+                    type="number"
+                    label={t("departure.noOfPeople")}
+                    value={numberOfPeople}
+                    onChange={(e) => setNumberOfPeople(e.target.value)}
+                  />
+                  <Dropdown
+                    title={t("departure.car")}
+                    options={allCars}
+                    value={car}
+                    onChange={setCar}
+                    controlMinHeight="36px"
+                    compact
+                  />
+                  <Dropdown
+                    title="Car Allocation Type"
+                    options={[dropOffOption]}
+                    value={carAllocationType}
+                    onChange={setCarAllocationType}
+                    disabled
+                    controlMinHeight="36px"
+                    compact
+                  />
+                  <Input
+                    type="datetime-local"
+                    label={t("departure.fromDate")}
+                    value={allocateFromDate}
+                    error={allocateFromError}
+                    min={weddingWindowStartValue}
+                    max={weddingWindowEndValue}
+                    onChange={(e) => {
+                      setAllocateFromDate(e.target.value);
+                      setAllocateFromError("");
+                    }}
+                    // disabled={!car}
+                  />
+                  <Input
+                    type="datetime-local"
+                    label={t("departure.toDate")}
+                    value={allocateToDate}
+                    error={allocateToError}
+                    min={allocateFromDate || weddingWindowStartValue}
+                    max={weddingWindowEndValue}
+                    onChange={(e) => {
+                      setAllocateToDate(e.target.value);
+                      setAllocateToError("");
+                    }}
+                    // disabled={!car}
+                  />
+
+                  <div className="col-span-2">
+                    <Input
+                      label={t("headings.notes")}
+                      textarea
+                      value={notes}
+                      onChange={(e) => setNotes(e.target.value)}
                     />
                   </div>
-                    {/* <XMarkIcon onClick={closeModal} className="h-8 w-8 cursor-pointer text-info-color" /> */}
+
+                  <div className="col-span-2 flex items-center gap-3">
+                    <input
+                      type="checkbox"
+                      id="hasDeparted"
+                      name="hasDeparted"
+                      checked={hasDeparted}
+                      onChange={(e) => setHasDeparted(e.target.checked)}
+                      className="!h-4 !w-4 rounded border-gray-300 text-secondary-color focus:ring-secondary-color"
+                    />
+                    <label htmlFor="hasDeparted" className="text-sm font-medium text-primary-color">
+                      {t("departure.hasDeparted")}
+                    </label>
                   </div>
 
-                  <form onSubmit={handleSubmit}>
-                    <div className=" h-[600px] overflow-y-auto p-2 md:h-[400px] lg:h-[400px] xl:h-[500px] 2xl:h-[600px]">
-                      <div className="mb-5 ltr:text-left rtl:text-right">
-                        <div className="label mb-2 text-secondary">{t("headings.basicInfo")}</div>
-                      </div>
-                      {/* <Dropdown
-                        isRequired
-                        title="Events"
-                        placeholder="Events"
-                        withError={eventError}
-                        options={allEvents}
-                        value={event}
-                        onChange={(e) => {
-                          setEvent(e);
-                          setEventError("");
-                        }}
-                      /> */}
+                  {serverError && <span className="col-span-2 text-xs text-red-500">{serverError}</span>}
+                </form>
+              </div>
 
-                      <div className="mt-5 grid grid-cols-2 gap-7">
-                        <Dropdown
-                          isRequired
-                          title={t("departure.guestName")}
-                          placeholder="Guest Name"
-                          options={allContact}
-                          withError={guestError}
-                          value={guest}
-                          onChange={(e) => {
-                            setGuest(e);
-                            setGuestError("");
-                          }}
-                        />
-
-                        <Input
-                          isRequired
-                          type="datetime-local"
-                          label={t("departure.departureDateTime")}
-                          placeholder="Select Departure Date & Time"
-                          value={departureDateAndTime}
-                          error={departureDateAndTimeError}
-                          onChange={(e) => {
-                            setDepartureDateAndtime(e.target.value);
-                            setDepartureDateAndtimeError("");
-                          }}
-                        />
-                        
-                        <Input
-                          isRequired
-                          label={t("departure.departingFrom")}
-                          placeholder={t("departure.departingFrom")}
-                          value={departingTo}
-                          error={departingToError}
-                          onChange={(e) => {
-                            setDepartingTo(e.target.value);
-                            setDepartingToError("");
-                          }}
-                        />
-                        <Input
-                          isRequired
-                          label={t("departure.departureAt")}
-                          placeholder={t("departure.departureAt")}
-                          value={departingPoint}
-                          error={departingPointError}
-                          onChange={(e) => {
-                            setDepartingPoint(e.target.value);
-                            setDepartingPointError("");
-                          }}
-                        />
-
-                        <Input
-                          isRequired
-                          label={t("departure.flightTrainNo")}
-                          placeholder={t("departure.flightTrainNo")}
-                          value={flightTrainNo}
-                          error={departureFlightTrainNoError}
-                          onChange={(e) => {
-                            setFlightTrainNo(e.target.value);
-
-                            setDepartureFlightTrainNoError("");
-                          }}
-                        />
-                        <Input
-                          isRequired
-                          type="number"
-                          label={t("departure.noOfPeople")}
-                          placeholder="No. of People Arriving"
-                          value={numberOfPeople}
-                          error={numberOfPeopleError}
-                          onChange={(e) => {
-                            setNumberOfPeople(e.target.value);
-                            setNumberOfPeopleError("");
-                          }}
-                        />
-
-                        <Dropdown
-                          // isRequired
-                          title={t("departure.car")}
-                          placeholder="Car Name"
-                          options={allCars}
-                          value={car}
-                          // withError={carError}
-                          onChange={(e) => {
-                            setCar(e);
-                            // setCarError("");
-                          }}
-                        />
-                        <Dropdown
-                          // isRequired
-                          title={"Car Allocation Type"}
-                          placeholder="Select"
-                          options={[
-                            { label: "Pick Up", value: "pick_up" },
-                            { label: "Drop Off", value: "drop_off" },
-                          ]}
-                          value={carAllocationType}
-                          onChange={(e) => {
-                            setCarAllocationType(e);
-                          }}
-                        />
-                        <Input
-                          // isRequired
-                          type="datetime-local"
-                          label={t("departure.fromDate")}
-                          placeholder="Select Date & Time"
-                          value={allocateFromDate}
-                          error={car && allocateFromDateError}
-                          onChange={(e) => {
-                            setAllocateFromDate(e.target.value);
-                            setAllocateFromDateError("");
-                          }}
-                          disabled={!car}
-                        />
-
-                        <Input
-                          // isRequired
-                          type="datetime-local"
-                          label={t("departure.toDate")}
-                          placeholder="Select Date & Time"
-                          value={allocateToDate}
-                          onChange={(e) => {
-                            setAllocateToDate(e.target.value);
-                            setAllocateToDateError("");
-                          }}
-                          error={car && allocateToDateError}
-                          min={allocateFromDate}
-                          disabled={!allocateFromDate}
-                        />
-                      </div>
-                      <div className="my-5 ltr:text-left rtl:text-right">
-                        <div className="label mb-2 text-secondary">{t("headings.otherInfo")}</div>
-                      </div>
-
-                      <div className="mt-5">
-                        <Input
-                          label={t("headings.notes")}
-                          placeholder={t("headings.notes")}
-                          error={notesError}
-                          textarea
-                          value={notes}
-                          onChange={(e) => {
-                            setNotes(e.target.value);
-                            setNotesError("");
-                          }}
-                        />
-                      </div>
-
-                      <div className="mt-2 text-left">
-                        <input
-                          type="checkbox"
-                          id="remember"
-                          name="remember"
-                          checked={hasDeparted}
-                          onChange={(e) => {
-                            setHasDeparted(e.target.checked);
-                            setHasDepartedError("");
-                          }}
-                        />
-                        <label for="remember" className="label ps-2">
-                          {t("departure.hasDeparted")}
-                          {hasDepartedError && <span className="text-xs text-red-500">* {hasDepartedError}</span>}
-                        </label>
-                      </div>
-
-                      {serverError && <span className="text-xs text-red-500">{serverError}</span>}
-
-                      <div className="mt-10 flex justify-center gap-7">
-                        <Button
-                          loading={btnLoading}
-                          icon={<CheckIcon />}
-                          title={data === null ? t("departure.addDeparture") : t("departure.updateDeparture")}
-                          type="submit"
-                        />
-                        <Button icon={<XMarkIcon />} title={t("buttons.cancel")} type="button" buttonColor="bg-red-500" onClick={closeModal} />
-                      </div>
-                    </div>
-                  </form>
-                </Dialog.Panel>
-              </Transition.Child>
-            </div>
+              <div className="flex justify-center gap-4 border-t px-5 py-4">
+                <Button
+                  loading={btnLoading}
+                  icon={<CheckIcon />}
+                  title={data ? t("departure.updateDeparture") : t("departure.addDeparture")}
+                  type="button"
+                  onClick={handleSubmit}
+                />
+                <Button
+                  icon={<XMarkIcon />}
+                  title={t("buttons.cancel")}
+                  type="button"
+                  buttonColor="bg-red-500"
+                  onClick={closeModal}
+                />
+              </div>
+            </Dialog.Panel>
           </div>
         </Dialog>
       </Transition>
+
       <QuickImportArrivalModal
         openQuickImport={openQuickImport}
         setOpenQuickImport={setOpenQuickImport}

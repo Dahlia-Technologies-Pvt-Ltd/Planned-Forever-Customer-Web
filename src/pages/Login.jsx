@@ -21,6 +21,7 @@ import {
   DASHBOARD,
   DEPARTURES,
   EVENTS,
+  EVENT_SCREEN,
   EXPORT_DATA,
   FORGOT_PASSWORD,
   GIFTS,
@@ -86,16 +87,6 @@ const Login = () => {
     loading,
     setLoading,
     updateUser,
-    getVenueList,
-    getEventList,
-    getCeremonies,
-    getContactsByGroup,
-    getHotels,
-    getCarListing,
-    getGifts,
-    getContacts,
-    getUserType,
-    getUsers,
   } = useThemeContext();
 
   // Navigation
@@ -148,40 +139,15 @@ const Login = () => {
           localStorage.setItem("sessionTime", next24Hours);
           localStorage.setItem("token", response.data?.data?.token);
 
-          getVenueList();
-          getEventList();
-          getCeremonies();
-          getContactsByGroup();
-          getHotels();
-          getCarListing();
-          getGifts();
-          getContacts();
-          getUserType();
-          getUsers();
-
           console.log({response})
 
-          if (response?.data?.data?.role?.display_name === "web_admin") {
-            console.log("webadmin")
-            navigate(EVENT_SCREEN);
-          } else if (response?.data?.data?.role?.permissions?.length > 0) {
-            const firstPermission = response?.data?.data?.role?.permissions[0];
-            const route = permissionRoutes[firstPermission?.name];
-            if (route) {
-              // navigate(route);
-              navigate(EVENT_SCREEN);
-            } else {
-              console.error("No matching route found for permission:", firstPermission);
-            }
-          } else {
-            console.error("User has no permissions set");
-          }
+          navigate(EVENT_SCREEN);
         } else {
           setLoading(false);
           setMessage("Oops! There is some issue in login!");
         }
-      } catch ({ response }) {
-        setMessage(response?.data?.message);
+      } catch (err) {
+        setMessage(err?.response?.data?.message || err?.message || "Oops! There is some issue in login!");
         setLoading(false);
       }
     }
@@ -189,7 +155,7 @@ const Login = () => {
 
   return (
     <>
-      <div className="mx-auto h-full max-w-lg space-y-8 lg:pr-20 2xl:py-12 3xl:pr-4">
+      <div className="mx-auto flex min-h-[calc(100vh-8rem)] max-w-lg flex-col justify-center space-y-6 py-6 lg:min-h-0 lg:pr-20 2xl:py-10 3xl:pr-4">
         <img src={Images.LOGO1} className="w-52 3xl:w-60" alt="logo" />
         <div className="">
           <h2 className="text-xl font-medium">Sign In to your account</h2>
@@ -228,7 +194,7 @@ const Login = () => {
             )}
             {message && <p className="mt-2 text-red-500">{message}</p>}
           </div>
-          <Button title="Sign In" type="submit" className="mt-10 w-full" loading={loading} />
+          <Button title="Sign In" type="submit" className="mt-8 w-full" loading={loading} />
         </form>
       </div>
     </>

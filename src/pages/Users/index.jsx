@@ -17,6 +17,9 @@ import { mediaUrl } from "../../utilities/config";
 import { Images } from "../../assets/Assets";
 import { useTranslation } from "react-i18next";
 import ImportUserModal from "./ImportUserModal";
+import { hasPermission } from "../../utilities/permissions";
+
+const isActiveStatus = (status) => ["1", "true", "active"].includes(String(status).toLowerCase());
 
 const Users = () => {
   const { t } = useTranslation("common");
@@ -150,7 +153,6 @@ const Users = () => {
   useEffect(() => {
     getUsersListing();
   }, [currentPage]);
-
   return (
     <>
       <div className="grid grid-cols-12 gap-5">
@@ -160,7 +162,7 @@ const Users = () => {
               <h3 className="heading">Users</h3>
               <div className="flex w-full items-center justify-between">
                 <div className="flex items-center gap-2">
-                {(userData?.role?.display_name === "web_admin" || userData.role.permissions?.some((item) => item === "users-create")) && (
+                {hasPermission(userData, "users-create") && (
                   <Button title={t("users.addUser")} onClick={() => setAddNewModal(true)} />
                 )}
                 <Button title="Import Excel" buttonColor="bg-purple-600" onClick={() => setImportModalOpen(true)} />
@@ -214,7 +216,7 @@ const Users = () => {
                             requestSort(sortKey);
                           }}
                         >
-                          <p className="font-inter cursor-pointer whitespace-nowrap text-xs font-semibold leading-5 3xl:text-sm">
+                          <p className="font-inter cursor-pointer whitespace-nowrap text-sm font-semibold leading-5 3xl:text-sm">
                             {head}
                             {sortConfig.key ===
                               (head === " Name"
@@ -249,6 +251,7 @@ const Users = () => {
                           className={`cursor-pointer ${item?.uuid === activeRow ? "border-l-4 border-secondary bg-secondary/15" : "even:bg-gray-50"}`}
                           onClick={() => handleRowClick(item?.uuid)}
                         >
+                          
                           <td className="py-3 pl-6 pr-4">
                             <p className="text-primary-color-200 flex items-center gap-x-3 text-xs font-normal 3xl:text-sm">
                               <img
@@ -267,8 +270,8 @@ const Users = () => {
                             <p className="text-primary-color-200 text-xs font-normal 3xl:text-sm">{item?.role?.display_name}</p>
                           </td>
                           <td className="py-3 pl-4 pr-3 3xl:px-4">
-                            <p className={`${item?.status === 1 ? "text-secondary" : "text-red-500"} text-xs font-normal 3xl:text-sm`}>
-                              {item?.status === 1 ? "Active" : "Inactive"}
+                            <p className={`${isActiveStatus(item?.status) ? "text-secondary" : "text-red-500"} text-xs font-normal 3xl:text-sm`}>
+                              {isActiveStatus(item?.status) ? t("users.active") : t("users.inactive")}
                             </p>
                           </td>
                           {/* <td className="py-3 pr-3 pl-4 3xl:px-4">
@@ -342,7 +345,7 @@ const Users = () => {
                       <div className="flex justify-between">
                         <h3 className="heading">Details</h3>
                         <div className="flex items-center gap-x-3">
-                          {(userData?.role?.display_name === "web_admin" || userData.role.permissions?.some((item) => item === "users-edit")) && (
+                          {hasPermission(userData, "users-edit") && (
                             <button
                               className="border-b border-secondary text-sm font-medium text-secondary"
                               type="button"
@@ -354,7 +357,7 @@ const Users = () => {
                               {t("buttons.edit")}
                             </button>
                           )}
-                          {(userData?.role?.display_name === "web_admin" || userData.role.permissions?.some((item) => item === "users-delete")) && (
+                          {hasPermission(userData, "users-delete") && (
                             <button
                               onClick={() => setOpenDeleteModal({ open: true, data: detail })}
                               className="border-b border-red-500 text-sm font-medium text-red-500"
@@ -388,7 +391,10 @@ const Users = () => {
                     <div className="flex flex-wrap justify-between gap-5">
                       <TitleValue title={t("users.userType")} value={detail?.role?.display_name || "-"} />
                       <TitleValue title={t("users.date")} value={getLocalDateFromUnixTimestamp(detail?.created_at_unix, "DD MMM, YYYY")} />
-                      <TitleValue title={t("users.status")} value={detail?.status === 1 ? "Active" : "Inactive" || "-"} />
+                      <TitleValue
+                        title={t("users.status")}
+                        value={detail?.status === null || detail?.status === undefined ? "-" : isActiveStatus(detail.status) ? t("users.active") : t("users.inactive")}
+                      />
                     </div>
                   </div>
                 </div>
