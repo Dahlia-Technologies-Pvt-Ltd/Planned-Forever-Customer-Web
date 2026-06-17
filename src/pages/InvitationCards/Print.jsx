@@ -20,7 +20,7 @@ const TABLE_HEAD_MENU = [t("invitationCard.name"), t("headings.notes")];
 
 const TABLE_HEAD_GROUP = ["Salutation", "Contact Name"];
   // Context
-  const { allInvitationCards , userData , getInvitationCards } = useThemeContext();
+  const { allInvitationCards, userData, getInvitationCards, eventSelect } = useThemeContext();
 
   // Navigations
   const navigate = useNavigate();
@@ -31,16 +31,21 @@ const TABLE_HEAD_GROUP = ["Salutation", "Contact Name"];
   const [loading, setLoading] = useState(false);
   const [selectedItem, setSelectedItem] = useState([]);
   const [allInvitationCardList, setAllInvitationCardList] = useState([]);
-  const [allInvitationCardUserList, setAllInvitationCardUserList] = useState("");
+  const [allInvitationCardUserList, setAllInvitationCardUserList] = useState([]);
 
   const getInvitationCardListToPrint = async () => {
+    if (!eventSelect) return;
     try {
       setLoading(true);
-      const result = await ApiServices.invitation_card.getInvitationCardReport();
+      const payload = {
+        event_id: eventSelect,
+      };
+      const result = await ApiServices.invitation_card.getInvitationCardReport(payload);
       if (result.data.code === 200) {
+        console.log(result?.data?.data);
         setAllInvitationCardList(result?.data?.data);
         setLoading(false);
-        setSelectedItem("")
+        setSelectedItem([]);
       }
     } catch (error) {
       setLoading(false);
@@ -50,18 +55,22 @@ const TABLE_HEAD_GROUP = ["Salutation", "Contact Name"];
   const [reportLoading , setReportLoading] = useState(false)
 
   const getInvitationCardUserListToPrint = async () => {
+    if (selectedItem.length === 0) return;
     let payload = {
       card_ids: selectedItem.map((item) => item.value),
+      event_id: eventSelect,
     };
     try {
       setReportLoading(true);
       const result = await ApiServices.invitation_card.getInvitationCardReportUser(payload);
        
       if (result.status === 200) {
-        setAllInvitationCardUserList(result?.data);
+        setAllInvitationCardUserList(result?.data?.data || []);
         setReportLoading(false);
       }
-    } catch (error) {}
+    } catch (error) {
+      setReportLoading(false);
+    }
   };
 
   const handlePrint = useReactToPrint({
@@ -79,7 +88,7 @@ const TABLE_HEAD_GROUP = ["Salutation", "Contact Name"];
         <tr>
           {TABLE_HEAD_GROUP.map((head) => (
             <th key={head} className="border-b border-gray-100 bg-white p-4 first:pl-6">
-              <p className="font-inter cursor-pointer whitespace-nowrap text-xs font-semibold leading-5 3xl:text-sm">{head}</p>
+              <p className="font-inter cursor-pointer whitespace-nowrap text-sm font-semibold leading-5 3xl:text-sm">{head}</p>
             </th>
           ))}
         </tr>
@@ -137,7 +146,7 @@ const TABLE_HEAD_GROUP = ["Salutation", "Contact Name"];
           <tr>
             {TABLE_HEAD_MENU.map((head) => (
               <th className="border-b border-gray-100 bg-white p-4 first:pl-6">
-                <p className="font-inter cursor-pointer whitespace-nowrap text-xs font-semibold leading-5 3xl:text-sm">{head}</p>
+                <p className="font-inter cursor-pointer whitespace-nowrap text-sm font-semibold leading-5 3xl:text-sm">{head}</p>
               </th>
             ))}
           </tr>
@@ -174,10 +183,11 @@ const TABLE_HEAD_GROUP = ["Salutation", "Contact Name"];
   </div>
   ));
 
-  useEffect(()=>{
+  useEffect(() => {
+    if (!eventSelect) return;
     getInvitationCardListToPrint();
-    getInvitationCards()
-  },[])
+    getInvitationCards();
+  }, [eventSelect]);
 
   return (
     <>

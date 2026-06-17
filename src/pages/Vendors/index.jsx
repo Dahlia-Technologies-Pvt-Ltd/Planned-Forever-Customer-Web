@@ -18,6 +18,7 @@ import ConfirmationModal from "../../components/common/ConfirmationModal";
 import { ChevronDownIcon, ChevronLeftIcon, ChevronRightIcon, ChevronUpIcon, MagnifyingGlassIcon } from "@heroicons/react/24/outline";
 import { useTranslation } from "react-i18next";
 import { tabClasses } from "@mui/material";
+import { hasPermission } from "../../utilities/permissions";
 
 // Table Head
 
@@ -164,7 +165,7 @@ const Vendors = () => {
                       <Button title={t("vendor.recommendedVendors")} buttonColor="border-primary  bg-primary " />
                     </Link>
                   )}
-                  {(userData?.role?.display_name === "web_admin" || userData.role.permissions?.some((item) => item === "vendors-create")) && (
+                  {(hasPermission(userData, "vendors-create")) && (
                     <Button title={t("vendor.addVendor")} onClick={() => setAddNewModal(true)} />
                   )}
 
@@ -189,7 +190,7 @@ const Vendors = () => {
                       }
                     }}
                     onKeyPress={handleKeyPress}
-                    className="focus:border-primary-color-100 block h-11 w-52 rounded-10 border border-primary-light-color px-4 pl-11 text-sm text-primary-color focus:ring-primary-color 3xl:w-full"
+                    className="focus:border-primary-color-100 block h-11 w-52 rounded-10 border border-primary-light-color px-4 pl-11 text-base text-primary-color focus:ring-primary-color 3xl:w-full"
                   />
                 </div>
               </div>
@@ -217,7 +218,7 @@ const Vendors = () => {
                             requestSort(sortKey);
                           }}
                         >
-                          <p className="font-inter cursor-pointer whitespace-nowrap text-xs font-semibold leading-5 3xl:text-sm">
+                          <p className="font-inter cursor-pointer whitespace-nowrap text-sm font-semibold leading-5">
                             {head}
                             {sortConfig.key ===
                               (head === "Vendor Name"
@@ -251,16 +252,16 @@ const Vendors = () => {
                           onClick={() => handleRowClick(item?.id)}
                         >
                           <td className="py-3 pl-6 pr-4">
-                            <p className="text-xs font-normal text-primary-color 3xl:text-sm">{item?.name || "-"}</p>
+                            <p className="text-sm font-normal text-primary-color">{item?.name || "-"}</p>
                           </td>
                           <td className="py-3 pl-4 3xl:px-4">
-                            <p className="text-xs font-normal text-primary-color 3xl:text-sm">{item?.first_contact_person_name || "-"}</p>
+                            <p className="text-sm font-normal text-primary-color">{item?.first_contact_person_name || "-"}</p>
                           </td>
                           <td className="py-3 pl-4 3xl:px-4">
-                            <p className="text-xs font-normal text-primary-color 3xl:text-sm">{item?.first_contact_person_phone?.phone || "-"}</p>
+                            <p className="text-sm font-normal text-primary-color">{item?.first_contact_person_phone?.phone || "-"}</p>
                           </td>
                           <td className="py-3 pl-4 pr-3 3xl:px-4">
-                            <p className="text-xs font-normal text-primary-color 3xl:text-sm">
+                            <p className="text-sm font-normal text-primary-color">
                               {item?.tags?.slice(0, 3).map((tag, index) => (
                                 <span key={index}>
                                   <Badge title={tag} />
@@ -339,7 +340,7 @@ const Vendors = () => {
                       <div className="flex justify-between">
                         <h3 className="heading">{t("headings.details")} </h3>
                         <div className="flex items-center gap-x-3">
-                          {(userData?.role?.display_name === "web_admin" || userData.role.permissions?.some((item) => item === "vendors-edit")) && (
+                          {(hasPermission(userData, "vendors-edit")) && (
                             <button
                               className="border-b border-secondary text-sm font-medium text-secondary"
                               type="button"
@@ -351,7 +352,7 @@ const Vendors = () => {
                               {t("buttons.edit")}
                             </button>
                           )}
-                          {(userData?.role?.display_name === "web_admin" || userData.role.permissions?.some((item) => item === "vendors-delete")) && (
+                          {(hasPermission(userData, "vendors-delete")) && (
                             <button
                               onClick={() => setOpenDeleteModal({ open: true, data: detail })}
                               className="border-b border-red-500 text-sm font-medium text-red-500 "

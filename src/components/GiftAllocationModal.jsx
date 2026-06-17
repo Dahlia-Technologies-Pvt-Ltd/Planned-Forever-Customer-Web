@@ -338,9 +338,67 @@ export default function GiftAllocationModal({ label, isOpen, setIsOpen, allocate
         } else {
           setItems([{ ceremony: "", gift: "", quantity: "", note: "" }]);
         }
+      } else if (Array.isArray(allocateData) && allocateData.length > 0) {
+        // Bulk allocation - merge unique existing gifts from selected group contacts
+        const uniqueGiftAllocations = getUniqueGiftAllocations(allocateData);
+
+        if (uniqueGiftAllocations.length > 0) {
+          const updatedItems = uniqueGiftAllocations.map((item) => {
+            const ceremonyObj = allCeremonies?.find((ceremony) => ceremony.value === item.ceremony_id);
+            const giftObj = allGifts?.find((gift) => gift.value === item.gift_id);
+
+            return {
+              ceremony: ceremonyObj
+                ? {
+                    value: ceremonyObj.value,
+                    label: ceremonyObj.label,
+                  }
+                : "",
+              gift: giftObj
+                ? {
+                    value: giftObj.value,
+                    label: giftObj.label,
+                  }
+                : "",
+              quantity: item.quantity,
+              note: item.description,
+            };
+          });
+
+          setItems(updatedItems);
+        } else {
+          setItems([{ ceremony: "", gift: "", quantity: "", note: "" }]);
+        }
+      } else if (allocateData?.gift && allocateData.gift.length > 0) {
+        // Fallback when bulk mode receives a single contact-shaped object
+        const updatedItems = allocateData.gift.map((item) => {
+          const ceremonyObj = allCeremonies?.find((ceremony) => ceremony.value === item.ceremony_id);
+          const giftObj = allGifts?.find((gift) => gift.value === item.id);
+
+          return {
+            ceremony: ceremonyObj
+              ? {
+                  value: ceremonyObj.value,
+                  label: ceremonyObj.label,
+                }
+              : "",
+            gift: giftObj
+              ? {
+                  value: giftObj.value,
+                  label: giftObj.label,
+                }
+              : "",
+            quantity: item?.pivot?.quantity,
+            note: item?.pivot?.description,
+          };
+        });
+
+        setItems(updatedItems);
+      } else {
+        setItems([{ ceremony: "", gift: "", quantity: "", note: "" }]);
       }
     }
-  }, [isOpen, allCeremonies, allGifts, isBulkAllocation]);
+  }, [isOpen, allCeremonies, allGifts, isBulkAllocation, allocateData]);
 
   useLayoutEffect(() => {
     getCeremonies();
@@ -385,10 +443,10 @@ export default function GiftAllocationModal({ label, isOpen, setIsOpen, allocate
                 leaveFrom="opacity-100 scale-100"
                 leaveTo="opacity-0 scale-75"
               >
-                <Dialog.Panel className="min-h-[600px] w-full max-w-4xl rounded-2xl bg-white p-4 text-center align-middle shadow-xl transition-all xl:max-w-5xl xl:p-6 3xl:max-w-6xl 3xl:p-8">
-                  <div className="flex items-center gap-x-4 rounded-10 border bg-blue-400 p-4 font-poppins text-20 font-semibold leading-7 text-white">
-                    {isBulkAllocation ? <UserGroupIcon className="h-10 w-10 text-white" /> : <EnvelopeIcon className="h-10 w-10 text-white" />}
-                    <h3>
+                <Dialog.Panel className="w-full max-w-4xl rounded-2xl bg-white p-4 text-center align-middle shadow-xl transition-all xl:max-w-5xl xl:p-6 3xl:max-w-6xl 3xl:p-8">
+                  <div className="flex items-center gap-x-3 rounded-10 border bg-blue-400 p-3 font-poppins text-base font-semibold leading-6 text-white xl:text-lg">
+                    {isBulkAllocation ? <UserGroupIcon className="h-8 w-8 text-white" /> : <EnvelopeIcon className="h-8 w-8 text-white" />}
+                    <h3 className="text-base xl:text-lg">
                       {t("giftAllocation.allocateGiftTo")} {getDisplayName()}
                     </h3>
                   </div>
@@ -396,7 +454,7 @@ export default function GiftAllocationModal({ label, isOpen, setIsOpen, allocate
                   {/* Contact Selection for Bulk Allocation - Show for ANY bulk allocation */}
                   {isBulkAllocation && (
                     <div className="mt-6 rounded-lg border border-gray-300 p-4">
-                      <h4 className="mb-4 text-left text-lg font-semibold">Select Contacts for Gift Allocation</h4>
+                      <h4 className="mb-4 text-left text-sm font-semibold xl:text-base">Select Contacts for Gift Allocation</h4>
 
                       {/* Only show "Select All" if there are multiple contacts */}
                       {Array.isArray(allocateData) && allocateData.length > 1 && (
@@ -408,7 +466,7 @@ export default function GiftAllocationModal({ label, isOpen, setIsOpen, allocate
                               onChange={(e) => handleSelectAllContacts(e.target.checked)}
                               className="mr-2"
                             />
-                            <span className="font-medium">Select All ({allocateData.length} contacts)</span>
+                            <span className="text-sm font-medium">Select All ({allocateData.length} contacts)</span>
                           </label>
                         </div>
                       )}
@@ -444,27 +502,31 @@ export default function GiftAllocationModal({ label, isOpen, setIsOpen, allocate
                         )}
                       </div>
 
-                      <div className="mt-3 text-sm text-gray-600">
+                      <div className="mt-3 text-xs text-gray-600 xl:text-sm">
                         {selectedContacts.length} of {Array.isArray(allocateData) ? allocateData.length : 1} contact{Array.isArray(allocateData) && allocateData.length > 1 ? 's' : ''} selected
                       </div>
                     </div>
                   )}
 
-                  <div>
-                    <table className="mt-8 w-full border-collapse">
-                      <thead>
-                        <tr>
-                          <th className="border border-gray-400 px-2 py-2 text-start">{t("giftAllocation.ceremony")}</th>
-                          <th className="border border-gray-400 px-2 py-2 text-start">{t("giftAllocation.gift")}</th>
-                          <th className="border border-gray-400 px-2 py-2 text-start">{t("giftAllocation.quantity")}</th>
-                          <th className="border border-gray-400 px-2 py-2 text-start">{t("headings.notes")}</th>
-                          <th className="border border-gray-400 px-2 text-start">Action</th>
-                        </tr>
-                      </thead>
-                      <tbody>
-                        {items.map((item, index) => (
-                          <tr key={index}>
-                            <td className="border border-gray-400 px-2 py-2">
+                  <div className="mt-8 rounded-2xl border border-slate-200 bg-slate-50/70 p-4 xl:p-5">
+                    <div className="mb-3 hidden grid-cols-[1.5fr_1.5fr_0.7fr_72px] items-center gap-4 px-1 lg:grid">
+                      <div className="text-left text-sm font-semibold text-slate-700">{t("giftAllocation.ceremony")}</div>
+                      <div className="text-left text-sm font-semibold text-slate-700">{t("giftAllocation.gift")}</div>
+                      <div className="text-left text-sm font-semibold text-slate-700">{t("giftAllocation.quantity")}</div>
+                      <div className="text-center text-sm font-semibold text-slate-700">Action</div>
+                    </div>
+
+                    <div className="space-y-4">
+                      {items.map((item, index) => (
+                        <div
+                          key={index}
+                          className="rounded-2xl border border-slate-200 bg-white p-4 shadow-[0_10px_30px_rgba(15,23,42,0.05)]"
+                        >
+                          <div className="grid grid-cols-1 gap-4 lg:grid-cols-[1.5fr_1.5fr_0.7fr_72px] lg:items-start">
+                            <div>
+                              <div className="mb-2 text-left text-xs font-semibold uppercase tracking-wide text-slate-500 lg:hidden">
+                                {t("giftAllocation.ceremony")}
+                              </div>
                               <Dropdown
                                 withoutTitle
                                 options={allCeremonies}
@@ -472,8 +534,12 @@ export default function GiftAllocationModal({ label, isOpen, setIsOpen, allocate
                                 value={item.ceremony}
                                 onChange={(label) => handleInputChange(label, index, "ceremony")}
                               />
-                            </td>
-                            <td className="border border-gray-400 px-2 py-2">
+                            </div>
+
+                            <div>
+                              <div className="mb-2 text-left text-xs font-semibold uppercase tracking-wide text-slate-500 lg:hidden">
+                                {t("giftAllocation.gift")}
+                              </div>
                               <Dropdown
                                 withoutTitle
                                 options={allGifts}
@@ -481,8 +547,12 @@ export default function GiftAllocationModal({ label, isOpen, setIsOpen, allocate
                                 value={item.gift}
                                 onChange={(label) => handleInputChange(label, index, "gift")}
                               />
-                            </td>
-                            <td className="w-32 border border-gray-400 px-2 pb-3 pt-2">
+                            </div>
+
+                            <div>
+                              <div className="mb-2 text-left text-xs font-semibold uppercase tracking-wide text-slate-500 lg:hidden">
+                                {t("giftAllocation.quantity")}
+                              </div>
                               <Input
                                 type="number"
                                 labelOnTop
@@ -490,28 +560,37 @@ export default function GiftAllocationModal({ label, isOpen, setIsOpen, allocate
                                 value={item.quantity}
                                 onChange={(e) => handleInputChange(e, index, "quantity")}
                               />
-                            </td>
-                            <td className="border border-gray-400 px-2 pb-3 pt-2">
-                              <Input type="text" labelOnTop value={item.note} onChange={(e) => handleInputChange(e, index, "note")} />
-                            </td>
-                            <td className="flex items-center justify-center gap-x-2 border-b border-r border-gray-400 px-2 py-4">
-                              {items.length > 1 ? (
-                                <Button icon={<TrashIcon className="w-5" />} className="w-1" onClick={() => handleDeleteItem(index)} />
-                              ) : (
-                                <div className="py-5"></div>
-                              )}
-                            </td>
-                          </tr>
-                        ))}
-                      </tbody>
-                    </table>
+                            </div>
 
-                    <button className="float-left mt-4 rounded-lg bg-secondary px-4 py-2 text-white" onClick={addNewFieldSet}>
-                      {t("giftAllocation.addAnotherSet")}
-                    </button>
+                            <div className="flex h-full items-center justify-start pt-1 lg:justify-center lg:pt-2">
+                              {items.length > 1 ? (
+                                <button
+                                  type="button"
+                                  className="rounded-full border border-red-100 bg-red-50 p-2.5 text-red-500 transition hover:border-red-200 hover:bg-red-100 hover:text-red-600"
+                                  onClick={() => handleDeleteItem(index)}
+                                >
+                                  <TrashIcon className="h-5 w-5" />
+                                </button>
+                              ) : (
+                                <span className="text-xs text-slate-300 lg:block hidden">-</span>
+                              )}
+                            </div>
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+
+                    <div className="mt-5 flex justify-start">
+                      <button
+                        className="rounded-xl bg-secondary px-5 py-3 text-sm font-medium text-white transition hover:bg-secondary/90"
+                        onClick={addNewFieldSet}
+                      >
+                        {t("giftAllocation.addAnotherSet")}
+                      </button>
+                    </div>
                   </div>
 
-                  <div className="mt-64 flex justify-end gap-x-6 px-8">
+                  <div className="mt-10 flex justify-end gap-x-6 px-2 xl:px-4">
                     <Button loading={btnLoading} title={t("buttons.save")} icon={<CheckIcon />} onClick={handleSubmit} />
                     <Button title={t("buttons.cancel")} icon={<XMarkIcon />} className="border-primary bg-primary" onClick={closeModal} />
                   </div>

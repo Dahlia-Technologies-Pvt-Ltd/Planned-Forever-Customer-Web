@@ -103,7 +103,7 @@ const ArrivalTab = ({ data, t }) => {
                     requestArrivalSort(sortKey);
                   }}
                 >
-                  <p className="font-inter cursor-pointer whitespace-nowrap text-xs font-semibold leading-5 3xl:text-sm">
+                  <p className="font-inter cursor-pointer whitespace-nowrap text-sm font-semibold leading-5 3xl:text-sm">
                     {head}
                     {arrivalSortConfig.key ===
                       (head === "Date/Time" || head === t("contacts.dateTime")
@@ -143,21 +143,21 @@ const ArrivalTab = ({ data, t }) => {
               arrivalItems.map((item, index) => (
                 <tr key={index} className="cursor-pointer even:bg-gray-50">
                   <td className="cursor-pointer py-3 pl-6 pr-4">
-                    <p className="text-xs font-normal text-primary-color 3xl:text-sm">
+                    <p className="text-sm font-normal text-primary-color 3xl:text-sm">
                       {item?.date ? moment.unix(item.date).format("DD MMM, YYYY h:mm A") : "-"}
                     </p>
                   </td>
                   <td className="cursor-pointer py-3 pl-6 pr-4">
-                    <p className="text-xs font-normal text-primary-color 3xl:text-sm">{item?.from || "-"}</p>
+                    <p className="text-sm font-normal text-primary-color 3xl:text-sm">{item?.from || "-"}</p>
                   </td>
                   <td className="cursor-pointer py-3 pl-6 pr-4">
-                    <p className="text-xs font-normal text-primary-color 3xl:text-sm">{item?.to || "-"}</p>
+                    <p className="text-sm font-normal text-primary-color 3xl:text-sm">{item?.to || "-"}</p>
                   </td>
                   <td className="cursor-pointer py-3 pl-6 pr-4">
-                    <p className="text-xs font-normal text-primary-color 3xl:text-sm">{item?.fligh_train_no || "-"}</p>
+                    <p className="text-sm font-normal text-primary-color 3xl:text-sm">{item?.fligh_train_no || "-"}</p>
                   </td>
                   <td className="cursor-pointer py-3 pl-6 pr-4">
-                    <p className="text-xs font-normal text-primary-color 3xl:text-sm">{item?.no_of_person || "-"}</p>
+                    <p className="text-sm font-normal text-primary-color 3xl:text-sm">{item?.no_of_person || "-"}</p>
                   </td>
                 </tr>
               ))

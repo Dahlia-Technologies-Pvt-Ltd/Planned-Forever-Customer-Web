@@ -33,7 +33,7 @@ const ChooseFile = ({
             <div className="label ">{label}</div>
 
             <div>
-              <input type="file" multiple id="imageInput2" className="hidden" onChange={onChange} />
+              <input type="file" multiple id="imageInput2" className="hidden" accept={accept} onChange={onChange} />
               <label
                 htmlFor="imageInput2"
                 className="mr-4  mt-2 flex w-full cursor-pointer justify-center rounded-full border-0 bg-green-50 px-4 py-2 text-sm font-semibold text-green-700 hover:bg-green-100"
@@ -47,7 +47,7 @@ const ChooseFile = ({
             <div className="label ">{label}</div>
 
             <div>
-              <input type="file" id={`${uni ? uni : "imageInput"}`} className="hidden" onChange={onChange} />
+              <input type="file" id={`${uni ? uni : "imageInput"}`} className="hidden" accept={accept} onChange={onChange} />
               <label
                 htmlFor={`${uni ? uni : "imageInput"}`}
                 className="mr-4  mt-2 flex w-full cursor-pointer justify-center rounded-full border-0 bg-green-50 px-4 py-2 text-sm font-semibold text-green-700 hover:bg-green-100"

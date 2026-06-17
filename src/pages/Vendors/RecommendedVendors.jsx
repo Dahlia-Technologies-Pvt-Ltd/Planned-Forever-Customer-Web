@@ -182,6 +182,15 @@ const Vendors = () => {
     await getFurtherClassification(selectedSubCategory);
   };
 
+  const handleClearFilters = () => {
+    setCategory("");
+    setSubCategory(null);
+    setFurtherClassification([]);
+    setAllSubCategoryList([]);
+    setAllClassificatioinList([]);
+    setCurrentPage(1);
+  };
+
   // Get Sub Category List
   const getSubCategoryList = async (categoryId) => {
     try {
@@ -362,7 +371,7 @@ const Vendors = () => {
                 </div>
               </div>
             </div>
-            <div className="mb-5 mt-7 grid grid-cols-3 gap-7">
+            <div className="mb-5 mt-7 grid grid-cols-1 gap-2 md:grid-cols-2 xl:grid-cols-4">
               <Dropdown
                 isSearchable
                 options={allType2CategoryList}
@@ -388,7 +397,17 @@ const Vendors = () => {
                   setFurtherClassification(e);
                 }}
                 title={t("vendor.furtherClassification")}
+                
               />
+              <div className="flex items-end">
+                <Button
+                  type="button"
+                  title={t("buttons.clearFilters") || "Clear"}
+                  onClick={handleClearFilters}
+                  buttonColor="border border-secondary bg-white"
+                  className="w-full/3 !text-secondary py-2"
+                />
+              </div>
             </div>
             <div className="mt-5">
               <div className="-mx-6 mb-8 overflow-x-auto">
@@ -417,7 +436,7 @@ const Vendors = () => {
                             requestSort(sortKey);
                           }}
                         >
-                          <p className="font-inter cursor-pointer whitespace-nowrap text-xs font-semibold leading-5 3xl:text-sm">
+                          <p className="font-inter cursor-pointer whitespace-nowrap text-sm font-semibold leading-5 3xl:text-sm">
                             {head}
                             {sortConfig.key ===
                               (head === "Vendor Name"
@@ -456,19 +475,19 @@ const Vendors = () => {
                         >
                           <td className="py-3 pl-6 pr-4">
                             {console.log({ item })}
-                            <p className="text-xs font-normal text-primary-color 3xl:text-sm">{item?.name || "-"}</p>
+                            <p className="text-sm font-normal text-primary-color 3xl:text-sm">{item?.name || "-"}</p>
                           </td>
                           <td className="py-3 pl-4 3xl:px-4">
-                            <p className="text-xs font-normal text-primary-color 3xl:text-sm">{item?.category?.name || "-"}</p>
+                            <p className="text-sm font-normal text-primary-color 3xl:text-sm">{item?.category?.name || "-"}</p>
                           </td>
                           <td className="py-3 pl-4 3xl:px-4">
-                            <p className="text-xs font-normal text-primary-color 3xl:text-sm">{item?.sub_category?.name || "-"}</p>
+                            <p className="text-sm font-normal text-primary-color 3xl:text-sm">{item?.sub_category?.name || "-"}</p>
                           </td>
                           <td className="py-3 pl-4 3xl:px-4">
-                            <p className="text-xs font-normal text-primary-color 3xl:text-sm">{item?.classification?.name || "-"}</p>
+                            <p className="text-sm font-normal text-primary-color 3xl:text-sm">{item?.classification?.name || "-"}</p>
                           </td>
                           <td className="py-3 pl-4 pr-3 3xl:px-4">
-                            <p className="text-xs font-normal text-primary-color 3xl:text-sm">
+                            <p className="text-sm font-normal text-primary-color 3xl:text-sm">
                               {item?.tags?.slice(0, 2).map((tag, index) => (
                                 <span key={index}>
                                   <Badge title={tag?.name} />

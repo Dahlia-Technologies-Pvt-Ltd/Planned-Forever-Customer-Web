@@ -67,9 +67,9 @@ export const getCuisine = async (data) => {
   }
 };
 
-export const getPreferenceCount = async (id, data) => {
+export const getPreferenceCount = async (id, config = {}) => {
   try {
-    let response = await axios.get(`${GET.GET_PREFERENCE_COUNT}/${id}`, data);
+    let response = await axios.get(`${GET.GET_PREFERENCE_COUNT}/${id}`, config);
     return response;
   } catch (err) {
     throw err;

@@ -17,6 +17,7 @@ import ConfirmationModal from "../../components/common/ConfirmationModal";
 import TitleValue from "../../components/common/TitleValue";
 import Dropdown from "../../components/common/Dropdown";
 import ImportHotelRoomModal from "./ImportHotelRoomModal";
+import { hasPermission } from "../../utilities/permissions";
 
 const HotelRoomSetup = () => {
   const { t } = useTranslation("common");
@@ -162,7 +163,7 @@ const HotelRoomSetup = () => {
               <h3 className="heading">{t("pageTitles.hotelRooms")}</h3>
               <div className="flex w-full items-center justify-between">
                 <div className="flex items-center gap-x-3">
-                  {(userData?.role?.display_name === "web_admin" || userData.role.permissions?.some((item) => item === "hotel-rooms-create")) && (
+                  {(hasPermission(userData, "hotel-rooms-create")) && (
                     <>
                       <Button
                         title={t("hotels.addHotelRoom")}
@@ -171,7 +172,7 @@ const HotelRoomSetup = () => {
                           setModalData(null);
                         }}
                       />
-                      <Button title={t("contacts.importExcel")} buttonColor="bg-purple-600" onClick={() => setAddNewImportModal(true)} />
+                      {/* <Button title={t("contacts.importExcel")} buttonColor="bg-purple-600" onClick={() => setAddNewImportModal(true)} /> */}
                     </>
                   )}
                 </div>
@@ -229,7 +230,7 @@ const HotelRoomSetup = () => {
                           requestSort(sortKey);
                         }}
                       >
-                        <p className="cursor-pointer whitespace-nowrap text-xs font-semibold leading-5">
+                        <p className="cursor-pointer whitespace-nowrap text-sm font-semibold leading-5">
                           {head}
                           {sortConfig.key ===
                             (head === t("hotels.roomType")
@@ -326,7 +327,7 @@ const HotelRoomSetup = () => {
                       <h2 className="sub-heading">{t("headings.basicInfo")}</h2>
 
                       <div className="flex items-center gap-x-3 ">
-                        {(userData?.role?.display_name === "web_admin" || userData.role.permissions?.some((item) => item === "hotel-rooms-edit")) && (
+                        {(hasPermission(userData, "hotel-rooms-edit")) && (
                           <button
                             className="border-b border-secondary text-sm font-medium text-secondary"
                             type="button"
@@ -338,8 +339,7 @@ const HotelRoomSetup = () => {
                             {t("buttons.edit")}
                           </button>
                         )}
-                        {(userData?.role?.display_name === "web_admin" ||
-                          userData.role.permissions?.some((item) => item === "hotel-rooms-delete")) && (
+                        {(hasPermission(userData, "hotel-rooms-delete")) && (
                           <button
                             onClick={() => setOpenDeleteModal({ open: true, data: detail })}
                             className="border-b border-red-500 text-sm font-medium text-red-500"

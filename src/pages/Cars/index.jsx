@@ -24,6 +24,7 @@ import { useTranslation } from "react-i18next";
 import Dropdown from "../../components/common/Dropdown";
 import { FunnelIcon } from "@heroicons/react/24/outline";
 import Input from "../../components/common/Input";
+import { hasPermission } from "../../utilities/permissions";
 
 const Cars = () => {
   const { t } = useTranslation("common");
@@ -50,7 +51,6 @@ const Cars = () => {
   const [currentPage, setCurrentPage] = useState(1);
 
   const [modalData, setModalData] = useState(null);
-
   // Modal
   const [addNewModal, setAddNewModal] = useState(false);
   const [openDeleteModal, setOpenDeleteModal] = useState({ open: false, data: null });
@@ -89,6 +89,14 @@ const Cars = () => {
   // Pagination
   const handlePageChange = ({ selected }) => {
     setCurrentPage(selected + 1);
+  };
+
+  const clearFilters = () => {
+    setCarFilter(null);
+    setSeatsFilter(null);
+    setAvailableFromFilter("");
+    setAvailableTillFilter("");
+    setCurrentPage(1);
   };
 
   // get all cars
@@ -199,14 +207,18 @@ const Cars = () => {
   }, [items]);
 
   useEffect(() => {
-    getCarListing();
-  }, [currentPage, seatsFilter, carFilter, availableFromFilter, availableTillFilter]);
+    if (eventSelect) {
+      getCarListing();
+    }
+  }, [currentPage, seatsFilter, carFilter, availableFromFilter, availableTillFilter, eventSelect]);
 
   useEffect(() => {
-    getCarListingOptions();
-    getCarListing();
+    if (eventSelect) {
+      getCarListingOptions();
+      getCarListing();
+    }
 
-  }, []);
+  }, [eventSelect]);
 
   return (
     <>
@@ -217,7 +229,7 @@ const Cars = () => {
               <h3 className="heading">Cars</h3>
               <div className="flex w-full items-center justify-between">
                 <div className="flex items-center gap-x-3">
-                  {(userData?.role?.display_name === "web_admin" || userData.role.permissions?.some((item) => item === "cars-create")) && (
+                  {(hasPermission(userData, "cars-create")) && (
                     <Button title={t("cars.addCar")} onClick={() => setAddNewModal(true)} />
                   )}
                   <Link to={CAR_PRINT}>
@@ -295,6 +307,15 @@ const Cars = () => {
                     setAvailableTillFilter(e.target.value);
                   }}
                 />
+                <div className="mt-6">
+                  <Button
+                    title="Clear Filter"
+                    type="button"
+                    buttonColor="border-primary-light-color bg-white text-primary-color"
+                    onClick={clearFilters}
+                    className="h-10 px-4 text-sm"
+                  />
+                </div>
               </div>
             )}
             {/* Table Start */}
@@ -324,8 +345,8 @@ const Cars = () => {
                             }
                             requestSort(sortKey);
                           }}
-                        >
-                          <p className="font-inter cursor-pointer whitespace-nowrap text-xs font-semibold leading-5 3xl:text-sm">
+                          >
+                          <p className="font-inter cursor-pointer whitespace-nowrap text-sm font-semibold leading-5 3xl:text-md">
                             {head}
                             {sortConfig.key ===
                               (head === "Car Make & Model "
@@ -442,7 +463,7 @@ const Cars = () => {
                       <div className="flex justify-between">
                         <h3 className="heading">{t("headings.details")}</h3>
                         <div className="flex items-center gap-x-3">
-                          {(userData?.role?.display_name === "web_admin" || userData.role.permissions?.some((item) => item === "cars-edit")) && (
+                          {(hasPermission(userData, "cars-edit")) && (
                             <button
                               className="border-b border-secondary text-sm font-medium text-secondary"
                               type="button"
@@ -454,7 +475,7 @@ const Cars = () => {
                               {t("buttons.edit")}
                             </button>
                           )}
-                          {(userData?.role?.display_name === "web_admin" || userData.role.permissions?.some((item) => item === "cars-delete")) && (
+                          {(hasPermission(userData, "cars-delete")) && (
                             <button
                               onClick={() => setOpenDeleteModal({ open: true, data: detail })}
                               className="border-b border-red-500 text-sm font-medium text-red-500"

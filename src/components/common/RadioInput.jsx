@@ -13,7 +13,7 @@ const RadioInput = ({ name, options, onChange, Classes, type, labelClasses, chec
     <div className={`mb-2  ${Classes}`}>
       {options.map((option) => (
         <React.Fragment key={option.value}>
-          <div className={`mb-2 space-x-4 ${labelClasses}`}>
+          <div className={`mb-2 flex items-center gap-3 ${labelClasses}`}>
             <input
               type={type ? type : "radio"}
               id={option.id}
@@ -22,11 +22,11 @@ const RadioInput = ({ name, options, onChange, Classes, type, labelClasses, chec
               checked={checked ? checked === option.value : selectedOption === option.value}
               onChange={handleInputChange}
               disabled={disabled && disabled}
+              className="!h-4 !w-4 shrink-0 cursor-pointer accent-secondary-color"
             />
-            <label className="label" htmlFor={option.id}>
+            <label className="label !mb-0 cursor-pointer text-sm" htmlFor={option.id}>
               {option.label}
             </label>
-            <br />
           </div>
         </React.Fragment>
       ))}

@@ -20,10 +20,44 @@ import { mediaUrl } from "../../utilities/config";
 import { ChevronDownIcon, ChevronLeftIcon, ChevronRightIcon, ChevronUpIcon, MagnifyingGlassIcon } from "@heroicons/react/24/solid";
 import { useTranslation } from "react-i18next";
 import { Menu } from "@headlessui/react";
+import { hasPermission } from "../../utilities/permissions";
 const statuses = ["pending", "completed"];
 const statusStyles = {
   pending: "bg-yellow-100 text-yellow-700",
   completed: "bg-green-100 text-green-700",
+};
+
+const getTaskAttachment = (attachments) => {
+  if (!attachments) return "";
+
+  if (Array.isArray(attachments) && attachments.length > 0) {
+    const firstAttachment = attachments[0];
+    if (typeof firstAttachment === "string") return firstAttachment;
+    if (firstAttachment?.path) return firstAttachment.path;
+    if (firstAttachment?.file) return firstAttachment.file;
+    if (firstAttachment?.url) return firstAttachment.url;
+  }
+
+  if (typeof attachments === "object") {
+    if (attachments?.path) return attachments.path;
+    if (attachments?.file) return attachments.file;
+    if (attachments?.url) return attachments.url;
+  }
+
+  if (typeof attachments === "string" && attachments) {
+    const normalizedAttachments = attachments.trim();
+
+    if (normalizedAttachments.startsWith("[") || normalizedAttachments.startsWith("{")) {
+      try {
+        const parsedAttachments = JSON.parse(normalizedAttachments);
+        return getTaskAttachment(parsedAttachments);
+      } catch (error) {}
+    }
+
+    return normalizedAttachments;
+  }
+
+  return "";
 };
 
 const Tasks = () => {
@@ -339,7 +373,7 @@ const Tasks = () => {
           <Link to={TASK_PRINT}>
             <Button title={t("buttons.print")} buttonColor="border-primary bg-primary" />
           </Link>
-          {(userData?.role?.display_name === "web_admin" || userData.role.permissions?.some((item) => item === "tasks-create")) && (
+          {(hasPermission(userData, "tasks-create")) && (
             <Button title={t("tasks.addTask")} onClick={() => setAddNewModal(true)} />
           )}
           {/* <RangePicker setRangePicker={setDateRange} refreshData={refreshData} /> */}
@@ -393,7 +427,7 @@ const Tasks = () => {
                           requestSort(sortKey);
                         }}
                       >
-                        <p className="font-inter cursor-pointer whitespace-nowrap text-xs font-semibold leading-5 3xl:text-sm">
+                        <p className="font-inter cursor-pointer whitespace-nowrap text-sm font-semibold leading-5 3xl:text-sm">
                           {head}
                           {sortConfig.key ===
                             (head === "Due Date"
@@ -462,7 +496,7 @@ const Tasks = () => {
                         </td>
                         <td className="py-3 pl-4 pr-3 3xl:px-4">
                           <div className="flex items-center gap-x-3">
-                            {(userData?.role?.display_name === "web_admin" || userData.role.permissions?.some((item) => item === "tasks-edit")) && (
+                            {(hasPermission(userData, "tasks-edit")) && (
                               <span
                                 onClick={() => {
                                   setAddNewModal(true);
@@ -474,7 +508,7 @@ const Tasks = () => {
                               </span>
                             )}
 
-                            {(userData?.role?.display_name === "web_admin" || userData.role.permissions?.some((item) => item === "tasks-delete")) && (
+                            {(hasPermission(userData, "tasks-delete")) && (
                               <span
                                 onClick={() => setOpenDeleteModal({ open: true, data: item })}
                                 className="cursor-pointer text-xs font-normal text-red-500 underline underline-offset-4 3xl:text-sm"
@@ -547,7 +581,7 @@ const Tasks = () => {
                           delegateTasksRequestSort(sortKey);
                         }}
                       >
-                        <p className="font-inter cursor-pointer whitespace-nowrap text-xs font-semibold leading-5 3xl:text-sm">
+                        <p className="font-inter cursor-pointer whitespace-nowrap text-sm font-semibold leading-5 3xl:text-sm">
                           {head}
                           {delegateTasksSortConfig.key ===
                             (head === "Due Date"
@@ -701,7 +735,7 @@ const Tasks = () => {
                           othersTasksRequestSort(sortKey);
                         }}
                       >
-                        <p className="font-inter cursor-pointer whitespace-nowrap text-xs font-semibold leading-5 3xl:text-sm">
+                        <p className="font-inter cursor-pointer whitespace-nowrap text-sm font-semibold leading-5 3xl:text-sm">
                           {head}
                           {othersTasksSortConfig.key ===
                             (head === "Due Date"
@@ -801,14 +835,18 @@ const Tasks = () => {
                             : "No Tags"}
                         </td>
                         <td className="py-3 pl-4 pr-3 3xl:px-4">
-                          <a
-                            href={mediaUrl + item?.attachments || "#"}
-                            target="_blank"
-                            rel="noopener noreferrer"
-                            className="underline underline-offset-4 cursor-pointer text-primary-color-200 text-xs font-normal 3xl:text-sm"
-                          >
-                            View
-                          </a>
+                          {getTaskAttachment(item?.attachments) ? (
+                            <a
+                              href={mediaUrl + getTaskAttachment(item?.attachments)}
+                              target="_blank"
+                              rel="noopener noreferrer"
+                              className="cursor-pointer text-xs font-normal text-primary-color-200 underline underline-offset-4 3xl:text-sm"
+                            >
+                              View
+                            </a>
+                          ) : (
+                            <span className="text-primary-color-200 text-xs font-normal 3xl:text-sm">-</span>
+                          )}
                         </td>
                         <td className="py-3 pl-4 pr-3 3xl:px-4">
                           <div className="flex items-center gap-x-3">

@@ -43,17 +43,17 @@ export default function ConfirmationModal({ message, isOpen, setIsOpen, handleSu
                 leaveFrom="opacity-100 scale-100"
                 leaveTo="opacity-0 scale-75"
               >
-                <Dialog.Panel className="w-full max-w-sm overflow-hidden rounded-2xl bg-white p-8 text-center align-middle shadow-xl transition-all 3xl:max-w-md">
-                  <img src={Images.QUESTION_MARK} alt="question mark icon" className="mx-auto" />
-                  <Dialog.Title as="h3" className="mx-auto mt-8 max-w-xs font-poppins text-20 font-semibold leading-7 text-secondary-color">
+                <Dialog.Panel className="w-full max-w-[23rem] rounded-[1.5rem] bg-white px-8 py-8 text-center align-middle shadow-xl transition-all">
+                  <img src={Images.QUESTION_MARK} alt="question mark icon" className="mx-auto w-24 max-w-full" />
+                  <Dialog.Title as="h3" className="mx-auto mt-6 max-w-[15rem] font-poppins text-[1rem] font-semibold leading-snug text-secondary-color sm:text-[1.05rem]">
                     {message}
                   </Dialog.Title>
 
-                  <p className="my-4 text-sm text-red-500">{errorMessage}</p>
+                  <p className="mt-2 min-h-[1rem] text-xs text-red-500">{errorMessage}</p>
 
-                  <div className="mt-12 flex justify-center gap-x-6 px-8">
+                  <div className="mt-7 flex items-center justify-center gap-4">
                     <Button
-                      className="w-full"
+                      className="h-10 min-w-[7rem] rounded-[0.85rem] px-6 text-sm font-semibold"
                       title={btnLoading ? <Spinner /> : "Yes"}
                       onClick={() => {
                         handleSubmit ? handleSubmit() : closeModal();
@@ -65,7 +65,8 @@ export default function ConfirmationModal({ message, isOpen, setIsOpen, handleSu
                       onClick={() => {
                         handleCancel ? handleCancel() : closeModal();
                       }}
-                      buttonColor="bg-red-500 w-full"
+                      className="h-10 min-w-[7rem] rounded-[0.85rem] px-6 text-sm font-semibold"
+                      buttonColor="bg-red-500"
                     />
                   </div>
                 </Dialog.Panel>

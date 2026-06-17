@@ -142,7 +142,7 @@ const GeneralTab = ({ data, userIdData, t }) => {
         <div className="mb-5 flex gap-8">
           {/* Profile Image */}
           <div>
-            <h3 className="mb-2 text-xs text-info-color">Profile Image</h3>
+            <h3 className="mb-2 text-xs text-info-color">{t("contacts.profileImage")}</h3>
             <div className="h-full w-full">
               <img
                 src={data?.profile_image ? mediaUrl + data?.profile_image : Images.PLACEHOLDER}
@@ -154,13 +154,13 @@ const GeneralTab = ({ data, userIdData, t }) => {
 
           {/* Personal Details Cards */}
           <div className="flex flex-col gap-4">
-            <div className="card flex w-[600px] flex-wrap justify-between gap-y-6">
+            <div className="card flex w-[960px] flex-wrap justify-between gap-y-6">
               <TitleValue title={t("contacts.salutation")} value={data?.salutation} />
               <TitleValue title={t("contacts.firstName")} value={data?.first_name} />
               <TitleValue title={t("contacts.middleName")} value={data?.middle_name || "-"} />
               <TitleValue title={t("contacts.lastName")} value={data?.last_name} />
             </div>
-            <div className="card flex w-[600px] flex-wrap justify-between gap-y-6">
+            <div className="card flex w-[960px] flex-wrap justify-between gap-y-6">
               <TitleValue title={t("contacts.nickName")} value={data?.nick_name || "-"} />
               <TitleValue title={t("contacts.salutation")} value={data?.salutation_in_email || "-"} />
               <TitleValue title={t("contacts.gender")} value={data?.gender || "-"} />
@@ -172,7 +172,7 @@ const GeneralTab = ({ data, userIdData, t }) => {
         {/* Identity Proof Files */}
         <div className="mb-5 rounded-full">
           <div>
-            <h3 className="mb-2 text-xs text-info-color">Identity Proof File</h3>
+            <h3 className="mb-2 text-xs text-info-color">{t("contacts.IdentityProofFile")}</h3>
             <PhotoProvider>
               <div className="flex flex-wrap gap-2">
                 {identityImages.length > 0 ? (
@@ -203,14 +203,14 @@ const GeneralTab = ({ data, userIdData, t }) => {
                         ) : (
                           <>
                             <DocumentIcon className="h-10 w-10 text-gray-500" />
-                            <p className="mt-2 text-sm text-gray-700">View File</p>
+                            <p className="mt-2 text-sm text-gray-700">{t("contacts.viewFile")}</p>
                           </>
                         )}
                       </a>
                     );
                   })
                 ) : (
-                  <div className="text-sm text-gray-500">No identity proof files available</div>
+                  <div className="text-sm text-gray-500">{t("contacts.noIdentityProofFiles")}</div>
                 )}
               </div>
             </PhotoProvider>
@@ -224,7 +224,7 @@ const GeneralTab = ({ data, userIdData, t }) => {
           <div>
             <div className="my-2 ltr:text-left rtl:text-right">
               <div className="label mb-2 text-secondary">
-                {t("Wedding Hall Seat")}
+                {t("contacts.weddingHallSeat")}
               </div>
             </div>
 
@@ -238,9 +238,9 @@ const GeneralTab = ({ data, userIdData, t }) => {
       {/* ): null} */}
       {qrCodeOptions?.length > 0 && (
         <div>
-          <div className="my-5 ltr:text-left rtl:text-right">
-            <div className="label mb-2 text-secondary">
-              {t("QR Codes")}
+          <div className="my-2 ltr:text-left rtl:text-right">
+            <div className="label  text-secondary">
+              {t("contacts.qrCodes")}
             </div>
           </div>
 
@@ -260,11 +260,11 @@ const GeneralTab = ({ data, userIdData, t }) => {
 
       {/* Contact Address Section */}
       <div>
-        <h2 className="sub-heading mb-5">Contact Address</h2>
-        <div className="grid grid-cols-2 gap-16">
+        <h2 className="sub-heading mb-3">{t("contacts.contactAddress")}</h2>
+        <div className="grid grid-cols-2 gap-8">
 
           {data.contact_numbers?.length > 0 && (
-          <div className="card flex flex-wrap gap-x-5 gap-y-4">
+          <div className="card flex flex-wrap gap-x-8 gap-y-6">
             {data?.contact_numbers?.length ? (
               data.contact_numbers.map((item, index) => (
                 <React.Fragment key={index}>
@@ -281,7 +281,7 @@ const GeneralTab = ({ data, userIdData, t }) => {
           </div>
           )}
           {data.emails?.length > 0 && (
-          <div className="card flex flex-wrap gap-x-5 gap-y-4">
+          <div className="card flex flex-wrap gap-x-8 gap-y-6">
             {data?.emails?.length ? (
               data.emails.map((item, index) => (
                 <React.Fragment key={index}>
@@ -364,16 +364,16 @@ const GeneralTab = ({ data, userIdData, t }) => {
         {data?.medicines.length >0  && (
         <>
         <div className="mb-5 flex items-center gap-x-4">
-          <h2 className="sub-heading">{t("Medicine")}</h2>
+          <h2 className="sub-heading">{t("contacts.medicine")}</h2>
         </div>
         <div className="grid grid-cols-2 gap-16">
           {data?.medicines?.map((medicine, index) => (
             <div className="card flex flex-wrap gap-x-5 gap-y-4">
-              {medicine?.name != '' && medicine?.name != null && (<TitleValue title={t("Medicine Name")} value={medicine?.name || "-"} /> )}
-              {medicine?.ailment != '' && medicine?.ailment != null && (<TitleValue title={t("Problem/Ailment")} value={medicine?.ailment || "-"} />)}
-              {medicine?.type != '' && medicine?.type != null && (<TitleValue title={t("Medicine Type")} value={medicine?.type || "-"} />)}
-              {medicine?.usage != '' && medicine?.usage != null && (<TitleValue title={t("Medication Type")} value={medicine?.usage || "-"} />)}
-              {medicine?.special_instructions != '' && medicine?.special_instructions != null && (<TitleValue title={t("Special Instructions")} value={medicine?.special_instructions || "-"} />)}
+              {medicine?.name != '' && medicine?.name != null && (<TitleValue title={t("contacts.medicineName")} value={medicine?.name || "-"} /> )}
+              {medicine?.ailment != '' && medicine?.ailment != null && (<TitleValue title={t("contacts.problemAilment")} value={medicine?.ailment || "-"} />)}
+              {medicine?.type != '' && medicine?.type != null && (<TitleValue title={t("contacts.medicineType")} value={medicine?.type || "-"} />)}
+              {medicine?.usage != '' && medicine?.usage != null && (<TitleValue title={t("contacts.medicationType")} value={medicine?.usage || "-"} />)}
+              {medicine?.special_instructions != '' && medicine?.special_instructions != null && (<TitleValue title={t("contacts.specialInstructions")} value={medicine?.special_instructions || "-"} />)}
             </div>
           ))}
         </div>

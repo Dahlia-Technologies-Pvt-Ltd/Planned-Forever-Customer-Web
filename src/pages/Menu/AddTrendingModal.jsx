@@ -310,12 +310,12 @@ const AddTrendingModal = ({
                   <XMarkIcon onClick={closeModal} className="h-8 w-8 cursor-pointer text-info-color" />
                 </div>
 
-                <form>
+                <form onSubmit={handleSubmit} className="[&_.label]:text-xs [&_.label]:font-medium [&_input]:h-9 [&_input]:min-h-[36px] [&_input]:text-sm [&_input]:py-1 [&_input[type='datetime-local']]:h-9 [&_textarea]:text-sm [&_.css-b62m3t-container]:text-sm [&_.css-13cymwt-control]:h-9 [&_.css-13cymwt-control]:min-h-[36px] [&_.css-13cymwt-control]:py-0 [&_.css-t3ipsp-control]:h-9 [&_.css-t3ipsp-control]:min-h-[36px] [&_.css-t3ipsp-control]:py-0 [&_.css-hlgwow]:h-9 [&_.css-hlgwow]:min-h-[36px] [&_.css-hlgwow]:py-0 [&_.css-hlgwow]:px- [&_.css-1jqq78o-placeholder]:text-sm [&_.css-1jqq78o-placeholder]:leading-none [&_.css-1dimb5e-singleValue]:text-sm [&_.css-1dimb5e-singleValue]:leading-none [&_.css-1wy0on6]:h-9 [&_.css-19bb58m]:my-0">
                   <div className="h-[750px] overflow-y-auto p-2 md:h-[550px] lg:h-[550px] xl:h-[650px] 2xl:h-[650px]">
                     
                     {/* Menu Selection */}
                     <div className="mb-7">
-                      <div className="label mb-2 text-secondary text-left">{ "Select Menu"}</div>
+                    <div className="label mb-2 text-secondary text-left">{t("menu.selectMenu")}</div>
                       <div className="w-full">
                         {menusLoading ? (
                           <div className="flex items-center justify-center py-4">
@@ -347,7 +347,7 @@ const AddTrendingModal = ({
                             <div key={index} className="flex items-center space-x-4 border-b p-4 last:border-b-0">
                               <div className="flex-1">
                                 <Input 
-                                  placeholder="Item" 
+                                    placeholder={t("menu.menu_item")}
                                   labelOnTop 
                                   value={item.item} 
                                   disabled 
@@ -355,7 +355,7 @@ const AddTrendingModal = ({
                               </div>
                               <div className="flex-1">
                                 <Input 
-                                  placeholder="Type" 
+                                    placeholder={t("menu.itemType")}
                                   labelOnTop 
                                   value={item.type} 
                                   disabled 
@@ -363,7 +363,7 @@ const AddTrendingModal = ({
                               </div>
                               <div className="flex-1">
                                 <Input 
-                                  placeholder="Quantity" 
+                                    placeholder={t("menu.quantity")}
                                   labelOnTop 
                                   value={item.quantity} 
                                   onChange={(e) => handleTrendingItemChange(index, 'quantity', e.target.value)}
@@ -371,7 +371,7 @@ const AddTrendingModal = ({
                               </div>
                               <div className="flex-1">
                                 <Input 
-                                  placeholder="Description" 
+                                    placeholder={t("menu.description")}
                                   labelOnTop 
                                   value={item.description} 
                                   onChange={(e) => handleTrendingItemChange(index, 'description', e.target.value)}
@@ -386,7 +386,7 @@ const AddTrendingModal = ({
                                   />
                                 ) : (
                                   <div className="h-16 w-16 bg-gray-100 rounded-lg flex items-center justify-center">
-                                    <span className="text-xs text-gray-400">No Image</span>
+                                    <span className="text-xs text-gray-400">{t("menu.noImage")}</span>
                                   </div>
                                 )}
                               </div>
@@ -406,21 +406,21 @@ const AddTrendingModal = ({
                         {items.map((item, index) => (
                           <div key={index} className="flex w-full items-center space-x-3">
                             <Input
-                              placeholder="Item"
+                                placeholder={t("menu.menu_item")}
                               labelOnTop
                               value={item?.item}
                               onChange={(e) => handleInputChange(e, index, "item")}
                               error={errors[index]?.item}
                             />
                             <Input
-                              placeholder="Type"
+                                placeholder={t("menu.itemType")}
                               labelOnTop
                               value={item?.type}
                               onChange={(e) => handleInputChange(e, index, "type")}
                               error={errors[index]?.type}
                             />
                             <Input
-                              placeholder="Quantity"
+                                placeholder={t("menu.quantity")}
                               labelOnTop
                               type="text"
                               value={item?.quantity}
@@ -428,7 +428,7 @@ const AddTrendingModal = ({
                               error={errors[index]?.quantity}
                             />
                             <Input
-                              placeholder="Description"
+                                placeholder={t("menu.description")}
                               labelOnTop
                               value={item?.description}
                               onChange={(e) => handleInputChange(e, index, "description")}

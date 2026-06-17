@@ -2,6 +2,25 @@ import React from "react";
 import { TagsInput } from "react-tag-input-component";
 
 const InputTags = ({ label, name, isRequired, error, setSelected, selected , placeHolder , note }) => {
+  const commitPendingTags = (rawValue) => {
+    const pendingValue = String(rawValue || "").trim();
+
+    if (!pendingValue) {
+      return;
+    }
+
+    const existingTags = Array.isArray(selected) ? selected : [];
+    const nextTags = pendingValue
+      .split(",")
+      .map((tag) => tag.trim())
+      .filter(Boolean)
+      .filter((tag) => !existingTags.includes(tag));
+
+    if (nextTags.length > 0) {
+      setSelected([...existingTags, ...nextTags]);
+    }
+  };
+
   return (
     <div className="space-y-2">
       <label htmlFor={name} className="label">
@@ -16,7 +35,14 @@ const InputTags = ({ label, name, isRequired, error, setSelected, selected , pla
         }}
         value={selected}
         onChange={setSelected}
+        onBlur={(event) => {
+          commitPendingTags(event?.target?.value);
+          if (event?.target) {
+            event.target.value = "";
+          }
+        }}
         name={name}
+        separators={["Enter", ","]}
         placeHolder={placeHolder ? placeHolder :"Enter Tags"}
       />
     </div>

@@ -22,6 +22,7 @@ import Dropdown from "../../components/common/Dropdown";
 import { PhotoProvider, PhotoView } from "react-photo-view";
 import { mediaUrl } from "../../utilities/config";
 import { Images } from "../../assets/Assets";
+import { hasPermission } from "../../utilities/permissions";
 
 const CarAllocation = () => {
   const { t } = useTranslation("common");
@@ -98,6 +99,13 @@ const CarAllocation = () => {
   // Pagination
   const handlePageChange = ({ selected }) => {
     setCurrentPage(selected + 1);
+  };
+
+  const clearFilters = () => {
+    setCarAllocationFilter(null);
+    setSeatsFilter(null);
+    setTypeFilter(null);
+    setCurrentPage(1);
   };
 
   const getAllocateCarListing = (emptySearch) => {
@@ -222,7 +230,7 @@ const CarAllocation = () => {
               <h3 className="heading">Car Allocation</h3>
               <div className="flex w-full items-center justify-between">
                 <div className="flex items-center gap-x-3">
-                  {(userData?.role?.display_name === "web_admin" || userData.role.permissions?.some((item) => item === "car-allocation-create")) && (
+                  {(hasPermission(userData, "car-allocation-create")) && (
                     <Button
                       title={t("carAllocation.allcoateCar")}
                       onClick={() => {
@@ -261,7 +269,7 @@ const CarAllocation = () => {
               </div>
             </div>
             {showFilter && (
-              <div className="flex items-center gap-x-4 pt-6">
+              <div className="flex flex-wrap items-end gap-4 pt-6">
                 <div className="w-44">
                   <Dropdown
                     placeholder="Select Car"
@@ -300,6 +308,15 @@ const CarAllocation = () => {
                     noMargin
                   />
                 </div>
+                <div>
+                  <Button
+                    title="Clear Filter"
+                    type="button"
+                    buttonColor="border border-primary-light-color bg-white"
+                    onClick={clearFilters}
+                    className="h-10 px-4 text-sm !text-primary-color"
+                  />
+                </div>
               </div>
             )}
             {/* Table Start */}
@@ -334,7 +351,7 @@ const CarAllocation = () => {
                             requestSort(sortKey);
                           }}
                         >
-                          <p className="font-inter cursor-pointer whitespace-nowrap text-xs font-semibold leading-5 3xl:text-sm">
+                          <p className="font-inter cursor-pointer whitespace-nowrap text-sm font-semibold leading-5 3xl:text-sm">
                             {head}
                             {sortConfig.key ===
                               (head === "Allocated From "
@@ -481,8 +498,7 @@ const CarAllocation = () => {
                       <div className="flex justify-between">
                         <h3 className="heading">{t("headings.details")}</h3>
                         <div className="flex items-center gap-x-3">
-                          {(userData?.role?.display_name === "web_admin" ||
-                            userData.role.permissions?.some((item) => item === "car-allocation-edit")) && (
+                          {(hasPermission(userData, "car-allocation-edit")) && (
                             <button
                               className="border-b border-secondary text-sm font-medium text-secondary"
                               type="button"
@@ -493,8 +509,7 @@ const CarAllocation = () => {
                               {t("buttons.edit")}
                             </button>
                           )}
-                          {(userData?.role?.display_name === "web_admin" ||
-                            userData.role.permissions?.some((item) => item === "car-allocation-delete")) && (
+                          {(hasPermission(userData, "car-allocation-delete")) && (
                             <button
                               onClick={() => setOpenDeleteModal({ open: true, data: detail })}
                               className="border-b border-red-500 text-sm font-medium text-red-500"

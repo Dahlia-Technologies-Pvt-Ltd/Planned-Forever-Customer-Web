@@ -56,7 +56,8 @@ const Input = ({
             readOnly={readOnly}
             onChange={onChange}
             placeholder={placeholder}
-            className={`text-md w-full rounded-10 border p-3 text-secondary-color placeholder:text-primary-light-color focus:border-secondary-color focus:outline-none focus:ring-1 focus:ring-secondary-color ${
+            style={{"lineHeight" : "0.75rem", "marginTop": "3px"}}
+            className={`text-sm w-full rounded-10 border p-3 text-secondary-color placeholder:text-primary-light-color focus:border-secondary-color focus:outline-none focus:ring-1 focus:ring-secondary-color ${
               error ? "border-red-500" : "border-gray-300"
             }`}
           />
@@ -70,7 +71,7 @@ const Input = ({
               onClick={onClick}
               ref={ref && ref}
               readOnly={readOnly}
-              className={`text-md h-11 w-full ${inputClassName} rounded-10 border-[1.5px] font-poppins text-primary-color placeholder:text-primary-light-color focus:border-secondary-color focus:outline-none focus:ring-1 focus:ring-secondary-color ${
+              className={`text-md h-9 w-full ${inputClassName} rounded-10 border-[1.5px] font-poppins text-primary-color placeholder:text-primary-light-color focus:border-secondary-color focus:outline-none focus:ring-1 focus:ring-secondary-color ${
                 error || withError ? "border-red-500" : "border-gray-300"
               } `}
               placeholder={placeholder}

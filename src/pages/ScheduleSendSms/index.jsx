@@ -16,6 +16,7 @@ import { useEffect } from "react";
 import ApiServices from "../../api/services";
 import moment from "moment";
 import { useTranslation } from "react-i18next";
+import { hasPermission } from "../../utilities/permissions";
 
 // Table Head
 const TABLE_HEAD = ["Schedule Title ", "Scheduled On", "Status"];
@@ -155,7 +156,7 @@ const SchedlueSendSms = () => {
             <div className="flex justify-between">
               <h3 className="heading">Scheduled/Send Sms</h3>
               <div className="flex w-full items-center justify-between">
-                {(userData?.role?.display_name === "web_admin" || userData.role.permissions?.some((item) => item === "schedule-sms-create")) && (
+                {(hasPermission(userData, "schedule/send-sms-create")) && (
                   <Button title={t("scheduleSendSms.sendNowSchedule")} onClick={() => setAddNewModal(true)} />
                 )}
                 <div className="relative flex items-center">
@@ -205,7 +206,7 @@ const SchedlueSendSms = () => {
                             requestSort(sortKey);
                           }}
                         >
-                          <p className="font-inter cursor-pointer whitespace-nowrap text-xs font-semibold leading-5 3xl:text-sm">
+                          <p className="font-inter cursor-pointer whitespace-nowrap text-sm font-semibold leading-5 3xl:text-sm">
                             {head}
                             {sortConfig?.key ===
                               (head === "Schedule Title "
@@ -325,8 +326,7 @@ const SchedlueSendSms = () => {
                       <div className="flex justify-between">
                         <h3 className="heading">{t("headings.details")}</h3>
                         <div className="flex items-center gap-x-3">
-                          {(userData?.role?.display_name === "web_admin" ||
-                            userData.role.permissions?.some((item) => item === "schedule-sms-edit")) && (
+                          {(hasPermission(userData, "schedule/send-sms-edit")) && (
                             <>
                               {" "}
                               {detail?.status === "pending" && (
@@ -343,8 +343,7 @@ const SchedlueSendSms = () => {
                                   </button>{" "}
                                 </>
                               )}
-                              {(userData?.role?.display_name === "web_admin" ||
-                                userData.role.permissions?.some((item) => item === "schedule-sms-delete")) && (
+                              {(hasPermission(userData, "schedule/send-sms-delete")) && (
                                 <button
                                   onClick={() => setOpenDeleteModal({ open: true, data: detail })}
                                   className="border-b border-red-500 text-sm font-medium text-red-500"

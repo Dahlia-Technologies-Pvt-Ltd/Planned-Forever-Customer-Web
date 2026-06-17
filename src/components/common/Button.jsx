@@ -7,7 +7,7 @@ const Button = ({ type, title, className, href, link, icon, onClick, buttonColor
     <Link
       to={href}
       onClick={onClick}
-      className={`flex h-11 items-center justify-center rounded-10 px-8 ${buttonColor ? buttonColor : "border-secondary bg-secondary"} text-base font-medium text-white
+      className={`inline-flex h-10 shrink-0 whitespace-nowrap items-center justify-center rounded-10 px-6 ${buttonColor ? buttonColor : "border-secondary bg-secondary"} text-sm font-medium text-white
  transition-all hover:shadow-lg ${className ? className : ""}`}
     >
       {loading ? (
@@ -24,7 +24,7 @@ const Button = ({ type, title, className, href, link, icon, onClick, buttonColor
       type={type ? type : "submit"}
       onClick={onClick}
       disabled={disabled && disabled}
-      className={`flex h-11 items-center justify-center rounded-10 px-8 ${buttonColor ? buttonColor : "border-secondary bg-secondary"} text-base font-medium text-white
+      className={`inline-flex h-10 shrink-0 whitespace-nowrap items-center justify-center rounded-10 px-6 ${buttonColor ? buttonColor : "border-secondary bg-secondary"} text-sm font-medium text-white
  transition-all hover:shadow-lg ${className ? className : ""}`}
     >
       {loading ? (

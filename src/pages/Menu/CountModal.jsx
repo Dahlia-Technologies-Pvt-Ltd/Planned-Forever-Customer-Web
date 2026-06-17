@@ -46,23 +46,26 @@ export default function ConfirmationModal({ data, isOpen, setIsOpen }) {
                     {t("menu.guestMealPreference")}
                   </Dialog.Title>
 
-                  <div className="mt-5 flex max-h-[400px] flex-wrap overflow-auto">
-                    {data?.map((item) => {
-                      return (
-                        <>
-                          <div className="flex gap-5 p-5 m-3 border border-black">
+                  <div className="mt-5 flex max-h-[400px] flex-wrap justify-center overflow-auto">
+                    {data?.length > 0 ? (
+                      data.map((item, index) => (
+                          <div key={item?.id || item?.name || index} className="m-3 flex gap-5 rounded-lg border border-gray-200 bg-gray-50 p-5">
                             <p className="font-bold">{item?.name}:</p>
-                            <p className="font-bold text-red-400">{item?.count}</p>
+                            <p className="font-bold text-secondary">{item?.count}</p>
                           </div>
-                        </>
-                      );
-                    })}
+                      ))
+                    ) : (
+                      <div className="w-full rounded-xl border border-dashed border-gray-300 bg-gray-50 px-6 py-10 text-center">
+                        <p className="text-base font-semibold text-black">{t("menu.noCountsAvailable")}</p>
+                        <p className="mt-2 text-sm text-gray-500">{t("menu.noGuestCountsDescription")}</p>
+                      </div>
+                    )}
                   </div>
 
                   <div className="flex gap-x-6 justify-center px-8 mt-12">
                     <Button
                       // className="w-full"
-                      title="Okay"
+                      title={t("buttons.okay")}
                       onClick={closeModal}
                     />
                   </div>

@@ -18,12 +18,13 @@ import { getLocalDateFromUnixTimestamp } from "../../utilities/HelperFunctions";
 import { RECEIVED_GIFT_PRINT } from "../../routes/Names";
 import { Link } from "react-router-dom";
 import { useTranslation } from "react-i18next";
+import { hasPermission } from "../../utilities/permissions";
 
 const ReceivedGifts = () => {
   // translation
   const { t } = useTranslation("common");
 
-  const TABLE_HEAD = [t("receivedGifts.receivedGift"), t("receivedGifts.receivedGiftFrom"), t("receivedGifts.receivedOn"), t("receivedGifts.thankYouNoteSentTo"), t("receivedGifts.thankYouNoteSentOn")];
+  const TABLE_HEAD = [t("receivedGifts.receivedGift"), t("receivedGifts.receivedGiftFrom"), t("receivedGifts.receivedOn")];
   // Context
   const { eventSelect,loading, setLoading, setBtnLoading, openSuccessModal, setErrorMessage, closeSuccessModel , userData } = useThemeContext();
 
@@ -39,7 +40,6 @@ const ReceivedGifts = () => {
   const [currentPage, setCurrentPage] = useState(1);
 
   const [modalData, setModalData] = useState(null);
-
   // Modal
   const [addNewModal, setAddNewModal] = useState(false);
   const [openDeleteModal, setOpenDeleteModal] = useState({ open: false, data: null });
@@ -158,7 +158,7 @@ const ReceivedGifts = () => {
               <h3 className="heading">{t("receivedGifts.addReceivedGifts")}</h3>
               <div className="flex items-center justify-between gap-3">
                 <div className="flex items-center gap-x-3">
-                {(userData?.role?.display_name === "web_admin" || userData.role.permissions?.some((item) => item === "received-gifts-create")) &&          
+                {(hasPermission(userData, "received-gifts-create")) &&          
                  <Button title={t("receivedGifts.addReceivedGifts")} onClick={() => setAddNewModal(true)} /> }
                   <Link to={RECEIVED_GIFT_PRINT}>
                     <Button title={t("receivedGifts.printReceivedGifts")} buttonColor="border-primary  bg-primary " />
@@ -215,7 +215,7 @@ const ReceivedGifts = () => {
                             requestSort(sortKey);
                           }}
                         >
-                          <p className="font-inter cursor-pointer whitespace-nowrap text-xs font-semibold leading-5 3xl:text-sm">
+                          <p className="font-inter cursor-pointer whitespace-nowrap text-sm font-semibold leading-5 3xl:text-sm">
                             {head}
                             {sortConfig.key ===
                               (head === "Received Gift"
@@ -241,7 +241,7 @@ const ReceivedGifts = () => {
                   <tbody>
                     {loading ? (
                       <tr>
-                        <td colSpan="6">
+                        <td colSpan={TABLE_HEAD.length}>
                           <Skeleton count={itemsPerPage} height={50} />
                         </td>
                       </tr>
@@ -253,32 +253,20 @@ const ReceivedGifts = () => {
                           onClick={() => handleRowClick(item?.id)}
                         >
                           <td className="py-3 pl-6 pr-4">
-                            <p className="text-primary-color-200 text-xs font-normal 3xl:text-sm">{item?.gift_received || "-"}</p>
+                            <p className="text-primary-color-200 text-md font-normal 3xl:text-sm">{item?.gift_received || "-"}</p>
                           </td>
 
                           <td className="py-3 pl-4 pr-3 3xl:px-4">
-                            <p className="text-primary-color-200 text-xs font-normal 3xl:text-sm">
+                            <p className="text-primary-color-200 text-md font-normal 3xl:text-sm">
                               {item?.contact?.first_name + " " + item?.contact?.last_name || "-"}
                             </p>
                           </td>
 
                           <td className="py-3 pl-4 pr-3 3xl:px-4">
-                            <p className="text-primary-color-200 text-xs font-normal 3xl:text-sm">
-                              <p className="text-primary-color-200 text-xs font-normal 3xl:text-sm">
+                            <p className="text-primary-color-200 text-md font-normal 3xl:text-sm">
+                              <p className="text-primary-color-200 text-md font-normal 3xl:text-sm">
                                 {getLocalDateFromUnixTimestamp(item?.received_on, "DD MMM, YYYY")}
                               </p>
-                            </p>
-                          </td>
-
-                          <td className="py-3 pl-4 pr-3 3xl:px-4">
-                            <p className="text-primary-color-200 text-xs font-normal 3xl:text-sm">
-                              {item?.contact?.first_name + " " + item?.contact?.last_name || "-"}
-                            </p>
-                          </td>
-                          <td className="py-3 pl-4 pr-3 3xl:px-4">
-                            <p className="text-primary-color-200 text-xs font-normal 3xl:text-sm">
-                              {" "}
-                              {getLocalDateFromUnixTimestamp(item?.note_send_at, "DD MMM, YYYY")}
                             </p>
                           </td>
 
@@ -307,7 +295,7 @@ const ReceivedGifts = () => {
                     ) : (
                       // Render "No Data" message
                       <tr className="h-[400px]">
-                        <td colSpan="6">
+                        <td colSpan={TABLE_HEAD.length}>
                           <Lottie options={emptyFolderAnimation} width={200} height={200} />
                         </td>
                       </tr>
@@ -353,7 +341,7 @@ const ReceivedGifts = () => {
                       <div className="flex justify-between">
                         <h3 className="heading">Details</h3>
                         <div className="flex items-center gap-x-3">
-                        {(userData?.role?.display_name === "web_admin" || userData.role.permissions?.some((item) => item === "received-gifts-edit")) &&           <button
+                        {(hasPermission(userData, "received-gifts-edit")) &&           <button
                             className="border-b border-secondary text-sm font-medium text-secondary"
                             type="button"
                             onClick={() => {
@@ -363,7 +351,7 @@ const ReceivedGifts = () => {
                           >
                             {t("buttons.edit")}
                           </button> }
-                          {(userData?.role?.display_name === "web_admin" || userData.role.permissions?.some((item) => item === "received-gifts-delete")) &&          <button
+                          {(hasPermission(userData, "received-gifts-delete")) &&          <button
                             onClick={() => setOpenDeleteModal({ open: true, data: detail })}
                             className="border-b border-red-500 text-sm font-medium text-red-500"
                             type="button"
@@ -377,8 +365,6 @@ const ReceivedGifts = () => {
                       <TitleValue title={t("receivedGifts.receivedGift")} value={detail?.gift_received || "-"} />
                       <TitleValue title={t("receivedGifts.receivedGiftFrom")} value={detail?.contact?.first_name + " " + detail?.contact?.last_name || "-"} />
                       <TitleValue title={t("receivedGifts.receivedOn")} value={getLocalDateFromUnixTimestamp(detail?.received_on, "DD MMM, YYYY")} />
-                      <TitleValue title={t("receivedGifts.thankYouNoteSentTo")} value={detail?.contact?.first_name + " " + detail?.contact?.last_name || "-"} />
-                      <TitleValue title={t("receivedGifts.thankYouNoteSentOn")} value={getLocalDateFromUnixTimestamp(detail?.note_send_at, "DD MMM, YYYY")} />
                     </div>
                   </div>
                   <h2 className="sub-heading">{t('headings.otherInfo')}</h2>

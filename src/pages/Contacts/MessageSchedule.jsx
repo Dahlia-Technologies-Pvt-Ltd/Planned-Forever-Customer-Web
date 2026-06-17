@@ -479,7 +479,7 @@ const MessageSchedule = ({ label, isOpen, setIsOpen, refreshData, data, setModal
                   </div>
 
                   {/* <form onSubmit={data === null ? handleSubmit : updateSubmit}> */}
-                  <form onSubmit={handleSubmit}>
+                  <form onSubmit={handleSubmit} className="[&_.label]:text-xs [&_.label]:font-medium [&_input]:h-9 [&_input]:min-h-[36px] [&_input]:text-sm [&_input]:py-1 [&_input[type='datetime-local']]:h-9 [&_textarea]:text-sm [&_.css-b62m3t-container]:text-sm [&_.css-13cymwt-control]:h-9 [&_.css-13cymwt-control]:min-h-[36px] [&_.css-13cymwt-control]:py-0 [&_.css-t3ipsp-control]:h-9 [&_.css-t3ipsp-control]:min-h-[36px] [&_.css-t3ipsp-control]:py-0 [&_.css-hlgwow]:h-9 [&_.css-hlgwow]:min-h-[36px] [&_.css-hlgwow]:py-0 [&_.css-hlgwow]:px- [&_.css-1jqq78o-placeholder]:text-sm [&_.css-1jqq78o-placeholder]:leading-none [&_.css-1dimb5e-singleValue]:text-sm [&_.css-1dimb5e-singleValue]:leading-none [&_.css-1wy0on6]:h-9 [&_.css-19bb58m]:my-0">
                     <div className="h-[400px]  overflow-y-auto p-2 md:h-[400px] lg:h-[400px] xl:h-[400px] 2xl:h-[400px]">
                       
 
@@ -576,7 +576,7 @@ const MessageSchedule = ({ label, isOpen, setIsOpen, refreshData, data, setModal
                                           </div>
                                         ))
                                       ) : (
-                                        <div className="text-xs text-gray-500">No contacts available</div>
+                                        <div className="text-xs text-gray-500">{t("contacts.noContactsAvailable")}</div>
                                       )}
                                     </div>
                                   )}
@@ -617,8 +617,8 @@ const MessageSchedule = ({ label, isOpen, setIsOpen, refreshData, data, setModal
                           <Input
                             isRequired
                             type="datetime-local"
-                            label={t("scheduledOn")}
-                            placeholder="Select Date & Time"
+                            label={t("contacts.scheduledOn")}
+                    placeholder={t("contacts.selectDateTime")}
                             value={selectDateTime}
                             min={getLocalDateTime()} // Prevent past selection in supported browsers
                             onChange={handleDateTimeChange} // Manual validation for all cases
@@ -630,7 +630,7 @@ const MessageSchedule = ({ label, isOpen, setIsOpen, refreshData, data, setModal
                       <div className="mx-auto mt-10 grid w-8/12 grid-cols-2 gap-7">
                         <Button
                           icon={<CheckIcon />}
-                          title={data === null ? t("Proceed") : t("Schedule")}
+                          title={data === null ? t("contacts.proceed") : t("contacts.schedule")}
                           type="submit"
                           loading={data === null ? btnLoading : btnLoading2}
                         />

@@ -21,6 +21,7 @@ import { Link } from "react-router-dom";
 import { useTranslation } from "react-i18next";
 import { FaFilePdf } from "react-icons/fa";
 import QRCode from "qrcode"; // Add this import
+import { hasPermission } from "../../utilities/permissions";
 
 // Table Head
 
@@ -45,7 +46,6 @@ const InvitationCards = () => {
   const [currentPage, setCurrentPage] = useState(1);
 
   const [modalData, setModalData] = useState(null);
-
   // Modal
   const [addNewModal, setAddNewModal] = useState(false);
   const [openDeleteModal, setOpenDeleteModal] = useState({ open: false, data: null });
@@ -210,8 +210,7 @@ const InvitationCards = () => {
               <h3 className="heading">{t("invitationCard.invitationCards")} </h3>
               <div className="flex w-full items-center justify-between">
                 <div className="flex items-center gap-x-3">
-                  {(userData?.role?.display_name === "web_admin" ||
-                    userData.role.permissions?.some((item) => item === "invitation-cards-create")) && (
+                  {(hasPermission(userData, "invitation-cards-create")) && (
                     <Button
                       title={t("invitationCard.addInvitationCard")}
                       onClick={() => {
@@ -224,7 +223,7 @@ const InvitationCards = () => {
                   <Link to={INVITATION_CARD_PRINT}>
                     <Button title={t("buttons.print")} buttonColor="border-primary  bg-primary " />
                   </Link>
-                  <Button title={t("Download Guest Invitations QR")} onClick={handleDownloadGuestInvitationsQr} />
+                  {/* <Button title={t("Download Guest Invitations QR")} onClick={handleDownloadGuestInvitationsQr} /> */}
                 </div>
                 <div className="relative flex items-center">
                   <div className="pointer-events-none absolute inset-y-0 left-0 z-20 flex items-center pl-4">
@@ -271,7 +270,7 @@ const InvitationCards = () => {
                             requestSort(sortKey);
                           }}
                         >
-                          <p className="font-inter cursor-pointer whitespace-nowrap text-xs font-semibold leading-5 3xl:text-sm">
+                          <p className="font-inter cursor-pointer whitespace-nowrap text-sm font-semibold leading-5 3xl:text-sm">
                             {head}
                             {sortConfig.key ===
                               (head === "Invitation Card Name" ? "name" : head === "Invitation Card Notes" ? "room_type" : head.toLowerCase()) &&
@@ -300,11 +299,11 @@ const InvitationCards = () => {
                           onClick={() => handleRowClick(item?.id)}
                         >
                           <td className="py-3 pl-6 pr-4">
-                            <p className="text-primary-color-200 text-xs font-normal 3xl:text-sm">{item?.name}</p>
+                            <p className="text-primary-color-200 text-md font-normal 3xl:text-sm">{item?.name}</p>
                           </td>
 
                           <td className="py-3 pl-4 pr-3 3xl:px-4">
-                            <p className="text-primary-color-200 text-xs font-normal 3xl:text-sm">{item?.description ? item?.description : '-'}</p>
+                            <p className="text-primary-color-200 text-md font-normal 3xl:text-sm">{item?.description ? item?.description : '-'}</p>
                           </td>
 
                           {/* <td className="py-3 pl-4 pr-3 3xl:px-4">
@@ -378,8 +377,7 @@ const InvitationCards = () => {
                       <div className="flex justify-between">
                         <h3 className="heading">{t("headings.details")} </h3>
                         <div className="flex items-center gap-x-3">
-                          {(userData?.role?.display_name === "web_admin" ||
-                            userData.role.permissions?.some((item) => item === "invitation-cards-edit")) && (
+                          {(hasPermission(userData, "invitation-cards-edit")) && (
                             <button
                               className="border-b border-secondary text-sm font-medium text-secondary"
                               type="button"
@@ -391,8 +389,7 @@ const InvitationCards = () => {
                               {t("buttons.edit")}
                             </button>
                           )}
-                          {(userData?.role?.display_name === "web_admin" ||
-                            userData.role.permissions?.some((item) => item === "invitation-cards-delete")) && (
+                          {(hasPermission(userData, "invitation-cards-delete")) && (
                             <button
                               onClick={() => setOpenDeleteModal({ open: true, data: detail })}
                               className="border-b border-red-500 text-sm font-medium text-red-500"

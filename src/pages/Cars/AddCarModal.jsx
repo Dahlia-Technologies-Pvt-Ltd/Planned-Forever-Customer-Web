@@ -5,12 +5,10 @@ import Button from "../../components/common/Button";
 import { Fragment, useState, useEffect } from "react";
 import { Dialog, Transition } from "@headlessui/react";
 import RadioInput from "../../components/common/RadioInput";
-import DateAndTime from "../../components/common/DateAndTime";
 import { XMarkIcon, CheckIcon } from "@heroicons/react/24/solid";
 import { toUTCUnixTimestamp } from "../../utilities/HelperFunctions";
 import { useThemeContext } from "../../context/GlobalContext";
 import ChooseFile from "../../components/common/ChooseFile";
-import { mediaUrl } from "../../utilities/config";
 import countriesCodeData from "../../utilities/countryCode.json";
 import Dropdown from "../../components/common/Dropdown";
 import moment from "moment";
@@ -19,7 +17,7 @@ import { useTranslation } from "react-i18next";
 const AddCarModal = ({ label, isOpen, setIsOpen, refreshData, data, setModalData }) => {
   const { t } = useTranslation("common");
 
-  const { eventSelect, openSuccessModal, closeSuccessModel } = useThemeContext();
+  const { eventSelect, eventDetail, openSuccessModal, closeSuccessModel } = useThemeContext();
 
   const [paid, setPaid] = useState("");
   const [carNote, setCarNote] = useState("");
@@ -47,6 +45,18 @@ const AddCarModal = ({ label, isOpen, setIsOpen, refreshData, data, setModalData
   const [driverNumberError, setDriverNumberError] = useState("");
   const [availableFromError, setAvailableFromError] = useState("");
   const [availableTillError, setAvailableTillError] = useState("");
+  const eventWindowStart = eventDetail?.start_date ? moment.unix(eventDetail.start_date).subtract(120, "hours") : null;
+  const eventWindowEnd = eventDetail?.end_date ? moment.unix(eventDetail.end_date).add(120, "hours") : null;
+  const eventWindowStartValue = eventWindowStart ? eventWindowStart.format("YYYY-MM-DDTHH:mm") : "";
+  const eventWindowEndValue = eventWindowEnd ? eventWindowEnd.format("YYYY-MM-DDTHH:mm") : "";
+
+  const isWithinEventWindow = (value) => {
+    if (!value || !eventWindowStart || !eventWindowEnd) return true;
+    const current = moment(value);
+    return current.isBetween(eventWindowStart, eventWindowEnd, undefined, "[]");
+  };
+
+  const isPaidStatus = (value) => value === 1 || value === "1" || value === true;
 
   const { t: commonT } = useTranslation("common");
 
@@ -96,10 +106,25 @@ const AddCarModal = ({ label, isOpen, setIsOpen, refreshData, data, setModalData
       setContactNumberError(" Required");
       isValidData = false;
     }
+
+    if (availableFrom && !isWithinEventWindow(availableFrom)) {
+      setAvailableFromError(" Must be within 120 hours before event start and 120 hours after event end");
+      isValidData = false;
+    }
+
+    if (availableTill && !isWithinEventWindow(availableTill)) {
+      setAvailableTillError(" Must be within 120 hours before event start and 120 hours after event end");
+      isValidData = false;
+    }
+
+    if (availableFrom && availableTill && moment(availableFrom).isAfter(moment(availableTill))) {
+      setAvailableFromError(" From date must be before Till date");
+      setAvailableTillError(" Till date must be after From date");
+      isValidData = false;
+    }
+
     return isValidData;
   };
-
-  console.log({ contactNumber });
 
   // // Handle Submit
   // const handleSubmit = async (e) => {
@@ -355,12 +380,14 @@ const AddCarModal = ({ label, isOpen, setIsOpen, refreshData, data, setModalData
       setAvailableFrom(moment.unix(data?.available_from).format("YYYY-MM-DD HH:mm"));
       setAvailableTill(moment.unix(data?.available_till).format("YYYY-MM-DD HH:mm"));
       setOwnerName(data?.owner_name);
-      setPaid(data?.price_status === 1 ? "Yes" : "No");
+      setPaid(isPaidStatus(data?.price_status) ? "Yes" : "No");
       setDriverPicture(data?.driver_image);
       setCarPicture(data?.car_images);
       setSeats(data?.seats);
+    } else if (isOpen) {
+      clearAllData();
     }
-  }, [isOpen]);
+  }, [isOpen, data]);
 
   const handleReplyImageChange = (e) => {
     // Get the new files from the input
@@ -405,23 +432,22 @@ const AddCarModal = ({ label, isOpen, setIsOpen, refreshData, data, setModalData
                 leaveFrom="opacity-100 scale-100"
                 leaveTo="opacity-0 scale-75"
               >
-                <Dialog.Panel className="w-full max-w-3xl overflow-hidden rounded-2xl bg-white p-8 shadow-xl transition-all">
-                  <div className="mb-5 flex items-center justify-between">
-                    <Dialog.Title as="h3" className="font-poppins text-lg font-semibold leading-7 text-secondary-color">
+                <Dialog.Panel className="w-full max-w-[760px] overflow-hidden rounded-2xl bg-white shadow-xl transition-all">
+                  <div className="flex items-center justify-between border-b px-5 py-4">
+                    <Dialog.Title as="h3" className="font-poppins text-sm font-semibold leading-6 text-secondary-color">
                       {data === null ? t("cars.addCar") : t("cars.updateCar")}
                     </Dialog.Title>
-                    <XMarkIcon onClick={closeModal} className="h-8 w-8 cursor-pointer text-info-color" />
+                    <XMarkIcon onClick={closeModal} className="h-5 w-5 cursor-pointer text-info-color" />
                   </div>
 
-                  <form onSubmit={handleSubmit}>
-                    <div className="h-[600px] overflow-y-auto p-2 md:h-[400px] lg:h-[400px] xl:h-[500px] 2xl:h-[600px]">
-                      <div className="mb-5 ltr:text-left rtl:text-right">
+                  <form onSubmit={handleSubmit} className="[&_.label]:text-xs [&_.label]:font-medium [&_.css-b62m3t-container]:text-sm [&_.css-13cymwt-control]:min-h-[36px] [&_.css-13cymwt-control]:text-sm [&_.css-13cymwt-control]:py-0 [&_.css-t3ipsp-control]:min-h-[36px] [&_.css-t3ipsp-control]:text-sm [&_.css-t3ipsp-control]:py-0 [&_.css-hlgwow]:min-h-[34px] [&_.css-hlgwow]:py-0 [&_.css-19bb58m]:my-0 [&_.css-1dimb5e-singleValue]:text-sm [&_.css-1dimb5e-singleValue]:leading-5 [&_.css-1jqq78o-placeholder]:text-sm [&_.css-1jqq78o-placeholder]:leading-5 [&_input]:h-9 [&_input]:text-sm [&_textarea]:text-sm">
+                    <div className="max-h-[70vh] overflow-y-auto px-4 py-3.5">
+                      <div className="mb-4 ltr:text-left rtl:text-right">
                         <div>
-                          <div className="label mb-2 text-secondary">{t("headings.basicInfo")}</div>
-                          {/* <div className="rounded-full border-[1.5px] border-solid border-secondary"></div> */}
+                          <div className="label mb-1.5 text-[10px] font-medium text-secondary">{t("headings.basicInfo")}</div>
                         </div>
                       </div>
-                      <div className="grid grid-cols-2 gap-7">
+                      <div className="grid grid-cols-2 gap-4">
                         <Input
                           isRequired
                           label={t("cars.carMakeModel")}
@@ -446,9 +472,9 @@ const AddCarModal = ({ label, isOpen, setIsOpen, refreshData, data, setModalData
                         />
                       </div>
 
-                      <div className="my-5 ltr:text-left rtl:text-right">
+                      <div className="my-3 ltr:text-left rtl:text-right">
                         <div className="label mb-2">{t("cars.uploadCarImage")}</div>
-                        <div className="w-3/12">
+                        <div className="w-4/12">
                           <ChooseFile
                             onClickCross={handleRemoveFile}
                             placeholder
@@ -460,7 +486,7 @@ const AddCarModal = ({ label, isOpen, setIsOpen, refreshData, data, setModalData
                         </div>
                       </div>
 
-                      <div className="grid grid-cols-2 gap-7">
+                      <div className="grid grid-cols-2 gap-4">
                         <Input
                           isRequired
                           label={t("cars.driverName")}
@@ -496,12 +522,14 @@ const AddCarModal = ({ label, isOpen, setIsOpen, refreshData, data, setModalData
                             setContactNumberError("");
                           }}
                           withError={contactNumberError}
-                          title={t("cars.driverName")}
+                          title={t("Country Code")}
                           isRequired
+                          controlMinHeight="32px"
+                          compact
                         />
 
-                        <div className="mt-6">
                           <Input
+                            label="Contact Number"
                             placeholder="Contact Number"
                             value={contactNumber.number}
                             onChange={(e) => {
@@ -510,10 +538,7 @@ const AddCarModal = ({ label, isOpen, setIsOpen, refreshData, data, setModalData
                             }}
                             type="tel"
                             error={contactNumberError}
-                            invisible
-                            label="Contact Number"
                           />
-                        </div>
 
                         {/* <Input
                           isRequired
@@ -528,9 +553,9 @@ const AddCarModal = ({ label, isOpen, setIsOpen, refreshData, data, setModalData
                         /> */}
                       </div>
 
-                      <div className="my-5 ltr:text-left rtl:text-right">
+                      <div className="my-3 ltr:text-left rtl:text-right">
                         <div className="label mb-2">{t("cars.uploadDriverPicture")} </div>
-                        <div className="w-3/12">
+                        <div className="w-4/12">
                           <ChooseFile
                             onClickCross={handleRemoveDriverImage}
                             placeholder
@@ -541,11 +566,11 @@ const AddCarModal = ({ label, isOpen, setIsOpen, refreshData, data, setModalData
                         </div>
                       </div>
 
-                      <div className="grid grid-cols-2 gap-7">
+                      <div className="grid grid-cols-2 gap-4">
                         <Input
                           isRequired
-                          label={t("carsOwnerName")}
-                          placeholder={t("carsOwnerName")}
+                          label={t("Cars Ownername")}
+                          placeholder={t("Cars Ownername")}
                           value={ownerName}
                           error={ownerNameError}
                           onChange={(e) => {
@@ -554,15 +579,8 @@ const AddCarModal = ({ label, isOpen, setIsOpen, refreshData, data, setModalData
                           }}
                         />
 
-                        {/* <DateAndTime
-                          isRequired
-                          dateAndTime={availableFrom}
-                          error={availableFromError}
-                          setDateAndTime={setAvailableFrom}
-                          label="Available From"
-                        /> */}
                         <div className="w-full">
-                          <div className="label mb-5 ltr:text-left rtl:text-right">
+                          <div className="label mb-6 text-[10px] font-medium ltr:text-left rtl:text-right">
                             {t("cars.paid")} <span className="text-red-500">*</span>
                             {paidError && <span className="text-xs text-red-500">{paidError}</span>}
                           </div>
@@ -572,7 +590,7 @@ const AddCarModal = ({ label, isOpen, setIsOpen, refreshData, data, setModalData
                               { id: "Yes", value: "Yes", label: t("cars.yes") },
                               { id: "No", value: "No", label: t("cars.no") },
                             ]}
-                            Classes="flex items-center gap-x-10"
+                            Classes="flex items-center gap-x-6 text-xs"
                             value={paid}
                             onChange={(value) => {
                               setPaid(value);
@@ -588,20 +606,16 @@ const AddCarModal = ({ label, isOpen, setIsOpen, refreshData, data, setModalData
                           placeholder="Select Start Date & Time"
                           value={availableFrom ? availableFrom : ""}
                           error={availableFromError}
+                          min={eventWindowStartValue}
+                          max={eventWindowEndValue}
                           onChange={(e) => {
                             setAvailableFrom(e.target.value);
                             setAvailableFromError("");
+                            if (availableTillError === " Till date must be after From date") {
+                              setAvailableTillError("");
+                            }
                           }}
                         />
-
-                        {/* <DateAndTime
-                          isRequired
-                          dateAndTime={availableTill}
-                          error={availableTillError}
-                          setDateAndTime={setAvailableTill}
-                          label="Available Till"
-                          minDate={availableFrom}
-                        /> */}
 
                         <Input
                           isRequired
@@ -610,22 +624,25 @@ const AddCarModal = ({ label, isOpen, setIsOpen, refreshData, data, setModalData
                           placeholder="Select Start Date & Time"
                           value={availableTill ? availableTill : ""}
                           error={availableTillError}
+                          min={availableFrom || eventWindowStartValue}
+                          max={eventWindowEndValue}
                           onChange={(e) => {
                             setAvailableTill(e.target.value);
                             setAvailableTillError("");
+                            if (availableFromError === " From date must be before Till date") {
+                              setAvailableFromError("");
+                            }
                           }}
-                          min={availableTill}
                         />
                       </div>
 
-                      <div className="mt-5 ltr:text-left rtl:text-right">
+                      <div className="mt-3 ltr:text-left rtl:text-right">
                         <div>
-                          <div className="label mb-2 text-secondary">{t("headings.otherInfo")}</div>
-                          {/* <div className="rounded-full border-[1.5px] border-solid border-secondary"></div> */}
+                          <div className="label mb-1.5 text-[10px] font-medium text-secondary">{t("headings.otherInfo")}</div>
                         </div>
                       </div>
 
-                      <div className="mt-5">
+                      <div className="mt-3">
                         <Input
                           // isRequired
                           label={t("headings.notes")}
@@ -640,14 +657,22 @@ const AddCarModal = ({ label, isOpen, setIsOpen, refreshData, data, setModalData
                         />
                       </div>
 
-                      <div className="mx-auto mt-10 grid w-8/12 grid-cols-2 gap-7">
+                      <div className="mx-auto mt-6 grid w-full max-w-[360px] grid-cols-2 gap-3">
                         <Button
                           icon={<CheckIcon />}
                           title={data === null ? t("cars.addCar") : t("cars.updateCar")}
                           type="submit"
                           loading={btnLoading}
+                          className="h-8 text-xs"
                         />
-                        <Button icon={<XMarkIcon />} title={t("buttons.cancel")} type="button" buttonColor="bg-red-500" onClick={closeModal} />
+                        <Button
+                          icon={<XMarkIcon />}
+                          title={t("buttons.cancel")}
+                          type="button"
+                          buttonColor="bg-red-500"
+                          onClick={closeModal}
+                          className="h-8 text-xs"
+                        />
                       </div>
                     </div>
                   </form>

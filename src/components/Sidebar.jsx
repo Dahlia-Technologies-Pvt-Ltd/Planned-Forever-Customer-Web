@@ -1,8 +1,9 @@
-import React, { useState, useEffect } from "react";
+﻿import React, { useState, useEffect } from "react";
 import { Link, useNavigate, useLocation } from "react-router-dom";
 import { Images } from "../assets/Assets";
 import { useMediaQuery } from "react-responsive";
 import { useThemeContext } from "../context/GlobalContext";
+import { hasAnyPermission } from "../utilities/permissions";
 
 import {
   CARS,
@@ -166,7 +167,7 @@ const Sidebar = () => {
       iconInactive: <img src={Images.DOUBLE_INACTIVE} alt="double Icon" className="h-5 w-5" />,
       path: DOUBLE_TICK,
       active: location.pathname.startsWith(DOUBLE_TICK),
-      permissions: ["contacts-delete", "contacts-view", "contacts-edit", "contacts-create"],
+      permissions: ["double-tick-delete", "double-tick-view", "double-tick-edit", "double-tick-create"],
     },
     {
       label: t("pageTitles.invitees"),
@@ -225,11 +226,12 @@ const Sidebar = () => {
       permissions: ["card-allocation-view"],
     },
     {
-      label: t("pageTitles.card-schedule"),
+      label: "Send Invites",
       iconActive: <img src={Images.SMSGREEN} alt="Card Schedule Icon" className="h-5 w-5" />,
       iconInactive: <img src={Images.SMS} alt="Card Schedule Icon" className="h-5 w-5" />,
       path: CARD_SCHEDULE,
       active: location.pathname.startsWith(CARD_SCHEDULE),
+      permissions: ["card-schedule-view", "card-schedule-create", "card-schedule-edit", "card-schedule-delete"],
     },
     {
       label: t("pageTitles.samagri"),
@@ -389,6 +391,7 @@ const Sidebar = () => {
       iconInactive: <img src={Images.USERTYPE} alt="User Type Icon" className="h-5 w-5" />,
       path: USER_TYPE,
       active: location.pathname.startsWith(USER_TYPE) || location.pathname.startsWith(ADD_USER_TYPE),
+      permissions: ["user-type-delete", "user-type-view", "user-type-edit", "user-type-create"],
     },
     {
       label: t("pageTitles.users"),
@@ -414,22 +417,14 @@ const Sidebar = () => {
       active: location.pathname.startsWith(REPORTS),
       permissions: ["reports-view"],
     },
-    {
-      label: t("pageTitles.export-data"),
-      iconActive: <ArrowDownCircleIcon className="h-5 w-5 text-secondary" />,
-      iconInactive: <ArrowDownCircleIcon className="h-5 w-5" />,
-      path: EXPORT_DATA,
-      active: location.pathname.startsWith(EXPORT_DATA),
-      permissions: ["export-data-view"],
-    },
-    {
-      label: t("pageTitles.service-requests"),
-      iconActive: <WrenchScrewdriverIcon className="h-5 w-5 text-secondary" />,
-      iconInactive: <WrenchScrewdriverIcon className="h-5 w-5" />,
-      path: SERVICE_REQUESTS,
-      active: location.pathname.startsWith(SERVICE_REQUESTS),
-      permissions: ["service-requests-view"],
-    },
+//     {
+//       label: t("pageTitles.export-data"),
+//       iconActive: <ArrowDownCircleIcon className="h-5 w-5 text-secondary" />,
+//       iconInactive: <ArrowDownCircleIcon className="h-5 w-5" />,
+//       path: EXPORT_DATA,
+//       active: location.pathname.startsWith(EXPORT_DATA),
+//       permissions: ["export-data-view"],
+//     },
     // {
     //   label: t("pageTitles.nearby-attractions"),
     //   iconActive: <img src={Images.USERTYPEGREEN} alt="User Type Icon" className="h-5 w-5" />,
@@ -452,7 +447,15 @@ const Sidebar = () => {
       iconInactive: <CalendarIcon className="h-5 w-5" />,
       path: PANCHANG_CALENDAR,
       active: location.pathname.startsWith(PANCHANG_CALENDAR),
-      permissions: ["panchang-caldendar-view"],
+      permissions: ["panchang-calendar-view"],
+    },
+    {
+      label: t("pageTitles.service-requests"),
+      iconActive: <WrenchScrewdriverIcon className="h-5 w-5 text-secondary" />,
+      iconInactive: <WrenchScrewdriverIcon className="h-5 w-5" />,
+      path: SERVICE_REQUESTS,
+      active: location.pathname.startsWith(SERVICE_REQUESTS),
+      permissions: ["service-requests-view"],
     },
   ];
 
@@ -468,12 +471,8 @@ const Sidebar = () => {
   // });
 
   const filteredSidebarMenuItems = sidebarMenuItems?.filter((menuItem) => {
-    if (userData?.role?.display_name === "web_admin") {
+    if (hasAnyPermission(userData, menuItem.permissions || [])) {
       return true;
-    } else if (userData?.role?.permissions) {
-      const userPermissions = userData.role.permissions?.map((permission) => permission.name); // Get user's permissions array
-      console.log("User Permissions:", { userPermissions });
-      return menuItem.permissions?.some((permission) => userPermissions.includes(permission)) || false;
     }
     return false;
   });
@@ -565,6 +564,7 @@ const Sidebar = () => {
       iconInactive: <ClipboardDocumentListIcon className="h-5 w-5" />,
       path: TICKET_CUSTOM_FIELD_DETAIL,
       active: location.pathname.startsWith(TICKET_CUSTOM_FIELD_DETAIL),
+      permissions: ["ticket-custom-field-delete", "ticket-custom-field-view", "ticket-custom-field-edit", "ticket-custom-field-create"],
     },
     {
       label: t("pageTitles.ticket-custom-field-library"),
@@ -572,6 +572,12 @@ const Sidebar = () => {
       iconInactive: <CalendarDaysIcon className="h-5 w-5" />,
       path: TICKET_CUSTOM_FIELD_LIBRARY,
       active: location.pathname.startsWith(TICKET_CUSTOM_FIELD_LIBRARY),
+      permissions: [
+        "ticket-custom-field-library-delete",
+        "ticket-custom-field-library-view",
+        "ticket-custom-field-library-edit",
+        "ticket-custom-field-library-create",
+      ],
     },
     {
       label: t("pageTitles.ticket-category"),
@@ -579,6 +585,7 @@ const Sidebar = () => {
       iconInactive: <ClipboardDocumentListIcon className="h-5 w-5" />,
       path: TICKET_CATEGORY,
       active: location.pathname.startsWith(TICKET_CATEGORY),
+      permissions: ["ticket-category-delete", "ticket-category-view", "ticket-category-edit", "ticket-category-create"],
     },
     {
       label: t("pageTitles.ticket-sub-category"),
@@ -586,6 +593,7 @@ const Sidebar = () => {
       iconInactive: <ClipboardDocumentListIcon className="h-5 w-5" />,
       path: TICKET_SUB_CATEGORY,
       active: location.pathname.startsWith(TICKET_SUB_CATEGORY),
+      permissions: ["ticket-sub-category-delete", "ticket-sub-category-view", "ticket-sub-category-edit", "ticket-sub-category-create"],
     },
     {
       label: t("pageTitles.ticket-classification"),
@@ -593,8 +601,11 @@ const Sidebar = () => {
       iconInactive: <WrenchScrewdriverIcon className="h-5 w-5" />,
       path: TICKET_FURTHER_CLASSIFICATION,
       active: location.pathname.startsWith(TICKET_FURTHER_CLASSIFICATION),
+      permissions: ["ticket-classification-delete", "ticket-classification-view", "ticket-classification-edit", "ticket-classification-create"],
     },
   ];
+  const ticketManagerPermissions = sidebarTicketsSubmenuItems.flatMap((menuItem) => menuItem.permissions || []);
+  const filteredSidebarTicketsSubmenuItems = sidebarTicketsSubmenuItems.filter((menuItem) => hasAnyPermission(userData, menuItem.permissions || []));
 
   // const filteredSidebarServiceSubmenuItems = sidebarTicketsSubmenuItems?.filter((menuItem) => {
   //   if (userData?.role === "superAdmin") {
@@ -781,7 +792,7 @@ const Sidebar = () => {
   return (
     <>
       <aside
-        className={`fixed ${!isSidebarOpenWithTitle ? "w-[5.5rem]" : "w-64"} -left-full bottom-0 top-20 z-10 transform border-r border-gray-200 bg-white py-4 transition-all duration-300 xl:left-0 xl:h-screen
+        className={`dashboard-sidebar fixed ${!isSidebarOpenWithTitle ? "w-[5.5rem]" : "w-64"} -left-full bottom-0 top-20 z-10 flex transform flex-col border-r border-gray-200 bg-white py-4 transition-all duration-300 xl:left-0
  xl:rtl:right-0 ${isSidebarOpen ? "left-0" : "-left-full"}`}
         onMouseEnter={() => setIsSidebarOpenWithTitle(true)}
         onMouseLeave={() => {
@@ -790,7 +801,7 @@ const Sidebar = () => {
           }
         }}
       >
-        <nav className=" flex h-[74vh] w-full flex-col overflow-y-auto pb-8 pt-4 xl:h-[87vh] ltr:pr-4 rtl:pl-4">
+        <nav className="flex min-h-0 flex-1 w-full flex-col overflow-y-auto pb-16 pt-4 ltr:pr-4 rtl:pl-4">
           <ul className="flex-grow space-y-3">
             {filteredSidebarMenuItems.map((menuItem, index) => (
               <li key={index} onClick={isTablet ? toggleSidebar : null}>
@@ -848,8 +859,7 @@ const Sidebar = () => {
               </li>
            )}  */}
 
-            {(userData?.role.display_name === "web_admin" ||
-              (userData?.role?.permissions && userData?.role?.permissions?.includes("Recommended"))) && (
+            {hasAnyPermission(userData, ticketManagerPermissions) && (
               <li>
                 <details className="group [&_summary::-webkit-details-marker]:hidden">
                   <summary className="flex cursor-pointer items-center justify-between rounded-lg px-5 py-2.5 text-sm font-medium text-info-color hover:bg-gray-100 hover:text-gray-700 xl:rounded-br-10 xl:rounded-tr-10">
@@ -866,7 +876,7 @@ const Sidebar = () => {
                   </summary>
 
                   <ul className={`${isSidebarOpenWithTitle ? "pl-6 pr-4" : "pl-3"} mt-2 space-y-1`}>
-                    {sidebarTicketsSubmenuItems.map((menuItem, index) => (
+                    {filteredSidebarTicketsSubmenuItems.map((menuItem, index) => (
                       <li key={index} onClick={isTablet ? toggleSidebar : null}>
                         <Link
                           className={`flex items-center gap-x-3.5 rounded-10 p-2.5 text-sm font-medium transition duration-200 hover:bg-gray-100 ${
@@ -893,3 +903,4 @@ const Sidebar = () => {
   );
 };
 export default Sidebar;
+

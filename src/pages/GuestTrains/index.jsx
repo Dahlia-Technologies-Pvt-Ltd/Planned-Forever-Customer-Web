@@ -20,6 +20,7 @@ import { Switch } from "@headlessui/react";
 import { useTranslation } from "react-i18next";
 import Dropdown from "../../components/common/Dropdown";
 import ImportGuestTrainModal from "./ImportGuestTrainModal";
+import { hasPermission } from "../../utilities/permissions";
 
 // Table Head
 const GuestTrains = () => {
@@ -166,7 +167,7 @@ const GuestTrains = () => {
               <h3 className="heading">Guest Trains</h3>
               <div className="flex w-full items-center justify-between">
                 <div className="flex items-center gap-x-3">
-                  {(userData?.role?.display_name === "web_admin" || userData.role.permissions?.some((item) => item === "guest_trains-create")) && (
+                  {(hasPermission(userData, "guest-trains-create")) && (
                     <>
                       <Button title={t("guestTrain.addGuestTrain")} onClick={() => setAddNewModal(true)} />
                       <Button title={t("contacts.importExcel")} buttonColor="bg-purple-600" onClick={() => setAddNewImportModal(true)} />
@@ -250,7 +251,7 @@ const GuestTrains = () => {
                             requestSort(sortKey);
                           }}
                         >
-                          <p className="font-inter cursor-pointer whitespace-nowrap text-xs font-semibold leading-5 3xl:text-sm">
+                          <p className="font-inter cursor-pointer whitespace-nowrap text-sm font-semibold leading-5 3xl:text-sm">
                             {head}
                             {sortConfig.key ===
                               (head === "Guest Name"
@@ -383,8 +384,7 @@ const GuestTrains = () => {
                       <div className="flex justify-between">
                         <h3 className="heading">{t("headings.details")} </h3>
                         <div className="flex items-center gap-x-3">
-                          {(userData?.role?.display_name === "web_admin" ||
-                            userData.role.permissions?.some((item) => item === "guest_trains-edit")) && (
+                          {(hasPermission(userData, "guest-trains-edit")) && (
                             <button
                               className="border-b border-secondary text-sm font-medium text-secondary"
                               type="button"
@@ -396,8 +396,7 @@ const GuestTrains = () => {
                               {t("buttons.edit")}
                             </button>
                           )}
-                          {(userData?.role?.display_name === "web_admin" ||
-                            userData.role.permissions?.some((item) => item === "guest_trains-delete")) && (
+                          {(hasPermission(userData, "guest-trains-delete")) && (
                             <button
                               onClick={() => setOpenDeleteModal({ open: true, data: detail })}
                               className="border-b border-red-500 text-sm font-medium text-red-500"

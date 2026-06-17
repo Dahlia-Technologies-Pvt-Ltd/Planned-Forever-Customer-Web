@@ -12,6 +12,8 @@ import { set } from "lodash";
 import ChooseFile from "../../components/common/ChooseFile";
 import { useTranslation } from "react-i18next";
 
+const isActiveStatus = (status) => ["1", "true", "active"].includes(String(status).toLowerCase());
+
 const AddUserModal = ({ label, isOpen, setIsOpen, refreshData, data, setModalData }) => {
   const { t } = useTranslation("common");
 
@@ -238,14 +240,14 @@ const AddUserModal = ({ label, isOpen, setIsOpen, refreshData, data, setModalDat
       setFirstName(data?.first_name);
       setSalutation(data?.salutation);
       setLastName(data?.last_name);
-      setUserStatus(data?.status === 1 ? "Active" : "Inactive");
+      setUserStatus(isActiveStatus(data?.status) ? "Active" : "Inactive");
       setUserType({ label: data?.role?.name, value: data?.role?.id });
       setEmailAddress(data?.email);
       setIndentityFile(data?.profile_image);
       setFile(data?.profile_image);
       // setPassword(data?.)
     }
-  }, [isOpen]);
+  }, [data, isOpen]);
 
   useEffect(() => {
     if (isOpen) {
@@ -296,7 +298,7 @@ const AddUserModal = ({ label, isOpen, setIsOpen, refreshData, data, setModalDat
                     />
                   </div>
 
-                  <form onSubmit={handleSubmit}>
+                  <form onSubmit={handleSubmit} className="[&_.label]:text-xs [&_.label]:font-medium [&_input]:h-9 [&_input]:min-h-[36px] [&_input]:text-sm [&_input]:py-1 [&_input[type='datetime-local']]:h-9 [&_textarea]:text-sm [&_.css-b62m3t-container]:text-sm [&_.css-13cymwt-control]:h-9 [&_.css-13cymwt-control]:min-h-[36px] [&_.css-13cymwt-control]:py-0 [&_.css-t3ipsp-control]:h-9 [&_.css-t3ipsp-control]:min-h-[36px] [&_.css-t3ipsp-control]:py-0 [&_.css-hlgwow]:h-9 [&_.css-hlgwow]:min-h-[36px] [&_.css-hlgwow]:py-0 [&_.css-hlgwow]:px- [&_.css-1jqq78o-placeholder]:text-sm [&_.css-1jqq78o-placeholder]:leading-none [&_.css-1dimb5e-singleValue]:text-sm [&_.css-1dimb5e-singleValue]:leading-none [&_.css-1wy0on6]:h-9 [&_.css-19bb58m]:my-0 [&_input[type='radio']]:h-4 [&_input[type='radio']]:w-4 [&_input[type='radio']]:min-h-4 [&_input[type='radio']]:min-w-4">
                     <div className="h-[600px] overflow-y-auto p-2 md:h-[400px] lg:h-[400px] xl:h-[500px] 2xl:h-[600px]">
                       <div className="mb-5 ltr:text-left rtl:text-right">
                         <div>
@@ -391,7 +393,7 @@ const AddUserModal = ({ label, isOpen, setIsOpen, refreshData, data, setModalDat
                                 value: "Active",
                                 label: t("users.active"),
                               },
-                              { id: "Inactive", value: "InActive", label: t("users.inactive") },
+                              { id: "Inactive", value: "Inactive", label: t("users.inactive") },
                             ]}
                             Classes="flex"
                             labelClasses="ml-3"

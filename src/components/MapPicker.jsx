@@ -26,10 +26,17 @@ const MapPicker = ({ setLocation , onLocationSelect, location, venueAddressError
   });
 
   useEffect(() => {
-    if (location?.lat && location?.lng) {
-      setMarkerPosition({ lat: location.lat, lng: location.lng });
-      setVisibleAddress(location.address || "");
-      setHiddenAddress(location.address || "");
+    const lat = Number(location?.lat);
+    const lng = Number(location?.lng);
+    const address = location?.address || "";
+
+    setVisibleAddress(address);
+    setHiddenAddress(address);
+
+    if (location?.lat !== "" && location?.lat != null && location?.lng !== "" && location?.lng != null && Number.isFinite(lat) && Number.isFinite(lng)) {
+      setMarkerPosition({ lat, lng });
+    } else {
+      setMarkerPosition(null);
     }
   }, [location]);
 
@@ -40,12 +47,12 @@ const MapPicker = ({ setLocation , onLocationSelect, location, venueAddressError
         const address = results[0].formatted_address;
         setVisibleAddress(address);
         setHiddenAddress(address);
-        onLocationSelect({ lat, lng, address });
+        onLocationSelect?.({ lat, lng, address });
       } else {
         const fallbackAddress = "Address not found";
         setVisibleAddress(fallbackAddress);
         setHiddenAddress(fallbackAddress);
-        onLocationSelect({ lat, lng, address: fallbackAddress });
+        onLocationSelect?.({ lat, lng, address: fallbackAddress });
       }
     });
   };
@@ -86,12 +93,16 @@ const MapPicker = ({ setLocation , onLocationSelect, location, venueAddressError
           mapRef.current.panTo({ lat, lng });
         }
 
-        onLocationSelect({ lat, lng, address });
+        onLocationSelect?.({ lat, lng, address });
       }
     }
   }, [autocomplete, onLocationSelect]);
 
-  const mapCenter = markerPosition || defaultCenter;
+  const mapCenter =
+  typeof markerPosition?.lat === "number" &&
+  typeof markerPosition?.lng === "number"
+    ? markerPosition
+    : defaultCenter;
 
   return isLoaded ? (
     <div style={{ position: "relative" }}>
@@ -145,7 +156,6 @@ const MapPicker = ({ setLocation , onLocationSelect, location, venueAddressError
 };
 
 export default MapPicker;
-
 
 
 

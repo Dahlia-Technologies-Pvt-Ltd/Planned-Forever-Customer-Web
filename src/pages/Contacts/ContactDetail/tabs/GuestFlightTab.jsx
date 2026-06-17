@@ -227,34 +227,34 @@ const GuestFlightTab = ({ data, t }) => {
                     {/* Main flight row */}
                     <tr className="cursor-pointer even:bg-gray-50">
                       <td className="cursor-pointer py-3 pl-6 pr-4">
-                        <p className="text-xs font-normal text-primary-color 3xl:text-sm">
+                        <p className="text-sm font-normal text-primary-color 3xl:text-sm">
                           {item?.user?.first_name + " " + item?.user?.last_name || "-"}
                         </p>
                       </td>
                       <td className="cursor-pointer py-3 pl-6 pr-4">
-                        <p className="text-xs font-normal text-primary-color 3xl:text-sm">{item?.departure_from || "-"}</p>
+                        <p className="text-sm font-normal text-primary-color 3xl:text-sm">{item?.departure_from || "-"}</p>
                       </td>
                       <td className="cursor-pointer py-3 pl-6 pr-4">
-                        <p className="text-xs font-normal text-primary-color 3xl:text-sm">
+                        <p className="text-sm font-normal text-primary-color 3xl:text-sm">
                           {item?.departure_datetime ? moment.unix(item.departure_datetime).format("D MMM YYYY h:mm A") : "-"}
                         </p>
                       </td>
                       <td className="cursor-pointer py-3 pl-6 pr-4">
-                        <p className="text-xs font-normal text-primary-color 3xl:text-sm">{item?.arrival_at || "-"}</p>
+                        <p className="text-sm font-normal text-primary-color 3xl:text-sm">{item?.arrival_at || "-"}</p>
                       </td>
                       <td className="cursor-pointer py-3 pl-6 pr-4">
-                        <p className="text-xs font-normal text-primary-color 3xl:text-sm">
+                        <p className="text-sm font-normal text-primary-color 3xl:text-sm">
                           {item?.arrival_datetime ? moment.unix(item.arrival_datetime).format("D MMM YYYY h:mm A") : "-"}
                         </p>
                       </td>
                       <td className="cursor-pointer py-3 pl-6 pr-4">
-                        <p className="text-xs font-normal text-primary-color 3xl:text-sm">{item?.flight_train_no || "-"}</p>
+                        <p className="text-sm font-normal text-primary-color 3xl:text-sm">{item?.flight_train_no || "-"}</p>
                       </td>
                       <td className="cursor-pointer py-3 pl-6 pr-4">
-                        <p className="text-xs font-normal text-primary-color 3xl:text-sm">{item?.booking_pnr || "-"}</p>
+                        <p className="text-sm font-normal text-primary-color 3xl:text-sm">{item?.booking_pnr || "-"}</p>
                       </td>
                       <td className="cursor-pointer py-3 pl-6 pr-4">
-                        <p className="text-xs font-normal text-primary-color 3xl:text-sm">{item?.seat_no || "-"}</p>
+                        <p className="text-sm font-normal text-primary-color 3xl:text-sm">{item?.seat_no || "-"}</p>
                       </td>
                       <td className="cursor-pointer py-3 pl-6 pr-4">
                         <div className="flex items-center justify-center gap-x-3">
@@ -286,7 +286,7 @@ const GuestFlightTab = ({ data, t }) => {
                             )}
                           </button>
                         ) : (
-                          <span className="text-xs text-gray-400 3xl:text-sm">No Family Member</span>
+                          <span className="text-xs text-gray-400 3xl:text-sm">{t("contacts.noFamilyMember")}</span>
                         )}
                       </td>
                     </tr>
@@ -296,21 +296,21 @@ const GuestFlightTab = ({ data, t }) => {
                       <tr className="bg-blue-50">
                         <td colSpan="10" className="px-6 py-4">
                           <div className="ml-4">
-                            <h4 className="text-sm font-semibold text-gray-700 mb-3">Children Details:</h4>
+                            <h4 className="text-sm font-semibold text-gray-700 mb-3">{t("contacts.childrenDetails")}:</h4>
                             <div className="grid gap-3">
                               {item.children.map((child, childIndex) => (
                                 <div key={child.id} className="bg-white p-3 rounded border border-gray-200">
                                   <div className="grid grid-cols-3 gap-4 text-xs 3xl:text-sm">
                                     <div>
-                                      <span className="font-medium text-gray-600">Name: </span>
+                                      <span className="font-medium text-gray-600">{t("contacts.name")}: </span>
                                       <span className="text-gray-800">{child.name || "-"}</span>
                                     </div>
                                     <div>
-                                      <span className="font-medium text-gray-600">Booking PNR: </span>
+                                      <span className="font-medium text-gray-600">{t("contacts.bookingPnr")}: </span>
                                       <span className="text-gray-800">{child.booking_pnr || "-"}</span>
                                     </div>
                                     <div>
-                                      <span className="font-medium text-gray-600">Seat No: </span>
+                                      <span className="font-medium text-gray-600">{t("contacts.seatNumber")}: </span>
                                       <span className="text-gray-800">{child.seat_no || "-"}</span>
                                     </div>
                                   </div>

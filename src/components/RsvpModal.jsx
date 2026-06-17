@@ -26,19 +26,19 @@ export default function RsvpModal({ label, isOpen, setIsOpen, handleSubmit, allo
   const [status, setStatus] = useState(false);
   const [error, setError] = useState("");
 
-  const eventIdValue = eventId.value;
+  const eventIdValue = eventId?.value || eventSelect || "";
 
   useEffect(() => {
     if (allocateData) {
       const filteredInvitees = allocateData.invitees.filter((invitee) => invitee.event_id === eventIdValue);
 
-      if (allocateData.invitees.length > 0) {
-        const totalInvited = allocateData.invitees.reduce((acc, curr) => acc + curr.total_invited, 0);
-        const rsvpYes = allocateData.invitees.reduce((acc, curr) => acc + curr.rsvp_yes, 0);
-        const rsvpNo = allocateData.invitees.reduce((acc, curr) => acc + curr.rsvp_no, 0);
-        const rsvpMayAttend = allocateData.invitees.reduce((acc, curr) => acc + curr.rsvp_may_attend, 0);
-        const rsvpPending = allocateData.invitees.reduce((acc, curr) => acc + curr.rsvp_pending, 0);
-        const rsvpStatus = allocateData.invitees.reduce((acc, curr) => acc + curr.rsvp_status, 0);
+      if (filteredInvitees.length > 0) {
+        const totalInvited = filteredInvitees.reduce((acc, curr) => acc + curr.total_invited, 0);
+        const rsvpYes = filteredInvitees.reduce((acc, curr) => acc + curr.rsvp_yes, 0);
+        const rsvpNo = filteredInvitees.reduce((acc, curr) => acc + curr.rsvp_no, 0);
+        const rsvpMayAttend = filteredInvitees.reduce((acc, curr) => acc + curr.rsvp_may_attend, 0);
+        const rsvpPending = filteredInvitees.reduce((acc, curr) => acc + curr.rsvp_pending, 0);
+        const rsvpStatus = filteredInvitees.some((curr) => Number(curr.rsvp_status) === 1);
 
 
         setTotalInvitee(totalInvited);
@@ -46,13 +46,14 @@ export default function RsvpModal({ label, isOpen, setIsOpen, handleSubmit, allo
         setNoValue(rsvpNo);
         setMayAttend(rsvpMayAttend);
         setPending(rsvpPending);
-        setStatus(rsvpStatus)
+        setStatus(rsvpStatus);
       } else {
         setTotalInvitee(0);
         setYesValue(0);
         setNoValue(0);
         setMayAttend(0);
         setPending(0);
+        setStatus(false);
       }
     }
   }, [allocateData, eventIdValue, isOpen]);
@@ -111,12 +112,12 @@ export default function RsvpModal({ label, isOpen, setIsOpen, handleSubmit, allo
     // Prepare the payload for the API call
     const payload = {
       user_id: allocateData?.uuid,
-      event_id: eventSelect,
+      event_id: eventIdValue,
       rsvp_may_attend: parsedMayAttend,
       rsvp_no: parsedNoValue,
       rsvp_yes: parsedYesValue,
       rsvp_pending: newPending,
-      rsvp_status: status
+      rsvp_status: status ? 1 : 0
       // Updated to use the new calculated pending value
     };
 
@@ -177,43 +178,43 @@ export default function RsvpModal({ label, isOpen, setIsOpen, handleSubmit, allo
                 leaveTo="opacity-0 scale-75"
               >
                 <Dialog.Panel className="w-full max-w-3xl overflow-hidden rounded-2xl bg-white p-4 align-middle shadow-xl transition-all xl:max-w-4xl xl:p-6 3xl:max-w-5xl 3xl:p-8">
-                  <div className="flex items-center gap-x-4 rounded-10 border bg-blue-700 p-4 font-poppins text-20 font-semibold leading-7 text-white">
-                    <EnvelopeIcon className="h-10 w-10 text-white" />
-                    <h3>
+                  <div className="flex items-center gap-x-3 rounded-10 border bg-blue-700 p-3 font-poppins text-base font-semibold leading-6 text-white xl:text-lg">
+                    <EnvelopeIcon className="h-8 w-8 text-white" />
+                    <h3 className="text-base xl:text-lg">
                       Mark RSVP: {allocateData?.first_name} {allocateData?.middle_name} {allocateData?.last_name}
                     </h3>
                   </div>
 
                   {/* Contact */}
-                  <div className="mt-8 grid grid-cols-2 divide-x divide-gray-700 rounded-lg border-2 border-gray-400 text-left">
+                  <div className="mt-6 grid grid-cols-2 divide-x divide-gray-700 rounded-lg border-2 border-gray-400 text-left text-sm">
                     <div className="space-y-1 p-4">
-                      <h2 className="font-medium">Contact Numbers</h2>
-                      <p>Mobile: {allocateData?.contact_numbers?.map((item) => item.contact_number) || "-"}</p>
+                      <h2 className="text-sm font-medium">Contact Numbers</h2>
+                      <p className="text-sm">Mobile: {allocateData?.contact_numbers?.map((item) => item.contact_number) || "-"}</p>
                     </div>
                     <div className="p-4">
-                      <h2 className="font-medium">
-                        <h2 className="font-medium">Family</h2>
-                        <p>Name: {allocateData?.family?.name || "-"}</p>
+                      <h2 className="text-sm font-medium">
+                        <h2 className="text-sm font-medium">Family</h2>
+                        <p className="text-sm">Name: {allocateData?.family?.name || "-"}</p>
                       </h2>
                     </div>
                   </div>
 
                   {/* Table */}
-                  <div className="relative mt-8">
-                    <div className="rounded-tl-lg rounded-tr-lg border-l-2 border-r-2 border-t-2 border-gray-400 px-4 py-6">
-                      <h2 className="font-medium text-purple-500">
+                  <div className="relative mt-6">
+                    <div className="rounded-tl-lg rounded-tr-lg border-l-2 border-r-2 border-t-2 border-gray-400 px-4 py-4">
+                      <h2 className="text-sm font-medium text-purple-500 xl:text-base">
                         Mark {allocateData?.first_name} {allocateData?.last_name} RSVP status for the events:
                       </h2>
                     </div>
-                    <table className="w-full border-collapse">
+                    <table className="w-full border-collapse text-sm">
                       <thead>
                         <tr>
                           {/* <th className="px-2 py-2 border-2 border-gray-400">Event</th> */}
-                          <th className="border-2 border-gray-400 px-2 py-2">Total Invitee</th>
-                          <th className="border-2 border-gray-400 px-2 py-2">Yes</th>
-                          <th className="border-2 border-gray-400 px-2 py-2">No</th>
-                          <th className="border-2 border-gray-400 px-2">May Attend</th>
-                          <th className="border-2 border-gray-400 px-2">Pending</th>
+                          <th className="border-2 border-gray-400 px-2 py-2 text-sm font-medium">Total Invitee</th>
+                          <th className="border-2 border-gray-400 px-2 py-2 text-sm font-medium">Yes</th>
+                          <th className="border-2 border-gray-400 px-2 py-2 text-sm font-medium">No</th>
+                          <th className="border-2 border-gray-400 px-2 text-sm font-medium">May Attend</th>
+                          <th className="border-2 border-gray-400 px-2 text-sm font-medium">Pending</th>
                         </tr>
                       </thead>
                       <tbody>
@@ -241,14 +242,14 @@ export default function RsvpModal({ label, isOpen, setIsOpen, handleSubmit, allo
 
                   {/* dropdown */}
                   {/* <div className="mt-8 grid grid-cols-2 divide-x divide-gray-700 rounded-lg border-2 border-gray-400 text-left"> */}
-                    <div className="space-y-1 p-4 flex items-center gap-x-3">
+                    <div className="flex items-center gap-x-3 space-y-1 p-4 text-sm">
                     <input
                         type="checkbox"
                         checked={status}
                         onChange={() => setStatus(!status)}
                         className="h-4 w-4 border-gray-300 bg-gray-100 text-blue-600"
                       />
-                      <h2 className="font-medium">Invitation Call</h2>
+                      <h2 className="text-sm font-medium">Invitation Call</h2>
                     </div>
                     <div className="p-4">
                       {/* <Dropdown
@@ -264,10 +265,10 @@ export default function RsvpModal({ label, isOpen, setIsOpen, handleSubmit, allo
                     </div>
                   {/* </div> */}
 
-                  {error && <div className="p-2 text-center text-red-500">{error}</div>}
+                  {error && <div className="p-2 text-center text-sm text-red-500">{error}</div>}
 
                   {/* buttons */}
-                  <div className="mt-12 flex justify-end gap-x-6 px-8">
+                  <div className="mt-10 flex justify-end gap-x-6 px-8">
                     <Button loading={btnLoading} title="Save" icon={<CheckIcon />} onClick={handleSaveRsvp} />
                     <Button title="Cancel" icon={<XMarkIcon />} buttonColor="border-red-500 bg-red-500" onClick={closeModal} />
                   </div>

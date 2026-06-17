@@ -148,22 +148,21 @@ const ContactDetail = () => {
       case "guestTrains":
         return <GuestTrainsTab {...commonProps} />;
       default:
-        return <div>Tab content not found</div>;
+        return <div>{t("contacts.tabContentNotFound")}</div>;
     }
   };
 
   return (
     <>
-      <div onClick={() => navigate(CONTACTS)} className="mb-5 flex cursor-pointer text-base font-medium text-secondary hover:underline">
-        <ArrowLeftIcon className="mr-2 h-6 w-4 text-secondary" />
-        <span>{t("contacts.backToContactList")}</span>
-      </div>
+      <div className="flex min-h-full flex-col">
+        <div onClick={() => navigate(CONTACTS)} className="mb-5 flex cursor-pointer text-base font-medium text-secondary hover:underline">
+          <ArrowLeftIcon className="mr-2 h-6 w-4 text-secondary" />
+          <span>{t("contacts.backToContactList")}</span>
+        </div>
 
-      <div className="card flex h-[83vh] flex-col">
-        <div className="container mx-auto flex h-full flex-col">
+        <div className="card flex flex-col">
           <Tab.Group>
-            {/* Sticky Tab List */}
-            <div className="sticky top-0 z-10 bg-white pb-4">
+            <div className="bg-white pb-4">
               <Tab.List className="grid-col-1 grid justify-around rounded-10 md:grid-cols-3 md:bg-[#E9EEF5] lg:grid-cols-4 xl:grid-cols-10 xl:gap-x-0 2xl:gap-x-0">
                 {TabData.map((item, index) => (
                   <Tab as={Fragment} key={index}>
@@ -188,14 +187,11 @@ const ContactDetail = () => {
               </Tab.List>
             </div>
 
-            {/* Scrollable Tab Panels */}
-            <div className="flex-1 overflow-y-auto">
-              <Tab.Panels className="space-y-8">
-                {TabData.map((item, index) => (
-                  <Tab.Panel key={index}>{renderTabContent(item.component)}</Tab.Panel>
-                ))}
-              </Tab.Panels>
-            </div>
+            <Tab.Panels className="space-y-8">
+              {TabData.map((item, index) => (
+                <Tab.Panel key={index}>{renderTabContent(item.component)}</Tab.Panel>
+              ))}
+            </Tab.Panels>
           </Tab.Group>
         </div>
       </div>

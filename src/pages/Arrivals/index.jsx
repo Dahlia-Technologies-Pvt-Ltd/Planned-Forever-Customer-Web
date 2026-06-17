@@ -21,6 +21,7 @@ import { Switch } from "@headlessui/react";
 import { useTranslation } from "react-i18next";
 import Dropdown from "../../components/common/Dropdown";
 import ImportArrivalModal from "./ImportArrivalModal";
+import { hasPermission } from "../../utilities/permissions";
 // Table Head
 const Arrivals = () => {
   const { t } = useTranslation("common");
@@ -202,8 +203,7 @@ const Arrivals = () => {
 
               {/* Top buttons */}
               <div className="flex items-center gap-x-3">
-                {(userData?.role?.display_name === "web_admin" ||
-                  userData.role.permissions?.some((item) => item === "arrivals-create")) && (
+                {(hasPermission(userData, "arrivals-create")) && (
                   <>
                     <Button title={t("arrival.addArrival")} onClick={() => setAddNewModal(true)} />
                     <Button
@@ -218,11 +218,11 @@ const Arrivals = () => {
                   <Button title={t("buttons.print")} buttonColor="border-primary bg-primary" />
                 </Link>
 
-                <Button
-                  title="Send Message"
-                  onClick={() => setAddNewSendMessageModal(true)}
-                  buttonColor="bg-green-500"
-                />
+                  <Button
+                    title={t("Send Message")}
+                    onClick={() => setAddNewSendMessageModal(true)}
+                    buttonColor="bg-[#7d1d2f] hover:bg-[#641726]"
+                  />
               </div>
 
               {/* Filters section under Add Arrival */}
@@ -298,7 +298,7 @@ const Arrivals = () => {
                             requestSort(sortKey);
                           }}
                         >
-                          <p className="font-inter cursor-pointer whitespace-nowrap text-xs font-semibold leading-5 3xl:text-sm">
+                          <p className="font-inter cursor-pointer whitespace-nowrap text-sm font-semibold leading-5">
                             {head}
                             {sortConfig.key ===
                               (head === "Arrival Date & Time"
@@ -340,31 +340,31 @@ const Arrivals = () => {
                           onClick={() => handleRowClick(item?.id)}
                         >
                           <td className="py-1.5 pl-6 pr-4">
-                            <p className="text-primary-color-200 text-xs font-normal 3xl:text-sm">
+                            <p className="text-primary-color-200 text-sm font-normal">
                               {moment.unix(item?.date).format("D MMM YYYY  h:mm A") || "-"}
                             </p>
                           </td>
 
                           <td className="py-1.5 pl-4 pr-3 3xl:px-4">
-                            <p className="text-primary-color-200 text-xs font-normal 3xl:text-sm">
+                            <p className="text-primary-color-200 text-sm font-normal">
                               {item?.contact?.first_name + " " + item?.contact?.last_name || "-"}
                             </p>
                           </td>
 
                           <td className="py-1.5 pl-4 pr-3 3xl:px-4">
-                            <p className="text-primary-color-200 text-xs font-normal 3xl:text-sm">
-                              <p className="text-primary-color-200 text-xs font-normal 3xl:text-sm">{item?.from || "-"}</p>
+                            <p className="text-primary-color-200 text-sm font-normal">
+                              <p className="text-primary-color-200 text-sm font-normal">{item?.from || "-"}</p>
                             </p>
                           </td>
 
                           <td className="py-1.5 pl-4 pr-3 3xl:px-4">
-                            <p className="text-primary-color-200 text-xs font-normal 3xl:text-sm">{item?.to || "-"}</p>
+                            <p className="text-primary-color-200 text-sm font-normal">{item?.to || "-"}</p>
                           </td>
                           <td className="py-1.5 pl-4 pr-3 3xl:px-4">
-                            <p className="text-primary-color-200 text-xs font-normal 3xl:text-sm">{item?.fligh_train_no || "-"}</p>
+                            <p className="text-primary-color-200 text-sm font-normal">{item?.fligh_train_no || "-"}</p>
                           </td>
                           <td className="py-1.5 pl-4 pr-3 3xl:px-4">
-                            <p className="text-primary-color-200 text-xs font-normal 3xl:text-sm">{item?.no_of_person || "-"}</p>
+                            <p className="text-primary-color-200 text-sm font-normal">{item?.no_of_person || "-"}</p>
                           </td>
 
                           <td className="py-1.5 pl-4 pr-3 3xl:px-4">
@@ -453,7 +453,7 @@ const Arrivals = () => {
                       <div className="flex justify-between">
                         <h3 className="heading">{t("headings.details")} </h3>
                         <div className="flex items-center gap-x-3">
-                          {(userData?.role?.display_name === "web_admin" || userData.role.permissions?.some((item) => item === "arrivals-edit")) && (
+                          {(hasPermission(userData, "arrivals-edit")) && (
                             <button
                               className="border-b border-secondary text-sm font-medium text-secondary"
                               type="button"
@@ -465,8 +465,7 @@ const Arrivals = () => {
                               {t("buttons.edit")}
                             </button>
                           )}
-                          {(userData?.role?.display_name === "web_admin" ||
-                            userData.role.permissions?.some((item) => item === "arrivals-delete")) && (
+                          {(hasPermission(userData, "arrivals-delete")) && (
                             <button
                               onClick={() => setOpenDeleteModal({ open: true, data: detail })}
                               className="border-b border-red-500 text-sm font-medium text-red-500"
@@ -501,7 +500,7 @@ const Arrivals = () => {
                       <div className="my-5 ">
                         {detail?.car?.driver_image !== null && (
                           <div>
-                            <h3 className="mb-2 text-xs text-info-color">{t("arrival.driverImage")} </h3>
+                            <h3 className="mb-2 text-sm text-info-color">{t("arrival.driverImage")} </h3>
                             <div className="h-full w-full">
                               <img src={mediaUrl + detail?.car?.driver_image} alt="image" className="h-20 w-20 rounded-full object-cover" />
                             </div>

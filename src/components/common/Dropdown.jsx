@@ -22,6 +22,8 @@ const Dropdown = ({
   disabled = false,
   invisible,
   noMargin,
+  controlMinHeight = "36px",
+  compact = false,
   Delete,
   setOpenDeleteModal,
   setOpenDeleteModalFamily,
@@ -34,7 +36,7 @@ const Dropdown = ({
   const formatOptionLabel = (data, { context }) => {
     // Show only name when displaying the selected option
     if (context === "value") {
-      return <span>{data.label}</span>;
+      return <span>{data.selectedLabel || data.label}</span>;
     }
 
     // Show name and delete icon in the dropdown menu
@@ -74,11 +76,32 @@ const Dropdown = ({
       }),
       control: (defaultStyles, state) => ({
         ...defaultStyles,
-        boxShadow: state.isFocused ? "0 0 0 2px black" : defaultStyles.boxShadow,
+        boxShadow: state.isFocused ? "0 0 0 2px rgba(125, 24, 54, 0.12)" : "none",
         borderRadius: "10px",
-        borderColor: state.isFocused || state.isHovered ? "none" : withError ? "#dc2626" : "rgb(209 213 219)",
-        border: state.isFocused || state.isHovered ? "none" : defaultStyles.border,
-        minHeight: "44px",
+        borderColor: withError ? "#dc2626" : state.isFocused ? "rgb(125 24 54)" : "rgb(209 213 219)",
+        border: `1px solid ${withError ? "#dc2626" : state.isFocused ? "rgb(125 24 54)" : "rgb(209 213 219)"}`,
+        "&:hover": {
+          borderColor: withError ? "#dc2626" : "rgb(125 24 54)",
+        },
+        minHeight: controlMinHeight,
+      }),
+      valueContainer: (defaultStyles) => ({
+        ...defaultStyles,
+        minHeight: compact ? "34px" : defaultStyles.minHeight,
+        padding: compact ? "0 12px" : defaultStyles.padding,
+      }),
+      input: (defaultStyles) => ({
+        ...defaultStyles,
+        margin: compact ? "0px" : defaultStyles.margin,
+        padding: compact ? "0px" : defaultStyles.padding,
+      }),
+      indicatorsContainer: (defaultStyles) => ({
+        ...defaultStyles,
+        minHeight: compact ? "34px" : defaultStyles.minHeight,
+      }),
+      singleValue: (defaultStyles) => ({
+        ...defaultStyles,
+        fontSize: compact ? "14px" : defaultStyles.fontSize,
       }),
       menu: (defaultStyles) => ({
         ...defaultStyles,

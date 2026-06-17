@@ -1,5 +1,5 @@
 import moment from "moment";
-import { createContext, useContext, useEffect, useState } from "react";
+import { createContext, useContext, useEffect, useMemo, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import ApiServices from "../api/services";
 import SuccessModal from "../components/common/SuccessModal";
@@ -11,9 +11,12 @@ export const useThemeContext = () => {
   return useContext(GlobalContext);
 };
 
-const eventSelect = localStorage.getItem("event");
-
-const eventDetail = JSON.parse(localStorage.getItem("eventDetail"));
+const getListFromApiData = (data) => {
+  if (Array.isArray(data?.data?.data)) return data.data.data;
+  if (Array.isArray(data?.data)) return data.data;
+  if (Array.isArray(data?.roles)) return data.roles;
+  return [];
+};
 
 export const ThemeContextProvider = ({ children }) => {
   // Navigation
@@ -47,7 +50,9 @@ export const ThemeContextProvider = ({ children }) => {
   const [isSidebarOpenWithTitle, setIsSidebarOpenWithTitle] = useState(true);
   const [successModal, setSuccessModal] = useState({ open: false, message: "", title: "" });
   const [userData, setUserData] = useState(() => JSON.parse(localStorage.getItem("userData")) || {});
-  const [selectedEventRights, setSelectedEventRights] = useState(() => JSON.parse(localStorage.getItem("eventDetail")) || {});
+  const [eventSelect, setEventSelect] = useState(() => localStorage.getItem("event") || "");
+  const [eventDetail, setEventDetail] = useState(() => JSON.parse(localStorage.getItem("eventDetail") || "null"));
+  const [selectedEventRights, setSelectedEventRights] = useState(() => JSON.parse(localStorage.getItem("eventDetail") || "null") || {});
   const [withOutformattedContact, setWithOutformattedContact] = useState([]);
   const [fields, setFields] = useState([]);
   const [toggleClick, setToggleClick] = useState(true);
@@ -78,6 +83,15 @@ export const ThemeContextProvider = ({ children }) => {
     setUserData(newUserData);
   };
 
+  const updateSelectedEvent = (eventId, detail) => {
+    const normalizedEventId = eventId ? String(eventId) : "";
+    localStorage.setItem("event", normalizedEventId);
+    localStorage.setItem("eventDetail", JSON.stringify(detail || null));
+    setEventSelect(normalizedEventId);
+    setEventDetail(detail || null);
+    setSelectedEventRights(detail || {});
+  };
+
   // Get Venue List
   const getVenueList = async () => {
     try {
@@ -102,10 +116,12 @@ export const ThemeContextProvider = ({ children }) => {
       const response = await ApiServices.events.getEvents();
 
       if (response.data.code === 200) {
+        const events = Array.isArray(response.data.data?.data) ? response.data.data.data : Array.isArray(response.data.data) ? response.data.data : [];
+
         setLoading(false);
-        setAllEventsNotFormatted(response.data.data.data);
-        setAllEventsList(response.data.data.data);
-        const formattedVenues = response.data.data.data.map((venue) => ({
+        setAllEventsNotFormatted(events);
+        setAllEventsList(events);
+        const formattedVenues = events.map((venue) => ({
           value: venue.id,
           label: venue.name,
           venue_id: venue.venue_id,
@@ -301,7 +317,7 @@ export const ThemeContextProvider = ({ children }) => {
       const { data, message } = res;
 
       if (data.code === 200) {
-        const formattedUser = data?.data?.map((user) => ({
+        const formattedUser = getListFromApiData(data).map((user) => ({
           value: user?.name,
           label: user?.display_name,
         }));
@@ -414,6 +430,12 @@ export const ThemeContextProvider = ({ children }) => {
     localStorage.removeItem("token");
     localStorage.removeItem("sessionTime");
     localStorage.removeItem("event");
+    localStorage.removeItem("eventDetail");
+    localStorage.removeItem("userData");
+    setEventSelect("");
+    setEventDetail(null);
+    setSelectedEventRights({});
+    setUserData({});
 
     setTimeout(() => {
       navigate(LOGIN);
@@ -452,77 +474,137 @@ export const ThemeContextProvider = ({ children }) => {
     }
   }, []);
 
+  useEffect(() => {
+    if (!userData?.uuid || !eventSelect) return;
+
+    getVenueList();
+    getCeremonies();
+    getContactsByGroup();
+    getHotels();
+    getCarListing();
+    getGifts();
+    getContacts();
+    getUserType();
+    getUsers();
+    getContactsGroup();
+    getInvitationCards();
+    getCategoryList();
+    getType2CategoryList();
+    getGroupNames();
+    getFamilyNames();
+    getCustomFieldLibrary();
+  }, [eventSelect, userData?.uuid]);
+
   // Context Value
-  const contextValue = {
-    eventDetail,
-    eventSelect,
-    loading,
-    logout,
-    errorMessage,
-    setAllCars,
-    allCars,
-    successModal,
-    setLoading,
-    btnLoading,
-    allContact,
-    allUsers,
-    setAllContact,
-    setBtnLoading,
-    setErrorMessage,
-    setSuccessModal,
-    toggleSidebar,
-    isSidebarOpen,
-    allEventsList,
-    allContactGroup,
-    allType2CategoryList,
-    openSuccessModal,
-    allInvitationCards,
-    setToggleClick,
-    allVenues,
-    allEvents,
-    allGifts,
-    allGroups,
-    allCategoryList,
-    allSubCategoryList,
-    allCeremonies,
-    openSessionModal,
-    setIsSidebarOpen,
-    closeSuccessModel,
-    isSidebarOpenWithTitle,
-    setIsSidebarOpenWithTitle,
-    toggleSidebarWithTitle,
-    setOpenSessionModal,
-    allHotels,
-    userTypeOption,
-    setUserData,
-    userData,
-    updateUser,
-    allContactByGroup,
-    getVenueList,
-    getEventList,
-    getCeremonies,
-    getContactsByGroup,
-    getHotels,
-    getCarListing,
-    toggleClick,
-    getGifts,
-    getContacts,
-    getUserType,
-    getUsers,
-    getContactsGroup,
-    getGroupNames,
-    getCategoryList,
-    getType2CategoryList,
-    getInvitationCards,
-    fields,
-    getCustomFieldLibrary,
-    allEventsNotFormatted,
-    getFamilyNames,
-    allFamily,
-    setSelectedEventRights,
-    selectedEventRights,
-    withOutformattedContact,
-  };
+  const contextValue = useMemo(
+    () => ({
+      eventDetail,
+      eventSelect,
+      loading,
+      logout,
+      errorMessage,
+      setAllCars,
+      allCars,
+      successModal,
+      setLoading,
+      btnLoading,
+      allContact,
+      allUsers,
+      setAllContact,
+      setBtnLoading,
+      setErrorMessage,
+      setSuccessModal,
+      toggleSidebar,
+      isSidebarOpen,
+      allEventsList,
+      allContactGroup,
+      allType2CategoryList,
+      openSuccessModal,
+      allInvitationCards,
+      setToggleClick,
+      allVenues,
+      allEvents,
+      allGifts,
+      allGroups,
+      allCategoryList,
+      allSubCategoryList,
+      allCeremonies,
+      openSessionModal,
+      setIsSidebarOpen,
+      closeSuccessModel,
+      isSidebarOpenWithTitle,
+      setIsSidebarOpenWithTitle,
+      toggleSidebarWithTitle,
+      setOpenSessionModal,
+      allHotels,
+      userTypeOption,
+      setUserData,
+      userData,
+      updateUser,
+      updateSelectedEvent,
+      setEventSelect,
+      setEventDetail,
+      allContactByGroup,
+      getVenueList,
+      getEventList,
+      getCeremonies,
+      getContactsByGroup,
+      getHotels,
+      getCarListing,
+      toggleClick,
+      getGifts,
+      getContacts,
+      getUserType,
+      getUsers,
+      getContactsGroup,
+      getGroupNames,
+      getCategoryList,
+      getType2CategoryList,
+      getInvitationCards,
+      fields,
+      getCustomFieldLibrary,
+      allEventsNotFormatted,
+      getFamilyNames,
+      allFamily,
+      setSelectedEventRights,
+      selectedEventRights,
+      withOutformattedContact,
+    }),
+    [
+      eventDetail,
+      eventSelect,
+      loading,
+      errorMessage,
+      allCars,
+      successModal,
+      btnLoading,
+      allContact,
+      allUsers,
+      isSidebarOpen,
+      allEventsList,
+      allContactGroup,
+      allType2CategoryList,
+      allInvitationCards,
+      allVenues,
+      allEvents,
+      allGifts,
+      allGroups,
+      allCategoryList,
+      allSubCategoryList,
+      allCeremonies,
+      openSessionModal,
+      isSidebarOpenWithTitle,
+      allHotels,
+      userTypeOption,
+      userData,
+      toggleClick,
+      fields,
+      allEventsNotFormatted,
+      allFamily,
+      selectedEventRights,
+      withOutformattedContact,
+    ],
+  );
 
   return (
     <GlobalContext.Provider value={contextValue}>

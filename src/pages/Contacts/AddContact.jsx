@@ -43,6 +43,8 @@ const AddContact = () => {
         closeSuccessModel,
         btnLoading,
         eventDetail,
+        allGroups,
+        allFamily,
     } = useThemeContext();
 
     // Use States
@@ -1102,6 +1104,9 @@ const AddContact = () => {
     // console.log("emails----------", emails);
 
     const getFamilyNames = () => {
+        if (!eventSelect) {
+            return;
+        }
         const requestData = {
             event_id: eventSelect,
         };
@@ -1151,6 +1156,9 @@ const AddContact = () => {
     };
 
     const getGroupNames = () => {
+        if (!eventSelect) {
+            return;
+        }
         const requestData = {
             event_id: eventSelect,
         };
@@ -1951,14 +1959,39 @@ const AddContact = () => {
         }
     };
 
-    // API call useEffect
     useEffect(() => {
-        getFamilyNames();
-        getGroupNames();
         getColorCodes();
+    }, []);
+
+    useEffect(() => {
+        setGroupOptions(allGroups || []);
+    }, [allGroups]);
+
+    useEffect(() => {
+        setOptions(allFamily || []);
+    }, [allFamily]);
+
+    useEffect(() => {
+        if (!eventSelect || (allGroups?.length ?? 0) > 0) {
+            return;
+        }
+        getGroupNames();
+    }, [eventSelect, allGroups?.length]);
+
+    useEffect(() => {
+        if (!eventSelect || (allFamily?.length ?? 0) > 0) {
+            return;
+        }
+        getFamilyNames();
+    }, [eventSelect, allFamily?.length]);
+
+    useEffect(() => {
+        if (!data?.uuid) {
+            return;
+        }
         getQrCodesList();
         getUserQrCodeCounts();
-    }, [data]);
+    }, [data?.uuid]);
 
     
 
@@ -1969,7 +2002,11 @@ const AddContact = () => {
 
     const [allCategories, setAllCategories] = useState([]);
 
-    const getCategories = async (emptySearch) => {
+    const getCategories = async () => {
+        if (!eventSelect) {
+            return;
+        }
+
         let payload = {
             event_id: eventSelect,
         };
@@ -2003,7 +2040,7 @@ const AddContact = () => {
 
     useEffect(() => {
         getCategories();
-    }, []);
+    }, [eventSelect]);
 
     const [openDeleteModal, setOpenDeleteModal] = useState({ open: false, data: null });
 
@@ -2494,7 +2531,7 @@ const AddContact = () => {
                 <span>{t("contacts.backToContactList")}</span>
             </div>
 
-              <form onSubmit={handleSubmit}>
+              <form onSubmit={handleSubmit} className="[&_.label]:text-sm [&_.label]:font-medium [&_input]:h-9 [&_input]:min-h-[36px] [&_input]:text-sm [&_input]:py-1 [&_input[type='datetime-local']]:h-9 [&_textarea]:text-sm [&_.css-b62m3t-container]:text-sm [&_.css-13cymwt-control]:h-9 [&_.css-13cymwt-control]:min-h-[36px] [&_.css-13cymwt-control]:py-0 [&_.css-t3ipsp-control]:h-9 [&_.css-t3ipsp-control]:min-h-[36px] [&_.css-t3ipsp-control]:py-0 [&_.css-hlgwow]:h-9 [&_.css-hlgwow]:min-h-[36px] [&_.css-hlgwow]:py-0 [&_.css-hlgwow]:px- [&_.css-1jqq78o-placeholder]:text-sm [&_.css-1jqq78o-placeholder]:leading-none [&_.css-1dimb5e-singleValue]:text-sm [&_.css-1dimb5e-singleValue]:leading-none [&_.css-1wy0on6]:h-9 [&_.css-19bb58m]:my-0 [&_input[type='checkbox']]:h-4 [&_input[type='checkbox']]:w-4 [&_input[type='checkbox']]:min-h-4 [&_input[type='checkbox']]:min-w-4 [&_input[type='radio']]:h-4 [&_input[type='radio']]:w-4 [&_input[type='radio']]:min-h-4 [&_input[type='radio']]:min-w-4">
                 <div className="card ">
                   <div className="mb-5 flex cursor-pointer items-center justify-between"  onClick={() => setIsBasicInfoOpen(!isBasicInfoOpen)}>
                     <div className="label text-secondary">{t("contacts.addContact")}</div>
@@ -2507,7 +2544,7 @@ const AddContact = () => {
                       <div className="mb-5 rounded-lg bg-blue-50 p-4">
                           <div className="flex items-center">
                               <Spinner />
-                              <span className="ml-2 text-blue-700">Registering user...</span>
+                              <span className="ml-2 text-blue-700">{t("contacts.registeringUser")}</span>
                           </div>
                       </div>
                   )}
@@ -2528,7 +2565,7 @@ const AddContact = () => {
                       <div ref={fieldRefs?.salutation}>
                           <Input
                               label={t("contacts.salutation")}
-                              placeholder="Salutation"
+                              placeholder={t("contacts.salutation")}
                               value={salutation}
                               onChange={(e) => setSalutation(e.target.value)}
                               isRequired
@@ -2538,7 +2575,7 @@ const AddContact = () => {
                       <div ref={fieldRefs?.firstName}>
                           <Input
                               label={t("contacts.firstName")}
-                              placeholder="First Name"
+                              placeholder={t("contacts.firstName")}
                               value={firstName}
                               onChange={(e) => setFirstName(e.target.value)}
                               isRequired
@@ -2547,14 +2584,14 @@ const AddContact = () => {
                       </div>
                       <Input
                           label={t("contacts.middleName")}
-                          placeholder="Middle Name"
+                          placeholder={t("contacts.middleName")}
                           value={middleName}
                           onChange={(e) => setMiddleName(e.target.value)}
                       />
                       <div ref={fieldRefs?.lastName}>
                           <Input
                               label={t("contacts.lastName")}
-                              placeholder="Last Name"
+                              placeholder={t("contacts.lastName")}
                               value={lastName}
                               onChange={(e) => setLastName(e.target.value)}
                               isRequired
@@ -2563,13 +2600,13 @@ const AddContact = () => {
                       </div>
                       <Input
                           label={t("contacts.nickName")}
-                          placeholder="Nick Name"
+                          placeholder={t("contacts.nickName")}
                           value={nickName}
                           onChange={(e) => setNickName(e.target.value)}
                       />
                       <Input
-                          label={"Salutation in Message"}
-                          placeholder="Example, Dear Deepak, Hello Mr. & Mrs. Aggarwal"
+                          label={t("contacts.salutationInMessage")}
+                          placeholder={t("contacts.salutationInMessageExample")}
                           value={salutationEmail}
                           onChange={(e) => setSalutationEmail(e.target.value)}
                           labelOnTop
@@ -2579,8 +2616,8 @@ const AddContact = () => {
                       <Dropdown
                           isSearchable
                           options={colorCodeOptions.concat({ value: "add_color_code", label: "Add New Color Code" })}
-                          title="Select Guest Colour Code"
-                          placeholder="Select Color Code"
+                          title={t("contacts.selectGuestColorCode")}
+                          placeholder={t("contacts.selectColorCode")}
                           value={selectedColorCode}
                           onChange={handleColorCodeChange}
                           Delete
@@ -2588,8 +2625,8 @@ const AddContact = () => {
                       />
 
                       <Input
-                          label="Wedding Hall Seat"
-                          placeholder="Wedding Hall Seat"
+                          label={t("contacts.weddingHallSeat")}
+                          placeholder={t("contacts.weddingHallSeat")}
                           value={weddingHallSeat}
                           onChange={(e) => setWeddingHallSeat(e.target.value)}
                       />
@@ -2602,7 +2639,7 @@ const AddContact = () => {
                 </div>
                 <div className="card mt-6">
                   <div className="mb-5 flex cursor-pointer items-center justify-between"  onClick={() => setIsPersonalInfoOpen(!isPersonalInfoOpen)}>
-                    <div className="label text-secondary">{t("Personal Information")}</div>
+                    <div className="label text-secondary">{t("contacts.personalInformation")}</div>
                     <span className="flex h-9 w-9 items-center justify-center rounded-full bg-secondary text-white hover:bg-secondary/90">
                     {isPersonalInfoOpen ? "−" : "+"}
                     </span>
@@ -2635,7 +2672,7 @@ const AddContact = () => {
                           <Input
                               type="date"
                               label={t("contacts.birthDate")}
-                              placeholder="Date"
+                              placeholder={t("contacts.date")}
                               value={birthDate}
                               onChange={(e) => {
                                   setBirthDate(e.target.value);
@@ -2646,7 +2683,7 @@ const AddContact = () => {
                       <Dropdown
                           options={groupOptions?.concat({ value: "add_group", label: "Add New Group" })}
                           title={t("contacts.groups")}
-                          placeholder="Select groups"
+                          placeholder={t("contacts.selectGroup")}
                           value={groups}
                           onChange={handleGroupChange}
                           Delete
@@ -2666,7 +2703,7 @@ const AddContact = () => {
                       <Dropdown
                           options={options?.concat({ value: "add_family", label: "Add New Family" })}
                           title={t("contacts.family")}
-                          placeholder="Select family"
+                          placeholder={t("contacts.selectFamily")}
                           value={family}
                           onChange={handleFamilyChange}
                           Delete
@@ -2715,9 +2752,9 @@ const AddContact = () => {
                   </>
                   )}
                 </div>
-                <div className="card mt-6 w-full mb-5 h-96">
+                <div className="card mt-6">
                   <div className="mb-5 flex cursor-pointer items-center justify-between"  onClick={() => setIsContactInfoOpen(!isContactInfoOpen)}>
-                    <div className="label text-secondary">{t("Contact Information")}</div>
+                    <div className="label text-secondary">{t("headings.contactInfo")}</div>
                     <span className="flex h-9 w-9 items-center justify-center rounded-full bg-secondary text-white hover:bg-secondary/90">
                     {isContactInfoOpen ? "−" : "+"}
                     </span>
@@ -2734,7 +2771,7 @@ const AddContact = () => {
                         {/* CONTACT TYPE */}
                         <Dropdown
                           title={`Contact ${index + 1}`}
-                          placeholder="Type"
+                                  placeholder={t("contacts.contactType")}
                           value={contact.contactType}
                           onChange={(value) =>
                             handleInputChangePhone(contact.id, "contactType", value)
@@ -2754,7 +2791,7 @@ const AddContact = () => {
                         {/* COUNTRY CODE */} 
                         <Dropdown 
                           isSearchable 
-                          placeholder="Country Code" 
+                                  placeholder={t("contacts.countryCode")}
                           value={contact.countryCode} 
                           onChange={(value) => 
                             handleInputChangePhone(contact.id, "countryCode", value) 
@@ -2770,7 +2807,7 @@ const AddContact = () => {
                         {/* CONTACT NUMBER */}
                         <Input
                           type="tel" 
-                          placeholder="Contact Number"
+                                  placeholder={t("contacts.contactNumber")}
                           value={contact.contactNumber} 
                           onChange={(e) => 
                             handleInputChangePhone(contact.id, "contactNumber", e.target.value) 
@@ -2787,7 +2824,7 @@ const AddContact = () => {
                               type="button"
                               onClick={handleAddContactField}
                               className="flex h-9 w-9 items-center justify-center rounded-full bg-secondary text-white hover:bg-secondary/90"
-                              title="Add Contact"
+                              title={t("contacts.addAnotherContact")}
                             >
                               +
                             </button>
@@ -2795,7 +2832,7 @@ const AddContact = () => {
                             <button
                               type="button"
                               onClick={() => handleRemoveContact(contact.id)}
-                              title="Remove Contact"
+                              title={t("contacts.removeContact")}
                             >
                               <TrashIcon className="h-5 w-5 text-red-500 hover:text-red-600" />
                             </button>
@@ -2815,7 +2852,7 @@ const AddContact = () => {
                         {/* EMAIL TYPE */}
                         <Dropdown
                           title={`Email ${index + 1}`}
-                          placeholder="Type"
+                                  placeholder={t("contacts.emailType")}
                           value={emailTypeOptions.find(
                             (opt) => opt.value === emailItem.emailType
                           )}
@@ -2829,7 +2866,7 @@ const AddContact = () => {
                         {/* EMAIL ADDRESS */}
                         <Input
                           type="email"
-                          placeholder="Email Address"
+                                  placeholder={t("venues.emailAddress")}
                           value={emailItem.emailAddress}
                           onChange={(e) =>
                             handleInputChangeEmail(emailItem.id, "emailAddress", e.target.value)
@@ -2844,7 +2881,7 @@ const AddContact = () => {
                             <button
                               type="button"
                               onClick={handleAddEmailField}
-                              title="Add Email"
+                              title={t("contacts.addAnotherEmail")}
                               className="flex h-9 w-9 items-center justify-center rounded-full bg-secondary text-white hover:bg-secondary/90"
                             >
                               +
@@ -2853,7 +2890,7 @@ const AddContact = () => {
                             <button
                               type="button"
                               onClick={() => handleRemoveEmail(emailItem.id)}
-                              title="Remove Email"
+                              title={t("contacts.removeEmail")}
                             >
                               <TrashIcon className="h-5 w-5 text-red-500 hover:text-red-600" />
                             </button>
@@ -2862,7 +2899,7 @@ const AddContact = () => {
                       </div>
                     ))}
                     <Button
-                        title="Auto Generate Email"
+                              title={t("contacts.autoGenerateEmail")}
                         buttonColor="bg-blue-500"
                         className="float-right mt-10"
                         onClick={handleAutoGenerateEmail}
@@ -2874,7 +2911,7 @@ const AddContact = () => {
                 </div>
                 {/* <div className="card mt-6">
                   <div className="mb-5 flex cursor-pointer items-center justify-between"  onClick={() => setIsQrCodesOpen(!isQrCodesOpen)}>
-                    <div className="label text-secondary">{t("QR Codes")}</div>
+                    <div className="label text-secondary">{t("contacts.qrCodes")}</div>
                     <span className="flex h-9 w-9 items-center justify-center rounded-full bg-secondary text-white hover:bg-secondary/90">
                     {isQrCodesOpen ? "−" : "+"}
                     </span>
@@ -2896,7 +2933,7 @@ const AddContact = () => {
 
                     {/* RIGHT: Button }
                     <Button
-                      title="Allot QR Codes"
+                          title={t("contacts.allotQrCodes")}
                       type="button"
                       onClick={() => setShowAllotQRModal(true)}
                       buttonColor="bg-purple-600"
@@ -2908,7 +2945,7 @@ const AddContact = () => {
                 </div> */}
                 <div className="card mt-6 w-full">
                   <div className="mb-5 flex cursor-pointer items-center justify-between"  onClick={() => setIsMaritalStatusOpen(!isMaritalStatusOpen)}>
-                    <div className="label text-secondary">{t("Marital Status")}</div>
+                    <div className="label text-secondary">{t("contacts.maritalStatus")}</div>
                     <span className="flex h-9 w-9 items-center justify-center rounded-full bg-secondary text-white hover:bg-secondary/90">
                     {isMaritalStatusOpen ? "−" : "+"}
                     </span>
@@ -2940,8 +2977,8 @@ const AddContact = () => {
                           <div className="mb-3 w-3/12">
                               <Input
                                   type="date"
-                                  label="Anniversary Date"
-                                  placeholder="Date"
+                              label={t("contacts.anniversaryDate")}
+                              placeholder={t("contacts.date")}
                                   value={anniversaryDate}
                                   onChange={(e) => {
                                       setAnniversaryDate(e.target.value);
@@ -2951,15 +2988,15 @@ const AddContact = () => {
 
                           {/* UPDATED: Enhanced Spouse Section with Middle Name */}
                           <div className="mb-5 grid grid-cols-12 gap-7">
-                              <h2 className="label">Spouse</h2>
+                              <h2 className="label">{t("contacts.spouse")}</h2>
                               <div className="col-span-12 -mt-3 rounded-lg border border-dashed bg-yellow-50 p-4">
-                                  <h3 className="pb-3 text-sm font-medium text-gray-700">Add Spouse</h3>
+                                  <h3 className="pb-3 text-sm font-medium text-gray-700">{t("contacts.addSpouse")}</h3>
 
                                   <div className="grid grid-cols-12 gap-x-4">
                                       <div className="col-span-2">
                                           <Input
                                               label=" Salutation"
-                                              placeholder="Mr./Mrs./Ms./Dr."
+                                  placeholder={t("contacts.salutation")}
                                               value={spouse.salutation}
                                               onChange={(e) => setSpouse({ ...spouse, salutation: e.target.value })}
                                           />
@@ -2968,7 +3005,7 @@ const AddContact = () => {
                                       <div className="col-span-2">
                                           <Input
                                               label=" First Name"
-                                              placeholder="First Name"
+                                  placeholder={t("contacts.firstName")}
                                               value={spouse.name}
                                               onChange={(e) => setSpouse({ ...spouse, name: e.target.value })}
                                           />
@@ -2977,7 +3014,7 @@ const AddContact = () => {
                                       <div className="col-span-2">
                                           <Input
                                               label=" Middle Name"
-                                              placeholder="Middle Name"
+                                  placeholder={t("contacts.middleName")}
                                               value={spouse.middleName}
                                               onChange={(e) => setSpouse({ ...spouse, middleName: e.target.value })}
                                           />
@@ -2986,7 +3023,7 @@ const AddContact = () => {
                                       <div className="col-span-2">
                                           <Input
                                               label=" Last Name"
-                                              placeholder="Last Name"
+                                  placeholder={t("contacts.lastName")}
                                               value={spouse.lastName}
                                               onChange={(e) => setSpouse({ ...spouse, lastName: e.target.value })}
                                           />
@@ -2999,7 +3036,7 @@ const AddContact = () => {
                                                   label: `+${country.callingCodes[0]} ${country.name}`,
                                                   value: `+${country.callingCodes[0]} ${country.name}`,
                                               }))}
-                                              placeholder="Country Code"
+                                      placeholder={t("contacts.countryCode")}
                                               value={spouse.countryCode}
                                               onChange={(e) => setSpouse({ ...spouse, countryCode: e })}
                                               invisible
@@ -3009,7 +3046,7 @@ const AddContact = () => {
                                       <div className="col-span-2 mt-6">
                                           <Input
                                               type="tel"
-                                              placeholder="Contact Number"
+                                      placeholder={t("contacts.contactNumber")}
                                               value={spouse.contactNumber}
                                               onChange={(e) =>
                                                   setSpouse({ ...spouse, contactNumber: e.target.value })
@@ -3021,7 +3058,7 @@ const AddContact = () => {
 
                                   {/* Spouse Gender Selection */}
                                   <div className="mt-4">
-                                      <div className="label mb-2">Spouse Gender</div>
+                                      <div className="label mb-2">{t("contacts.spouseGender")}</div>
                                       <RadioInput
                                           name="SpouseGender"
                                           options={[
@@ -3057,8 +3094,8 @@ const AddContact = () => {
                                   </div>
                                   <div className="w-3/12">
                                       <Input
-                                          label="Wedding Hall Seat"
-                                          placeholder="Wedding Hall Seat"
+                                      label={t("contacts.weddingHallSeat")}
+                                      placeholder={t("contacts.weddingHallSeat")}
                                           value={spouse.weddingHallSeat}
                                           onChange={(e) => setSpouse({ ...spouse, weddingHallSeat: e.target.value })}
                                       />
@@ -3066,14 +3103,14 @@ const AddContact = () => {
                                   {/* Spouse Preferences Section */}
                                   <div className="mt-6">
                                       <div className="mb-3">
-                                          <div className="label text-secondary">Spouse Preferences</div>
+                                          <div className="label text-secondary">{t("contacts.spousePreferences")}</div>
                                       </div>
                                       <div className="grid grid-cols-3 gap-x-5">
                                           <Dropdown
                                               isSearchable
                                               options={primaryArray}
                                               title={t("contacts.primaryMealPreference")}
-                                              placeholder="Select Primary Meal"
+                                              placeholder={t("contacts.selectPrimaryMeal")}
                                               value={spouse.meal_preference?.[0] || ""}
                                               onChange={(value) => handleSpouseMealChange(value, 0)}
                                               isMulti
@@ -3083,7 +3120,7 @@ const AddContact = () => {
                                               isSearchable
                                               options={secondaryArray}
                                               title={t("contacts.secondaryMealPreference")}
-                                              placeholder="Select Secondary Meal"
+                                              placeholder={t("contacts.selectSecondaryMeal")}
                                               value={spouse.meal_preference?.[1] || ""}
                                               onChange={(value) => handleSpouseMealChange(value, 1)}
                                               isMulti
@@ -3093,7 +3130,7 @@ const AddContact = () => {
                                               isSearchable
                                               options={alcoholicArray}
                                               title={t("contacts.alcoholPreference")}
-                                              placeholder="Select Alcohol Preference"
+                                              placeholder={t("contacts.selectAlcoholPreference")}
                                               value={spouse.meal_preference?.[2] || ""}
                                               onChange={(value) => handleSpouseMealChange(value, 2)}
                                               isMulti
@@ -3117,7 +3154,7 @@ const AddContact = () => {
                                                   className="rounded-lg bg-secondary px-4 py-2 text-white"
                                                   onClick={handleAddSpouseMedicine}
                                               >
-                                                  Add Medicine for Spouse
+                                                  {t("contacts.addMedicineForSpouse")}
                                               </button>
                                           </div>
                                       </div>
@@ -3143,8 +3180,8 @@ const AddContact = () => {
                                                   <div className="grid grid-cols-4 gap-7 md:grid-cols-2 lg:grid-cols-4">
                                                       <Input
                                                           type="text"
-                                                          label="Medicine Name *"
-                                                          placeholder="Enter medicine name"
+                                                          label={t("contacts.medicineName")}
+                                                          placeholder={t("contacts.enterMedicineName")}
                                                           value={medicine.name}
                                                           onChange={(e) =>
                                                               handleSpouseMedicineChange(
@@ -3157,8 +3194,8 @@ const AddContact = () => {
 
                                                       <Input
                                                           type="text"
-                                                          label="Problem/Ailment *"
-                                                          placeholder="Enter problem or ailment"
+                                                          label={t("contacts.problemAilment")}
+                                                          placeholder={t("contacts.enterProblemAilment")}
                                                           value={medicine.ailment}
                                                           onChange={(e) =>
                                                               handleSpouseMedicineChange(
@@ -3171,8 +3208,8 @@ const AddContact = () => {
 
                                                       <Input
                                                           type="text"
-                                                          label="Medicine Type"
-                                                          placeholder="e.g., Tablet, Capsule, Syrup"
+                                                          label={t("contacts.medicineType")}
+                                                          placeholder={t("contacts.medicineTypeExample")}
                                                           value={medicine.type}
                                                           onChange={(e) =>
                                                               handleSpouseMedicineChange(
@@ -3185,8 +3222,8 @@ const AddContact = () => {
 
                                                       <Input
                                                           type="text"
-                                                          label="Medication Type"
-                                                          placeholder="e.g., Once daily, Twice daily"
+                                                          label={t("contacts.medicationSchedule")}
+                                                          placeholder={t("contacts.medicationScheduleExample")}
                                                           value={medicine.usage}
                                                           onChange={(e) =>
                                                               handleSpouseMedicineChange(
@@ -3201,8 +3238,8 @@ const AddContact = () => {
                                                   <div className="mt-4">
                                                       <Input
                                                           textarea
-                                                          label="Special Instructions"
-                                                          placeholder="Enter special instructions"
+                                                          label={t("contacts.specialInstructions")}
+                                                          placeholder={t("contacts.enterSpecialInstructions")}
                                                           value={medicine.special_instructions}
                                                           onChange={(e) =>
                                                               handleSpouseMedicineChange(
@@ -3244,7 +3281,7 @@ const AddContact = () => {
                                   {/* <h2 className="label"></h2> */}
                                   <div className="mb-5 ltr:text-left rtl:text-right">
                                       <div className="flex items-center justify-between">
-                                          <div className="label mb-2 text-secondary text-lg font-semibold text-gray-800">Children</div>
+                                          <div className="label mb-2 text-secondary text-lg font-semibold text-gray-800">{t("contacts.children")}</div>
                                       </div>
                                   </div>
                                   {/* Plus button to add new child form block */}
@@ -3254,7 +3291,7 @@ const AddContact = () => {
                                       className="flex items-center gap-2 text-green-600 hover:text-green-700"
                                   >
                                       <PlusCircleIcon className="h-6 w-6" />
-                                      <span className="text-sm">Add Child</span>
+                                      <span className="text-sm">{t("contacts.addChild")}</span>
                                   </button>
                               </div>
 
@@ -3267,8 +3304,8 @@ const AddContact = () => {
                                       <div className="grid gap-x-4 xl:grid-cols-8 3xl:grid-cols-12">
                                           <div className="col-span-2">
                                               <Input
-                                                  label="Salutation"
-                                                  placeholder="Mr./Mrs./Ms./Dr."
+                                  label={t("contacts.salutation")}
+                                  placeholder={t("contacts.salutation")}
                                                   labelOnTop
                                                   value={child.salutation || ""}
                                                   onChange={(event) =>
@@ -3284,7 +3321,7 @@ const AddContact = () => {
                                           <div className="col-span-2">
                                               <Input
                                                   label={`First Name`}
-                                                  placeholder="First Name"
+                                  placeholder={t("contacts.firstName")}
                                                   labelOnTop
                                                   value={child.name}
                                                   onChange={(event) =>
@@ -3299,8 +3336,8 @@ const AddContact = () => {
 
                                           <div className="col-span-2">
                                               <Input
-                                                  label="Middle Name"
-                                                  placeholder="Middle Name"
+                                  label={t("contacts.middleName")}
+                                  placeholder={t("contacts.middleName")}
                                                   labelOnTop
                                                   value={child.middleName || ""}
                                                   onChange={(event) =>
@@ -3315,8 +3352,8 @@ const AddContact = () => {
 
                                           <div className="col-span-2">
                                               <Input
-                                                  label="Last Name"
-                                                  placeholder="Last Name"
+                                  label={t("contacts.lastName")}
+                                  placeholder={t("contacts.lastName")}
                                                   labelOnTop
                                                   value={child.lastName || ""}
                                                   onChange={(event) =>
@@ -3336,7 +3373,7 @@ const AddContact = () => {
                                                       label: `+${country.callingCodes[0]} ${country.name}`,
                                                       value: `+${country.callingCodes[0]} ${country.name}`,
                                                   }))}
-                                                  placeholder="Country Code"
+                                      placeholder={t("contacts.countryCode")}
                                                   value={child.countryCode}
                                                   onChange={(event) =>
                                                       handleChildAdultFieldChange(child.id, "countryCode", event)
@@ -3348,7 +3385,7 @@ const AddContact = () => {
                                           <div className="col-span-2 mt-6">
                                               <Input
                                                   type="tel"
-                                                  placeholder="Contact Number"
+                                      placeholder={t("contacts.contactNumber")}
                                                   value={child.contactNumber}
                                                   onChange={(event) =>
                                                       handleChildAdultFieldChange(
@@ -3407,8 +3444,8 @@ const AddContact = () => {
                                       </div>
                                       <div className="w-3/12">
                                           <Input
-                                              label="Wedding Hall Seat"
-                                              placeholder="Wedding Hall Seat"
+                                      label={t("contacts.weddingHallSeat")}
+                                      placeholder={t("contacts.weddingHallSeat")}
                                               value={child.weddingHallSeat}
                                               onChange={(e) =>
                                                   handleChildAdultFieldChange(
@@ -3432,7 +3469,7 @@ const AddContact = () => {
                                                   isSearchable
                                                   options={primaryArray}
                                                   title={t("contacts.primaryMealPreference")}
-                                                  placeholder="Select Primary Meal"
+                                              placeholder={t("contacts.selectPrimaryMeal")}
                                                   value={child.meal_preference?.[0] || ""}
                                                   onChange={(value) => handleChildMealChange(child.id, value, 0)}
                                                   isMulti
@@ -3442,7 +3479,7 @@ const AddContact = () => {
                                                   isSearchable
                                                   options={secondaryArray}
                                                   title={t("contacts.secondaryMealPreference")}
-                                                  placeholder="Select Secondary Meal"
+                                              placeholder={t("contacts.selectSecondaryMeal")}
                                                   value={child.meal_preference?.[1] || ""}
                                                   onChange={(value) => handleChildMealChange(child.id, value, 1)}
                                                   isMulti
@@ -3452,7 +3489,7 @@ const AddContact = () => {
                                                   isSearchable
                                                   options={alcoholicArray}
                                                   title={t("contacts.alcoholPreference")}
-                                                  placeholder="Select Alcohol Preference"
+                                              placeholder={t("contacts.selectAlcoholPreference")}
                                                   value={child.meal_preference?.[2] || ""}
                                                   onChange={(value) => handleChildMealChange(child.id, value, 2)}
                                                   isMulti
@@ -3507,8 +3544,8 @@ const AddContact = () => {
                                                   <div className="grid grid-cols-4 gap-7 md:grid-cols-2 lg:grid-cols-4">
                                                       <Input
                                                           type="text"
-                                                          label="Medicine Name *"
-                                                          placeholder="Enter medicine name"
+                                                          label={t("contacts.medicineName")}
+                                                          placeholder={t("contacts.enterMedicineName")}
                                                           value={medicine.name}
                                                           onChange={(e) =>
                                                               handleChildMedicineChange(
@@ -3522,8 +3559,8 @@ const AddContact = () => {
 
                                                       <Input
                                                           type="text"
-                                                          label="Problem/Ailment *"
-                                                          placeholder="Enter problem or ailment"
+                                                          label={t("contacts.problemAilment")}
+                                                          placeholder={t("contacts.enterProblemAilment")}
                                                           value={medicine.ailment}
                                                           onChange={(e) =>
                                                               handleChildMedicineChange(
@@ -3537,8 +3574,8 @@ const AddContact = () => {
 
                                                       <Input
                                                           type="text"
-                                                          label="Medicine Type"
-                                                          placeholder="e.g., Tablet, Capsule, Syrup"
+                                                          label={t("contacts.medicineType")}
+                                                          placeholder={t("contacts.medicineTypeExample")}
                                                           value={medicine.type}
                                                           onChange={(e) =>
                                                               handleChildMedicineChange(
@@ -3552,8 +3589,8 @@ const AddContact = () => {
 
                                                       <Input
                                                           type="text"
-                                                          label="Medication Type"
-                                                          placeholder="e.g., Once daily, Twice daily"
+                                                          label={t("contacts.medicationSchedule")}
+                                                          placeholder={t("contacts.medicationScheduleExample")}
                                                           value={medicine.usage}
                                                           onChange={(e) =>
                                                               handleChildMedicineChange(
@@ -3569,8 +3606,8 @@ const AddContact = () => {
                                                   <div className="mt-4">
                                                       <Input
                                                           textarea
-                                                          label="Special Instructions"
-                                                          placeholder="Enter special instructions"
+                                                          label={t("contacts.specialInstructions")}
+                                                          placeholder={t("contacts.enterSpecialInstructions")}
                                                           value={medicine.special_instructions}
                                                           onChange={(e) =>
                                                               handleChildMedicineChange(
@@ -3613,12 +3650,12 @@ const AddContact = () => {
                               {/* NEW: New Child Form - Only shows when showNewChildForm is true */}
                               {showNewChildForm && (
                                   <div className="mt-5 space-y-4 rounded-lg border border-dashed bg-blue-50 p-4">
-                                      <h3 className="text-sm font-medium text-gray-700">Add New Child</h3>
+                                      <h3 className="text-sm font-medium text-gray-700">{t("contacts.addNewChild")}</h3>
                                       <div className="grid gap-x-4 xl:grid-cols-8 3xl:grid-cols-12">
                                           <div className="col-span-2">
                                               <Input
-                                                  label="Salutation"
-                                                  placeholder="Mr./Mrs./Ms./Dr."
+                                  label={t("contacts.salutation")}
+                                  placeholder={t("contacts.salutation")}
                                                   labelOnTop
                                                   value={newChild.salutation}
                                                   onChange={(event) =>
@@ -3631,8 +3668,8 @@ const AddContact = () => {
 
                                           <div className="col-span-2">
                                               <Input
-                                                  label="First Name"
-                                                  placeholder="First Name"
+                                  label={t("contacts.firstName")}
+                                  placeholder={t("contacts.firstName")}
                                                   labelOnTop
                                                   value={newChild.name}
                                                   isRequired
@@ -3643,8 +3680,8 @@ const AddContact = () => {
 
                                           <div className="col-span-2">
                                               <Input
-                                                  label="Middle Name"
-                                                  placeholder="Middle Name"
+                                  label={t("contacts.middleName")}
+                                  placeholder={t("contacts.middleName")}
                                                   labelOnTop
                                                   value={newChild.middleName}
                                                   onChange={(event) =>
@@ -3655,8 +3692,8 @@ const AddContact = () => {
 
                                           <div className="col-span-2">
                                               <Input
-                                                  label="Last Name"
-                                                  placeholder="Last Name"
+                                  label={t("contacts.lastName")}
+                                  placeholder={t("contacts.lastName")}
                                                   labelOnTop
                                                   value={newChild.lastName}
                                                   isRequired
@@ -3674,7 +3711,7 @@ const AddContact = () => {
                                                       label: `+${country.callingCodes[0]} ${country.name}`,
                                                       value: `+${country.callingCodes[0]} ${country.name}`,
                                                   }))}
-                                                  placeholder="Country Code"
+                                      placeholder={t("contacts.countryCode")}
                                                   value={newChild.countryCode}
                                                   onChange={(event) => handleInputChange("countryCode", event)}
                                                   invisible
@@ -3686,7 +3723,7 @@ const AddContact = () => {
                                           <div className="col-span-2 mt-6">
                                               <Input
                                                   type="tel"
-                                                  placeholder="Contact Number"
+                                      placeholder={t("contacts.contactNumber")}
                                                   value={newChild.contactNumber}
                                                   onChange={(event) =>
                                                       handleInputChange("contactNumber", event.target.value)
@@ -3721,7 +3758,7 @@ const AddContact = () => {
                                       {/* New Child Profile Image */}
                                       <div className="mt-4">
                                           <ChooseFile
-                                              label="New Child Profile Image"
+                                      label={t("contacts.newChildProfileImage")}
                                               onClickCross={() => handleRemoveChildProfileImage(null, true)}
                                               placeholder
                                               selectedFile={newChild.profileImage}
@@ -3739,8 +3776,8 @@ const AddContact = () => {
                                       </div>
                                       <div className="w-3/12">
                                           <Input
-                                              label="Wedding Hall Seat"
-                                              placeholder="Wedding Hall Seat"
+                                      label={t("contacts.weddingHallSeat")}
+                                      placeholder={t("contacts.weddingHallSeat")}
                                               value={newChild.weddingHallSeat}
                                               onChange={(e) => handleInputChange("weddingHallSeat", e.target.value)}
                                           />
@@ -3748,14 +3785,14 @@ const AddContact = () => {
                                       {/* New Child Preferences Section */}
                                       <div className="mt-4">
                                           <div className="mb-3">
-                                              <div className="label text-secondary">New Child Preferences</div>
+                                              <div className="label text-secondary">{t("contacts.newChildPreferences")}</div>
                                           </div>
                                           <div className="grid grid-cols-3 gap-x-5">
                                               <Dropdown
                                                   isSearchable
                                                   options={primaryArray}
                                                   title={t("contacts.primaryMealPreference")}
-                                                  placeholder="Select Primary Meal"
+                                              placeholder={t("contacts.selectPrimaryMeal")}
                                                   value={newChild.meal_preference?.[0] || ""}
                                                   onChange={(value) => handleNewChildMealChange(value, 0)}
                                                   isMulti
@@ -3765,7 +3802,7 @@ const AddContact = () => {
                                                   isSearchable
                                                   options={secondaryArray}
                                                   title={t("contacts.secondaryMealPreference")}
-                                                  placeholder="Select Secondary Meal"
+                                              placeholder={t("contacts.selectSecondaryMeal")}
                                                   value={newChild.meal_preference?.[1] || ""}
                                                   onChange={(value) => handleNewChildMealChange(value, 1)}
                                                   isMulti
@@ -3775,7 +3812,7 @@ const AddContact = () => {
                                                   isSearchable
                                                   options={alcoholicArray}
                                                   title={t("contacts.alcoholPreference")}
-                                                  placeholder="Select Alcohol Preference"
+                                              placeholder={t("contacts.selectAlcoholPreference")}
                                                   value={newChild.meal_preference?.[2] || ""}
                                                   onChange={(value) => handleNewChildMealChange(value, 2)}
                                                   isMulti
@@ -3799,7 +3836,7 @@ const AddContact = () => {
                                                       className="rounded-lg bg-secondary px-4 py-2 text-white"
                                                       onClick={handleAddNewChildMedicine}
                                                   >
-                                                      Add Medicine for New Child
+                                                      {t("contacts.addMedicineForNewChild")}
                                                   </button>
                                               </div>
                                           </div>
@@ -3827,8 +3864,8 @@ const AddContact = () => {
                                                       <div className="grid grid-cols-4 gap-7 md:grid-cols-2 lg:grid-cols-4">
                                                           <Input
                                                               type="text"
-                                                              label="Medicine Name *"
-                                                              placeholder="Enter medicine name"
+                                                          label={t("contacts.medicineName")}
+                                                          placeholder={t("contacts.enterMedicineName")}
                                                               value={medicine.name}
                                                               onChange={(e) =>
                                                                   handleNewChildMedicineChange(
@@ -3841,8 +3878,8 @@ const AddContact = () => {
 
                                                           <Input
                                                               type="text"
-                                                              label="Problem/Ailment *"
-                                                              placeholder="Enter problem or ailment"
+                                                          label={t("contacts.problemAilment")}
+                                                          placeholder={t("contacts.enterProblemAilment")}
                                                               value={medicine.ailment}
                                                               onChange={(e) =>
                                                                   handleNewChildMedicineChange(
@@ -3855,8 +3892,8 @@ const AddContact = () => {
 
                                                           <Input
                                                               type="text"
-                                                              label="Medicine Type"
-                                                              placeholder="e.g., Tablet, Capsule, Syrup"
+                                                          label={t("contacts.medicineType")}
+                                                          placeholder={t("contacts.medicineTypeExample")}
                                                               value={medicine.type}
                                                               onChange={(e) =>
                                                                   handleNewChildMedicineChange(
@@ -3869,8 +3906,8 @@ const AddContact = () => {
 
                                                           <Input
                                                               type="text"
-                                                              label="Medication Type"
-                                                              placeholder="e.g., Once daily, Twice daily"
+                                                          label={t("contacts.medicationSchedule")}
+                                                          placeholder={t("contacts.medicationScheduleExample")}
                                                               value={medicine.usage}
                                                               onChange={(e) =>
                                                                   handleNewChildMedicineChange(
@@ -3885,8 +3922,8 @@ const AddContact = () => {
                                                       <div className="mt-4">
                                                           <Input
                                                               textarea
-                                                              label="Special Instructions"
-                                                              placeholder="Enter special instructions"
+                                                          label={t("contacts.specialInstructions")}
+                                                          placeholder={t("contacts.enterSpecialInstructions")}
                                                               value={medicine.special_instructions}
                                                               onChange={(e) =>
                                                                   handleNewChildMedicineChange(
@@ -3932,7 +3969,7 @@ const AddContact = () => {
 
                   {/* HEADER */}
                   <div className="mb-5 flex cursor-pointer items-center justify-between"  onClick={() => setIsMedicinesOpen(!isMedicinesOpen)}>
-                    <div className="label text-secondary">{t("Medicines")}</div>
+                    <div className="label text-secondary">{t("contacts.medicines")}</div>
                     <span className="flex h-9 w-9 items-center justify-center rounded-full bg-secondary text-white hover:bg-secondary/90">
                     {isMedicinesOpen ? "−" : "+"}
                     </span>
@@ -3974,8 +4011,8 @@ const AddContact = () => {
                       {/* FORM GRID */}
                       <div className="grid grid-cols-1 gap-5 md:grid-cols-2 lg:grid-cols-4">
                         <Input
-                          label="Medicine Name *"
-                          placeholder="Enter medicine name"
+                          label={t("contacts.medicineName")}
+                          placeholder={t("contacts.enterMedicineName")}
                           value={medicine.name}
                           onChange={(e) =>
                             handleMedicineChange(medicine.id, "name", e.target.value)
@@ -3983,8 +4020,8 @@ const AddContact = () => {
                         />
 
                         <Input
-                          label="Problem / Ailment *"
-                          placeholder="Enter problem"
+                          label={t("contacts.problemAilment")}
+                          placeholder={t("contacts.enterProblemAilment")}
                           value={medicine.ailment}
                           onChange={(e) =>
                             handleMedicineChange(medicine.id, "ailment", e.target.value)
@@ -3992,8 +4029,8 @@ const AddContact = () => {
                         />
 
                         <Input
-                          label="Medicine Type"
-                          placeholder="Tablet, Capsule, Syrup"
+                          label={t("contacts.medicineType")}
+                          placeholder={t("contacts.medicineTypeExample")}
                           value={medicine.type}
                           onChange={(e) =>
                             handleMedicineChange(medicine.id, "type", e.target.value)
@@ -4001,8 +4038,8 @@ const AddContact = () => {
                         />
 
                         <Input
-                          label="Medication Schedule"
-                          placeholder="Once daily, Twice daily"
+                          label={t("contacts.medicationSchedule")}
+                          placeholder={t("contacts.medicationScheduleExample")}
                           value={medicine.usage}
                           onChange={(e) =>
                             handleMedicineChange(medicine.id, "usage", e.target.value)
@@ -4015,8 +4052,8 @@ const AddContact = () => {
                         <Input
                           textarea
                           rows={3}
-                          label="Special Instructions"
-                          placeholder="Enter instructions"
+                          label={t("contacts.specialInstructions")}
+                          placeholder={t("contacts.enterSpecialInstructions")}
                           value={medicine.special_instructions}
                           onChange={(e) =>
                             handleMedicineChange(
@@ -4054,7 +4091,7 @@ const AddContact = () => {
 	                  <>
                   <Input
                       label={t("contacts.address")}
-                      placeholder="Address"
+                      placeholder={t("contacts.address")}
                       textarea
                       value={address}
                       rows={2}
@@ -4065,7 +4102,7 @@ const AddContact = () => {
                       <div ref={fieldRefs.city}>
                           <Input
                               label={t("contacts.city")}
-                              placeholder="City"
+                              placeholder={t("contacts.city")}
                               labelOnTop
                               value={city}
                               onChange={(e) => setCity(e.target.value)}
@@ -4074,7 +4111,7 @@ const AddContact = () => {
                       <div ref={fieldRefs.state}>
                           <Input
                               label={t("contacts.state")}
-                              placeholder="State"
+                              placeholder={t("contacts.state")}
                               labelOnTop
                               value={state}
                               onChange={(e) => setState(e.target.value)}
@@ -4083,7 +4120,7 @@ const AddContact = () => {
                       <Input
                           type="number"
                           label={t("contacts.pin")}
-                          placeholder="PIN"
+                          placeholder={t("contacts.pin")}
                           labelOnTop
                           value={pin}
                           onChange={(e) => setPin(e.target.value)}
@@ -4096,7 +4133,7 @@ const AddContact = () => {
                                   Value: country.name,
                               }))}
                               title={t("contacts.country")}
-                              placeholder="Select Country"
+                              placeholder={t("contacts.selectCountry")}
                               value={country}
                               onChange={(value) => setCountry(value)}
                           />
@@ -4112,21 +4149,21 @@ const AddContact = () => {
                   <div className="mb-5 mt-5 grid grid-cols-4 gap-7 md:grid-cols-2 xl:grid-cols-4">
                       <Input
                           label={t("contacts.companyName")}
-                          placeholder="Company Name"
+                          placeholder={t("contacts.companyName")}
                           labelOnTop
                           value={companyName}
                           onChange={(e) => setCompanyName(e.target.value)}
                       />
                       <Input
                           label={t("contacts.city")}
-                          placeholder="City"
+                          placeholder={t("contacts.city")}
                           labelOnTop
                           value={workCity}
                           onChange={(e) => setWorkCity(e.target.value)}
                       />
                       <Input
                           label={t("contacts.state")}
-                          placeholder="State"
+                          placeholder={t("contacts.state")}
                           labelOnTop
                           value={workState}
                           onChange={(e) => setWorkState(e.target.value)}
@@ -4134,7 +4171,7 @@ const AddContact = () => {
                       <Input
                           type="number"
                           label={t("contacts.pin")}
-                          placeholder="PIN"
+                          placeholder={t("contacts.pin")}
                           labelOnTop
                           value={workPin}
                           onChange={(e) => setWorkPin(e.target.value)}
@@ -4147,7 +4184,7 @@ const AddContact = () => {
                               Value: country.name,
                           }))}
                           title={t("contacts.country")}
-                          placeholder="Select Country"
+                          placeholder={t("contacts.selectCountry")}
                           value={workCountry}
                           onChange={(value) => setWorkCountry(value)}
                       />
@@ -4155,7 +4192,7 @@ const AddContact = () => {
 
                   <Input
                       label={t("contacts.address")}
-                      placeholder="Address"
+                      placeholder={t("contacts.address")}
                       textarea
                       value={workAddress}
                       rows={2}
@@ -4177,7 +4214,7 @@ const AddContact = () => {
                           isSearchable
                           options={primaryArray}
                           title={t("contacts.primaryMealPreference")}
-                          placeholder="Select Primary Meal"
+                          placeholder={t("contacts.selectPrimaryMeal")}
                           value={selectedMealIds[0] || ""}
                           onChange={(value) => handleMealChange(value, 0)}
                           isMulti
@@ -4187,7 +4224,7 @@ const AddContact = () => {
                           isSearchable
                           options={secondaryArray}
                           title={t("contacts.secondaryMealPreference")}
-                          placeholder="Select Secondary Meal"
+                          placeholder={t("contacts.selectSecondaryMeal")}
                           value={selectedMealIds[1] || ""}
                           onChange={(value) => handleMealChange(value, 1)}
                           isMulti
@@ -4197,7 +4234,7 @@ const AddContact = () => {
                           isSearchable
                           options={alcoholicArray}
                           title={t("contacts.alcoholPreference")}
-                          placeholder="Select Alcohol Preference"
+                          placeholder={t("contacts.selectAlcoholPreference")}
                           value={selectedMealIds[2] || ""}
                           onChange={(value) => handleMealChange(value, 2)}
                           isMulti
@@ -4222,7 +4259,7 @@ const AddContact = () => {
                   {isOtherInfoOpen && (
                   <>
                   <div className="flex items-center">
-                      <div className="label pr-20 ltr:text-left rtl:text-right">{t("contacts.specialNeeds")}</div>
+                      <div className="label pr-5 ltr:text-left rtl:text-right">{t("contacts.specialNeeds")}</div>
 
                       <input
                           name="Gender"
@@ -4233,7 +4270,7 @@ const AddContact = () => {
                                   label: "Wheel Chair",
                               },
                           ]}
-                          Classes="flex"
+                          
                           type="checkbox"
                           value={specialNeed}
                           onChange={(e) => setSpecialNeed(e.target.checked)}
@@ -4260,7 +4297,7 @@ const AddContact = () => {
 
                   <Input
                       label={t("headings.notes")}
-                      placeholder="Note"
+                      placeholder={t("headings.notes")}
                       textarea
                       rows={3}
                       value={note}
@@ -4289,7 +4326,7 @@ const AddContact = () => {
                       )}
                       <Button
                           icon={<XMarkIcon />}
-                          title="Cancel"
+                          title={t("buttons.cancel")}
                           buttonColor="bg-red-500"
                           onClick={() => navigate(CONTACTS)}
                       />
@@ -4328,7 +4365,7 @@ const AddContact = () => {
                                             as="h3"
                                             className="font-poppins text-lg font-semibold leading-7 text-secondary-color"
                                         >
-                                            QR Codes Status
+                                            {t("contacts.qrCodesStatus")}
                                         </Dialog.Title>
                                         <XMarkIcon
                                             onClick={() => {
@@ -4374,17 +4411,17 @@ const AddContact = () => {
                                         </div>
 
                                         <h2 className="sub-heading mb-1 ltr:text-left rtl:text-right">
-                                            Allocate More QR Codes
+                                            {t("contacts.allocateMoreQrCodes")}
                                         </h2>
                                         <Input
-                                            label="Number of QR Codes"
+                        label={t("contacts.numberOfQrCodes")}
                                             type="number"
                                             value={newQRCodes}
                                             onChange={(e) => {
                                                 setNewQRCodes(e.target.value);
                                                 setNewQRCodesError("");
                                             }}
-                                            placeholder="Enter number of QR codes"
+                        placeholder={t("contacts.enterNumberOfQrCodes")}
                                             error={newQRCodesError}
                                             isRequired
                                             labelOnTop
@@ -4394,14 +4431,14 @@ const AddContact = () => {
                                     <div className="flex justify-center gap-4 pt-8">
                                         <Button
                                             icon={<CheckIcon />}
-                                            title="Allocate"
+                      title={t("contacts.allocate")}
                                             type="button"
                                             onClick={handleAllotQRCodes}
                                             loading={btnLoading}
                                         />
                                         <Button
                                             icon={<XMarkIcon />}
-                                            title="Cancel"
+                      title={t("buttons.cancel")}
                                             type="button"
                                             buttonColor="bg-red-500"
                                             onClick={() => {

@@ -1,4 +1,4 @@
-import Lottie from "react-lottie";
+﻿import Lottie from "react-lottie";
 import React, { useState } from "react";
 import ReactPaginate from "react-paginate";
 import CardScheduleModal from "./CardScheduleModal";
@@ -171,7 +171,7 @@ const CardSchedule = () => {
                       }
                     }}
                     onKeyPress={handleKeyPress}
-                    className="focus:border-primary-color-100 block h-11 w-44 rounded-10 border border-primary-light-color px-4 pl-11 text-sm text-primary-color focus:ring-primary-color 3xl:w-full"
+                    className="focus:border-primary-color-100 block h-11 w-44 rounded-10 border border-primary-light-color px-4 pl-11 text-base text-primary-color focus:ring-primary-color 3xl:w-full"
                   />
                 </div>
               </div>
@@ -200,7 +200,7 @@ const CardSchedule = () => {
                             requestSort(sortKey);
                           }}
                         >
-                          <p className="font-inter cursor-pointer whitespace-nowrap text-xs font-semibold leading-5 3xl:text-sm">
+                          <p className="font-inter cursor-pointer whitespace-nowrap text-sm font-semibold leading-5 3xl:text-base">
                             {head}
                             {sortConfig?.key ===
                               (head === "Schedule Title "
@@ -238,19 +238,19 @@ const CardSchedule = () => {
                           </td> */}
 
                           <td className="py-3 pl-4 pr-3 3xl:px-4">
-                            <p className="text-primary-color-200 text-xs font-normal 3xl:text-sm">
+                            <p className="text-primary-color-200 text-sm font-normal 3xl:text-base">
                               {moment(item?.sent_at).format("D MMM YYYY  h:mm A") || "-"}
                             </p>
                           </td>
 
                           <td className="py-3 pl-4 pr-3 3xl:px-4">
-                            <p className="text-primary-color-200 text-xs font-normal 3xl:text-sm">
-                              <p className="text-primary-color-200 text-xs font-normal 3xl:text-sm">{item?.status}</p>
+                            <p className="text-primary-color-200 text-sm font-normal 3xl:text-base">
+                              <p className="text-primary-color-200 text-sm font-normal 3xl:text-base">{item?.status}</p>
                             </p>
                           </td>
                           <td className="py-3 pl-4 pr-3 3xl:px-4">
-                            <p className="text-primary-color-200 text-xs font-normal 3xl:text-sm">
-                              <p className="text-primary-color-200 text-xs font-normal 3xl:text-sm">{item?.sent_to || "-"}</p>
+                            <p className="text-primary-color-200 text-sm font-normal 3xl:text-base">
+                              <p className="text-primary-color-200 text-sm font-normal 3xl:text-base">{item?.sent_to || "-"}</p>
                             </p>
                           </td>
                           {/* 
@@ -389,3 +389,4 @@ const CardSchedule = () => {
 };
 
 export default CardSchedule;
+

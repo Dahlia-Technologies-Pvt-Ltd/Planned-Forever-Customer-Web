@@ -11,19 +11,43 @@ import { useMediaQuery } from "react-responsive";
 import Badge from "../../components/common/Badge";
 import { MENU, VENDOR_PRINT } from "../../routes/Names";
 import Button from "../../components/common/Button";
-import TitleValue from "../../components/common/TitleValue";
 import { useThemeContext } from "../../context/GlobalContext";
 import { useSortableData } from "../../hooks/useSortableData";
 import { emptyFolderAnimation } from "../../utilities/lottieAnimations";
 import ConfirmationModal from "../../components/common/ConfirmationModal";
-import AddMenuModal from "./AddMenuModal"; // Import the AddMenuModal component
-import AddTrendingModal from "./AddTrendingModal"; // Import the new AddTrendingModal component
-import { ChevronDownIcon, ChevronLeftIcon, ChevronRightIcon, ChevronUpIcon, MagnifyingGlassIcon, ArrowLeftIcon } from "@heroicons/react/24/outline";
+import AddMenuModal from "./AddMenuModal";
+import {
+  ArrowLeftIcon,
+  ChevronDownIcon,
+  ChevronLeftIcon,
+  ChevronRightIcon,
+  ChevronUpIcon,
+  LinkIcon,
+  MagnifyingGlassIcon,
+  PhotoIcon,
+  SparklesIcon,
+} from "@heroicons/react/24/outline";
 import Dropdown from "../../components/common/Dropdown";
 import { mediaUrl } from "@utilities/config";
 import { PhotoProvider, PhotoView } from "react-photo-view";
 import "react-photo-view/dist/react-photo-view.css";
 import { useTranslation } from "react-i18next";
+
+const normalizeLinks = (value) => {
+  if (!value) return [];
+  if (Array.isArray(value)) return value.filter((link) => link?.url);
+
+  if (typeof value === "string") {
+    try {
+      const parsed = JSON.parse(value);
+      return Array.isArray(parsed) ? parsed.filter((link) => link?.url) : [];
+    } catch {
+      return [];
+    }
+  }
+
+  return [];
+};
 
 const Vendors = () => {
   const { t } = useTranslation("common");
@@ -58,7 +82,6 @@ const Vendors = () => {
   
   // Add Menu Modal
   const [addMenuModalOpen, setAddMenuModalOpen] = useState(false);
-  const [addTrendingModalOpen, setAddTrendingModalOpen] = useState(false); // New state for trending modal
   const [selectedTrendingItems, setSelectedTrendingItems] = useState([]);
 
   // Active Row
@@ -69,6 +92,7 @@ const Vendors = () => {
 
   // Detail of selected row
   const detail = allVendors?.find((item) => item?.id === (activeRow || allVendors[0]?.id));
+  const socialMediaLinks = normalizeLinks(detail?.social_media_links);
 
   // Table Sorting
   const { items, requestSort, sortConfig } = useSortableData(allVendors);
@@ -98,11 +122,12 @@ const Vendors = () => {
       quantity: "",
       description: item?.notes || "",
       img: item?.image,
-      id: item?.id
+      id: item?.id,
+      source: "trending",
     }));
     
     setSelectedTrendingItems(formattedItems);
-    setAddTrendingModalOpen(true); // Open the trending modal instead of menu modal
+    setAddMenuModalOpen(true);
   };
 
   // Get Vendors
@@ -117,19 +142,30 @@ const Vendors = () => {
         menu_type_id: menuType?.value,
         cuisine_id: menuCuisine?.value,
         taste_profile_id: menuTaste?.value,
-        status: "trending",
       };
 
       const res = await ApiServices.menu.getTrendingMenus(payload);
-      const { data, message } = res;
+      const { data } = res;
 
       if (data.code === 200) {
-        setLoading(false);
-        setAllVendors(data.data.data);
-        setCurrentPage(data?.data?.current_page);
-        setTotalPages(Math.ceil(data?.data?.total / data?.data?.per_page));
+        const pageData = data?.data;
+        const rows = Array.isArray(pageData?.data)
+          ? pageData.data
+          : Array.isArray(pageData)
+            ? pageData
+            : [];
+
+        setAllVendors(rows);
+        setCurrentPage(pageData?.current_page || 1);
+        setTotalPages(
+          pageData?.last_page ||
+            Math.ceil((pageData?.total || rows.length) / (pageData?.per_page || itemsPerPage))
+        );
       }
     } catch (err) {
+      setAllVendors([]);
+      setTotalPages(0);
+      setErrorMessage(err?.message);
     } finally {
       setLoading(false);
     }
@@ -175,11 +211,6 @@ const Vendors = () => {
       }
     }
   };
-
-  useEffect(() => {
-    setActiveRow(items[0]?.id);
-    getMenuById(items[0]?.id);
-  }, [items]);
 
   const [menuType, setMenuType] = useState("");
   const [menuTaste, setMenuTaste] = useState("");
@@ -245,6 +276,11 @@ const Vendors = () => {
   const [ceremonyDetailLoading, setCeremonyDetialLoading] = useState({});
 
   const getMenuById = async (id) => {
+    if (!id) {
+      setCeremonyDetial({});
+      return;
+    }
+
     try {
       setCeremonyDetialLoading(true);
       const res = await ApiServices.menu.getMenuById(id);
@@ -260,41 +296,40 @@ const Vendors = () => {
     }
   };
 
+  useEffect(() => {
+    if (allVendors.length === 0) {
+      setActiveRow(null);
+      setCeremonyDetial({});
+      return;
+    }
+
+    const activeItemStillExists = allVendors.some((item) => item?.id === activeRow);
+    const nextActiveId = activeItemStillExists ? activeRow : allVendors[0]?.id;
+
+    if (nextActiveId && nextActiveId !== activeRow) {
+      setActiveRow(nextActiveId);
+      getMenuById(nextActiveId);
+    }
+  }, [allVendors, activeRow]);
+
   return (
     <>
-      <div className="grid grid-cols-12 gap-5">
+      <div className="venues-page-layout grid grid-cols-12 items-start gap-5 lg:items-stretch">
         <div className="col-span-12 lg:col-span-8">
-          <div className="card min-h-[82vh]">
-            <div className="flex justify-between">
-              <h3 className="heading">Vendors</h3>
-              <div className="flex gap-x-3 justify-between items-center w-full">
-                <Link to={MENU}>
-                  <div className={`flex mb-5 text-base font-medium cursor-pointer text-secondary hover:underline`}>
-                    <ArrowLeftIcon className="mr-2 w-4 h-6 text-secondary" />
-                    <span>{t("menu.backToMenuList")}</span>
-                  </div>
-                </Link>
-                
-                <div className="flex items-center gap-x-5">
-
-                {/* Import Button - Only show when items are selected */}
-                {selectedItems.length > 0 && (
-                  <Button 
-                    title={`Import Selected (${selectedItems.length})`} 
-                    onClick={handleImportClick} 
-                    buttonColor="bg-secondary"
-                  />
-                )}
-                
-                <div className="flex relative items-center">
-                  <div className="flex absolute inset-y-0 left-0 z-20 items-center pl-4 pointer-events-none">
-                    <MagnifyingGlassIcon className="w-5 h-5 text-primary-light-color" />
+          <div className="venues-list-card card flex min-h-[72vh] flex-col shadow-[0_12px_34px_rgba(15,23,42,0.14)]">
+            <div className="w-full">
+              <div className="flex w-full items-center justify-between gap-4">
+                <h2 className="shrink-0 text-xl font-semibold text-black">{t("menu.trending_menu")}</h2>
+                <div className="relative ml-auto flex items-center">
+                  <div className="pointer-events-none absolute inset-y-0 left-0 z-20 flex items-center pl-4">
+                    <MagnifyingGlassIcon className="h-5 w-5 text-primary-light-color" />
                   </div>
                   <input
-                    type="text"
+                    type="search"
                     id="search"
                     name="search"
                     placeholder={t("placeholders.search") + "..."}
+                    autoComplete="off"
                     value={searchText}
                     onChange={(e) => {
                       setSearchText(e.target.value);
@@ -302,14 +337,29 @@ const Vendors = () => {
                         getVendorsListing(true);
                       }
                     }}
-                    onKeyPress={handleKeyPress}
-                    className="block px-4 pl-11 w-52 h-11 text-sm border focus:border-primary-color-100 rounded-10 border-primary-light-color text-primary-color focus:ring-primary-color 3xl:w-full"
+                    onKeyDown={handleKeyPress}
+                    className="block h-11 w-52 rounded-10 border border-primary-light-color px-4 pl-11 text-sm text-primary-color focus:border-primary-color-100 focus:ring-primary-color"
                   />
                 </div>
-                </div>
+              </div>
+
+              <div className="mt-4 flex items-center justify-between gap-4">
+                <Link to={MENU} className="inline-flex items-center text-sm font-medium text-secondary hover:underline">
+                  <ArrowLeftIcon className="mr-2 h-5 w-4" />
+                  {t("menu.backToMenuList")}
+                </Link>
+                {selectedItems.length > 0 && (
+                  <Button
+                    type="button"
+                    title={t("buttons.import")}
+                    onClick={handleImportClick}
+                    buttonColor="border border-orange-400 bg-transparent"
+                    className="h-9 px-4 !text-orange-500 shadow-none hover:bg-orange-50 hover:!text-orange-600 hover:shadow-none"
+                  />
+                )}
               </div>
             </div>
-            <div className="mt-7 mb-7 grid gap-4 items-end grid-cols-[1fr_1fr_1fr_auto]">
+            <div className="mb-5 mt-6 grid grid-cols-[1fr_1fr_1fr_auto] items-end gap-4">
               <Dropdown
                 isSearchable
                 options={allRecCeremonies}
@@ -341,7 +391,7 @@ const Vendors = () => {
                 title={t("menu.tasteProfile")}
               />
               <Button
-                  title="Clear"
+                  title={t("buttons.clearFilters")}
                   onClick={() => {
                     setMenuTaste(null);
                     setMenuCuisine(null);
@@ -350,8 +400,8 @@ const Vendors = () => {
                   className="px-3 py-2 text-sm w-auto"
                 />
             </div>
-            <div className="mt-5">
-              <div className="overflow-x-auto -mx-6 mb-8">
+            <div className="flex min-h-0 flex-1 flex-col">
+              <div className="-mx-6 mb-8 flex-1 overflow-x-auto">
                 <table className="w-full text-left">
                   <thead>
                     <tr>
@@ -378,7 +428,7 @@ const Vendors = () => {
                             requestSort(sortKey);
                           }}
                         >
-                          <p className="text-xs font-semibold leading-5 whitespace-nowrap cursor-pointer font-inter 3xl:text-sm">
+                          <p className="text-sm font-semibold leading-5 whitespace-nowrap cursor-pointer font-inter 3xl:text-sm">
                             {head}
                             {head !== t("menu.select") && sortConfig.key ===
                               (head === "Item Type"
@@ -421,24 +471,28 @@ const Vendors = () => {
                               onClick={(e) => e.stopPropagation()}
                               className="w-4 h-4 text-secondary bg-gray-100 border-gray-300 rounded focus:ring-secondary"
                             />
-                            <p className="text-xs font-normal text-primary-color 3xl:text-sm">{item?.menu_type?.name || "-"}</p>
+                            <p className="text-sm font-normal text-primary-color 3xl:text-sm">{item?.menu_type?.name || "-"}</p>
                           </td>
                           <td className="py-3 pl-4 3xl:px-4">
-                            <p className="text-xs font-normal text-primary-color 3xl:text-sm">{item?.cuisine?.name || "-"}</p>
+                            <p className="text-sm font-normal text-primary-color 3xl:text-sm">{item?.cuisine?.name || "-"}</p>
                           </td>
                           <td className="py-3 pl-4 3xl:px-4">
-                            <p className="text-xs font-normal text-primary-color 3xl:text-sm">{item?.taste_profile?.name || "-"}</p>
+                            <p className="text-sm font-normal text-primary-color 3xl:text-sm">{item?.taste_profile?.name || "-"}</p>
                           </td>
                           <td className="py-3 pl-4 3xl:px-4">
-                            <p className="text-xs font-normal text-primary-color 3xl:text-sm">{item?.name || "-"}</p>
+                            <p className="text-sm font-normal text-primary-color 3xl:text-sm">{item?.name || "-"}</p>
                           </td>
                         </tr>
                       ))
                     ) : (
                       // Render "No Data" message
-                      <tr className="h-[400px]">
-                        <td colSpan="6">
-                          <Lottie options={emptyFolderAnimation} width={200} height={200} />
+                      <tr>
+                        <td colSpan="4">
+                          <div className="flex min-h-[43vh] flex-col items-center justify-center px-4 text-center">
+                            <Lottie options={emptyFolderAnimation} width={170} height={170} />
+                            <h4 className="-mt-4 text-base font-semibold text-black">{t("menu.noTrendingItems")}</h4>
+                            <p className="mt-2 text-sm text-primary-light-color">{t("menu.tryChangingFilters")}</p>
+                          </div>
                         </td>
                       </tr>
                     )}
@@ -446,7 +500,7 @@ const Vendors = () => {
                 </table>
               </div>
 
-              <div className="absolute bottom-4">
+              {items.length > 0 && <div className="absolute bottom-4">
                 <ReactPaginate
                   breakLabel="..."
                   pageRangeDisplayed={5}
@@ -464,53 +518,102 @@ const Vendors = () => {
                   nextLabel={<ChevronRightIcon className="w-5 h-5" />}
                   previousLabel={<ChevronLeftIcon className="w-5 h-5" />}
                 />
-              </div>
+              </div>}
             </div>
           </div>
         </div>
 
         <div className="col-span-12 lg:col-span-4">
-          <div className="card min-h-[82vh]">
+          <div className="venues-details-card card flex h-[72vh] flex-col overflow-hidden shadow-[0_12px_34px_rgba(15,23,42,0.14)] lg:sticky lg:top-0">
             {loading ? (
               <Skeleton count={8} height={50} className="mt-3" />
-            ) : items.length > 0 ? (
-              <>
-                <div className="mt-6">
-                  <h2 className="mb-5 sub-heading">{t("headings.otherInfo")}</h2>
+            ) : detail ? (
+              <div className="-mx-1 -my-1 flex min-h-0 flex-1 flex-col px-1 py-1">
+                <div className="shrink-0">
+                  <h2 className="text-xl font-semibold text-black">{detail?.name || "Menu Item"}</h2>
+                  <p className="mt-2 text-sm text-gray-600">
+                    {[detail?.menu_type?.name, detail?.cuisine?.name].filter(Boolean).join(" · ") || "-"}
+                  </p>
+                </div>
 
-                  <div className="mt-2">
-                    {detail?.image !== null && (
-                      <div className="w-full">
-                        <h3 className="mb-5 text-xs text-info-color">{t("headings.relevantImages")}</h3>
-                        <div className="grid grid-cols-3 gap-2 w-full">
-                          <PhotoProvider>
-                            <PhotoView src={mediaUrl + detail?.image}>
-                              <img src={mediaUrl + detail?.image} alt="image" className="object-cover w-full h-full cursor-pointer rounded-10" />
-                            </PhotoView>
-                          </PhotoProvider>
-                        </div>
+                <div className="venue-details-scroll -mr-2 mt-6 min-h-0 flex-1 overflow-y-auto pr-2">
+                  <section>
+                    <div className="flex items-center gap-2 border-b border-gray-200 pb-3 text-secondary">
+                      <SparklesIcon className="h-5 w-5" />
+                      <h3 className="text-sm font-semibold">{t("menu.menuItemDetails")}</h3>
+                    </div>
+                    <div className="grid grid-cols-2 gap-x-8 gap-y-5 pt-5">
+                      <div>
+                        <p className="text-xs text-gray-600">{t("menu.itemType")}</p>
+                        <p className="mt-1 text-sm font-medium text-black">{detail?.menu_type?.name || "-"}</p>
                       </div>
-                    )}
-                  </div>
-
-                  <div className="mt-6">
-                    <h2 className="mb-5 sub-heading">{t("headings.socialMediaLinks")}</h2>
-                    <div className="flex flex-wrap gap-5">
-                      {detail?.social_media_links?.length > 0 ? (
-                        detail.social_media_links.map((item, index) => (
-                          <TitleValue key={index} isLink title={item.name.charAt(0).toUpperCase() + item.name.slice(1)} value={item?.url || "-"} />
-                        ))
-                      ) : (
-                        <p>-</p>
+                      <div>
+                        <p className="text-xs text-gray-600">{t("menu.cuisine")}</p>
+                        <p className="mt-1 text-sm font-medium text-black">{detail?.cuisine?.name || "-"}</p>
+                      </div>
+                      <div className="col-span-2">
+                        <p className="text-xs text-gray-600">{t("menu.tasteProfile")}</p>
+                        <p className="mt-1 text-sm font-medium text-black">{detail?.taste_profile?.name || "-"}</p>
+                      </div>
+                      {detail?.notes && (
+                        <div className="col-span-2">
+                          <p className="text-xs text-gray-600">{t("headings.notes")}</p>
+                          <p className="mt-1 text-sm leading-6 text-black">{detail.notes}</p>
+                        </div>
                       )}
                     </div>
-                  </div>
+                  </section>
+
+                  {detail?.image && (
+                    <section className="mt-8">
+                      <div className="flex items-center gap-2 border-b border-gray-200 pb-3 text-secondary">
+                        <PhotoIcon className="h-5 w-5" />
+                        <h3 className="text-sm font-semibold">{t("headings.relevantImages")}</h3>
+                      </div>
+                      <div className="grid grid-cols-3 gap-2 pt-5">
+                        <PhotoProvider>
+                          <PhotoView src={mediaUrl + detail.image}>
+                            <img
+                              src={mediaUrl + detail.image}
+                              alt={detail?.name || "Menu item"}
+                              className="h-24 w-full cursor-pointer rounded-10 object-cover"
+                            />
+                          </PhotoView>
+                        </PhotoProvider>
+                      </div>
+                    </section>
+                  )}
+
+                  {socialMediaLinks.length > 0 && (
+                    <section className="mt-8 pb-2">
+                      <div className="flex items-center gap-2 border-b border-gray-200 pb-3 text-secondary">
+                        <LinkIcon className="h-5 w-5" />
+                        <h3 className="text-sm font-semibold">{t("headings.socialMediaLinks")}</h3>
+                      </div>
+                      <div className="space-y-3 pt-5">
+                        {socialMediaLinks.map((link, index) => (
+                          <a
+                            key={`${link.url}-${index}`}
+                            href={link.url}
+                            target="_blank"
+                            rel="noreferrer"
+                            className="block break-all text-sm font-medium text-secondary hover:underline"
+                          >
+                            {link?.name ? `${link.name}: ` : ""}
+                            {link.url}
+                          </a>
+                        ))}
+                      </div>
+                    </section>
+                  )}
                 </div>
-              </>
+              </div>
             ) : (
-              <div className="flex h-[70vh] items-center justify-center">
-                <div colSpan="6">
-                  <Lottie options={emptyFolderAnimation} width={200} height={200} />
+              <div className="flex flex-1 items-center justify-center px-6 text-center">
+                <div>
+                  <Lottie options={emptyFolderAnimation} width={170} height={170} />
+                  <h4 className="-mt-4 text-base font-semibold text-black">{t("menu.noMenuItemSelected")}</h4>
+                  <p className="mt-2 text-sm text-primary-light-color">{t("menu.selectMenuItemToView")}</p>
                 </div>
               </div>
             )}
@@ -518,26 +621,18 @@ const Vendors = () => {
         </div>
       </div>
 
-      {/* Add Menu Modal - Keep for reference but not used now */}
-      {/* 
       <AddMenuModal
         label={t("menu.addMenu")}
         isOpen={addMenuModalOpen}
         setIsOpen={setAddMenuModalOpen}
-        refreshData={getVendorsListing}
+        refreshData={() => {
+          setSelectedItems([]);
+          setSelectedTrendingItems([]);
+          getVendorsListing();
+        }}
         data={null}
         setModalData={setModalData}
         preselectedItems={selectedTrendingItems}
-      />
-      */}
-
-      {/* Add Trending Modal - New modal for adding trending items to existing menus */}
-      <AddTrendingModal
-        isOpen={addTrendingModalOpen}
-        setIsOpen={setAddTrendingModalOpen}
-        selectedTrendingItems={selectedTrendingItems}
-        setSelectedTrendingItems={setSelectedTrendingItems} // Added setter function
-        refreshData={getVendorsListing}
       />
 
       {/* Delete Modal*/}

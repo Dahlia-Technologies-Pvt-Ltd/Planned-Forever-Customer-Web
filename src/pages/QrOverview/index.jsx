@@ -641,7 +641,7 @@ const QrCodesOverview = () => {
                             requestSort(sortKey);
                           }}
                         >
-                          <p className="font-inter cursor-pointer whitespace-nowrap text-xs font-semibold leading-5 3xl:text-sm">
+                          <p className="font-inter cursor-pointer whitespace-nowrap text-sm font-semibold leading-5 3xl:text-sm">
                             {head}
                             {sortConfig.key ===
                               (head === t("qrCodeOverview.qrCode")
@@ -761,7 +761,7 @@ const QrCodesOverview = () => {
                     <XMarkIcon onClick={closeBulkAllocationModal} className="h-6 w-6 cursor-pointer text-info-color" />
                   </div>
 
-                  <form onSubmit={handleBulkAllocation} className="h-[450px]">
+                  <form onSubmit={handleBulkAllocation} className="[&_.label]:text-xs [&_.label]:font-medium [&_input]:h-9 [&_input]:min-h-[36px] [&_input]:text-sm [&_input]:py-1 [&_input[type='datetime-local']]:h-9 [&_textarea]:text-sm [&_.css-b62m3t-container]:text-sm [&_.css-13cymwt-control]:h-9 [&_.css-13cymwt-control]:min-h-[36px] [&_.css-13cymwt-control]:py-0 [&_.css-t3ipsp-control]:h-9 [&_.css-t3ipsp-control]:min-h-[36px] [&_.css-t3ipsp-control]:py-0 [&_.css-hlgwow]:h-9 [&_.css-hlgwow]:min-h-[36px] [&_.css-hlgwow]:py-0 [&_.css-hlgwow]:px- [&_.css-1jqq78o-placeholder]:text-sm [&_.css-1jqq78o-placeholder]:leading-none [&_.css-1dimb5e-singleValue]:text-sm [&_.css-1dimb5e-singleValue]:leading-none [&_.css-1wy0on6]:h-9 [&_.css-19bb58m]:my-0 [&_input[type='radio']]:h-4 [&_input[type='radio']]:w-4 [&_input[type='radio']]:min-h-4 [&_input[type='radio']]:min-w-4">
                     <div className="grid grid-cols-2 gap-5">
                       <div>
                         <div>

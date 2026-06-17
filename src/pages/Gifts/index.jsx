@@ -17,6 +17,7 @@ import { ChevronDownIcon, ChevronLeftIcon, ChevronRightIcon, ChevronUpIcon, Magn
 import { GIFT_PRINT } from "../../routes/Names";
 import { Link } from "react-router-dom";
 import { useTranslation } from "react-i18next";
+import { hasPermission } from "../../utilities/permissions";
 
 const Gifts = () => {
   // translation
@@ -61,6 +62,47 @@ const Gifts = () => {
   const isLargeScreenLaptop = useMediaQuery({ minWidth: 1700 });
   const itemsPerPage = isLargeScreenLaptop ? 10 : isLaptopMedium ? 8 : isLaptop ? 8 : 10;
 
+  const normalizeTags = (tags) => {
+    if (Array.isArray(tags)) {
+      return tags
+        .map((tag) => {
+          if (typeof tag === "string") {
+            return tag.trim();
+          }
+
+          if (tag && typeof tag === "object") {
+            return String(tag?.name || tag?.label || tag?.value || "").trim();
+          }
+
+          return "";
+        })
+        .filter(Boolean);
+    }
+
+    if (typeof tags === "string") {
+      const trimmedTags = tags.trim();
+
+      if (!trimmedTags) {
+        return [];
+      }
+
+      try {
+        const parsedTags = JSON.parse(trimmedTags);
+        if (Array.isArray(parsedTags)) {
+          return normalizeTags(parsedTags);
+        }
+      } catch (error) {
+      }
+
+      return trimmedTags
+        .split(",")
+        .map((tag) => tag.trim())
+        .filter(Boolean);
+    }
+
+    return [];
+  };
+
   // Get Gifts
   const getGifts = async (emptySearch) => {
     try {
@@ -78,7 +120,12 @@ const Gifts = () => {
 
       if (data.code === 200) {
         setLoading(false);
-        setAllGifts(data.data.data);
+        const normalizedGifts = (data?.data?.data || []).map((gift) => ({
+          ...gift,
+          tags: normalizeTags(gift?.tags),
+        }));
+
+        setAllGifts(normalizedGifts);
         setCurrentPage(data?.data?.current_page);
         setTotalPages(Math.ceil(data?.data?.total / data?.data?.per_page));
       }
@@ -159,7 +206,7 @@ const Gifts = () => {
               <h3 className="heading">{t("gift.gifts")}</h3>
               <div className="flex items-center justify-between">
                 <div className="flex items-center gap-x-3">
-                  {(userData?.role?.display_name === "web_admin" || userData.role.permissions?.some((item) => item === "gifts-create")) && (
+                  {(hasPermission(userData, "gifts-create")) && (
                     <Button title={t("gift.addNewGift")} onClick={() => setAddNewModal(true)} />
                   )}
 
@@ -212,7 +259,7 @@ const Gifts = () => {
                             requestSort(sortKey);
                           }}
                         >
-                          <p className="font-inter cursor-pointer whitespace-nowrap text-xs font-semibold leading-5 3xl:text-sm">
+                          <p className="font-inter cursor-pointer whitespace-nowrap text-sm font-semibold leading-5 3xl:text-sm">
                             {head}
                             {sortConfig.key ===
                               (head === "Event Name"
@@ -246,10 +293,10 @@ const Gifts = () => {
                           onClick={() => handleRowClick(item?.id)}
                         >
                           <td className="py-3 pl-6 pr-4">
-                            <p className="text-xs font-normal text-primary-color 3xl:text-sm">{item?.name}</p>
+                            <p className="text-sm font-normal text-primary-color 3xl:text-sm">{item?.name}</p>
                           </td>
                           <td className="py-3 pl-4 3xl:px-4">
-                            <p className="text-xs font-normal text-primary-color 3xl:text-sm">{item?.value || "-"}</p>
+                            <p className="text-sm font-normal text-primary-color 3xl:text-sm">{item?.value || "-"}</p>
                           </td>
                           <td className="py-3 pl-4 pr-3 3xl:px-4">
                             {item?.tags?.length > 0 ? (
@@ -259,7 +306,7 @@ const Gifts = () => {
                                 </span>
                               ))
                             ) : (
-                              <span className="text-xs font-normal text-primary-color 3xl:text-sm">-</span>
+                              <span className="text-sm font-normal text-primary-color 3xl:text-sm">-</span>
                             )}
                           </td>
 
@@ -339,7 +386,7 @@ const Gifts = () => {
                       <h2 className="sub-heading">{t("headings.basicInfo")}</h2>
                       <div className="flex justify-between">
                         <div className="flex items-center gap-x-3">
-                          {(userData?.role?.display_name === "web_admin" || userData.role.permissions?.some((item) => item === "gifts-view")) && (
+                          {(hasPermission(userData, "gifts-view")) && (
                             <button
                               onClick={() => {
                                 setAddNewModal(true);
@@ -351,7 +398,7 @@ const Gifts = () => {
                               {t("buttons.edit")}
                             </button>
                           )}
-                          {(userData?.role?.display_name === "web_admin" || userData.role.permissions?.some((item) => item === "gifts-delete")) && (
+                          {(hasPermission(userData, "gifts-delete")) && (
                             <button
                               onClick={() => setOpenDeleteModal({ open: true, data: detail })}
                               className="border-b border-red-500 text-sm font-medium text-red-500"
@@ -373,7 +420,7 @@ const Gifts = () => {
                     <h2 className="sub-heading mb-5">{t("headings.otherInfo")}</h2>
                     <div className="grid grid-cols-1 gap-5">
                       <div className="w-full space-y-2">
-                        <h3 className="text-xs text-info-color">{t("gift.tags")}</h3>
+                        <h3 className="text-sm text-info-color">{t("gift.tags")}</h3>
                         {detail?.tags?.map((tag, index) => (
                           <span className="inline-block" key={index}>
                             <Badge title={tag} />

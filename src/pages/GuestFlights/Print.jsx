@@ -200,7 +200,7 @@ const GuestFlightsPrint = () => {
           <tr>
             {TABLE_HEAD_GUEST_FLIGHTS.map((head) => (
               <th className="border-b border-gray-100 bg-white p-4 first:pl-6" key={head}>
-                <p className="font-inter cursor-pointer whitespace-nowrap text-xs font-semibold leading-5 3xl:text-sm">{head}</p>
+                <p className="font-inter cursor-pointer whitespace-nowrap text-sm font-semibold leading-5 3xl:text-sm">{head}</p>
               </th>
             ))}
           </tr>

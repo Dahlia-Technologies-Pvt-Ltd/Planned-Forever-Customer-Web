@@ -28,6 +28,47 @@ const AddGfitModal = ({ isOpen, setIsOpen, refreshData, data, setModalData }) =>
   const [giftValueError, setGiftValueError] = useState("");
   const [selectedValueError, setSelectedValueError] = useState("");
 
+  const normalizeTags = (tags) => {
+    if (Array.isArray(tags)) {
+      return tags
+        .map((tag) => {
+          if (typeof tag === "string") {
+            return tag.trim();
+          }
+
+          if (tag && typeof tag === "object") {
+            return String(tag?.name || tag?.label || tag?.value || "").trim();
+          }
+
+          return "";
+        })
+        .filter(Boolean);
+    }
+
+    if (typeof tags === "string") {
+      const trimmedTags = tags.trim();
+
+      if (!trimmedTags) {
+        return [];
+      }
+
+      try {
+        const parsedTags = JSON.parse(trimmedTags);
+        if (Array.isArray(parsedTags)) {
+          return normalizeTags(parsedTags);
+        }
+      } catch (error) {
+      }
+
+      return trimmedTags
+        .split(",")
+        .map((tag) => tag.trim())
+        .filter(Boolean);
+    }
+
+    return [];
+  };
+
   const isValidForm = () => {
     let isValidData = true;
     if (giftName === "") {
@@ -55,6 +96,8 @@ const AddGfitModal = ({ isOpen, setIsOpen, refreshData, data, setModalData }) =>
   const handleSubmit = async (e) => {
     e.preventDefault();
     if (isValidForm()) {
+      const normalizedSelectedValue = normalizeTags(selectedValue);
+
       if (data === null) {
         try {
           setBtnLoading(true);
@@ -62,7 +105,7 @@ const AddGfitModal = ({ isOpen, setIsOpen, refreshData, data, setModalData }) =>
           let payload = {
             name: giftName,
             value: giftValue,
-            tags: selectedValue,
+            tags: normalizedSelectedValue,
             description: giftNote,
             event_id: eventSelect,
           };
@@ -96,7 +139,7 @@ const AddGfitModal = ({ isOpen, setIsOpen, refreshData, data, setModalData }) =>
           let payload = {
             name: giftName,
             value: giftValue,
-            tags: selectedValue,
+            tags: normalizedSelectedValue,
             description: giftNote,
             event_id: eventSelect,
           };
@@ -146,7 +189,7 @@ const AddGfitModal = ({ isOpen, setIsOpen, refreshData, data, setModalData }) =>
     if (data !== null) {
       setGiftName(data?.name);
       setGiftValue(data?.value);
-      setSelectedValue(data?.tags);
+      setSelectedValue(normalizeTags(data?.tags));
       setGiftNote(data?.description);
     }
   }, [isOpen]);
@@ -194,7 +237,7 @@ const AddGfitModal = ({ isOpen, setIsOpen, refreshData, data, setModalData }) =>
                     <XMarkIcon onClick={closeModal} className="h-8 w-8 cursor-pointer text-info-color" />
                   </div>
 
-                  <form>
+                  <form onSubmit={handleSubmit} className="[&_.label]:text-xs [&_.label]:font-medium [&_input]:h-9 [&_input]:min-h-[36px] [&_input]:text-sm [&_input]:py-1 [&_input[type='datetime-local']]:h-9 [&_textarea]:text-sm [&_.css-b62m3t-container]:text-sm [&_.css-13cymwt-control]:h-9 [&_.css-13cymwt-control]:min-h-[36px] [&_.css-13cymwt-control]:py-0 [&_.css-t3ipsp-control]:h-9 [&_.css-t3ipsp-control]:min-h-[36px] [&_.css-t3ipsp-control]:py-0 [&_.css-hlgwow]:h-9 [&_.css-hlgwow]:min-h-[36px] [&_.css-hlgwow]:py-0 [&_.css-hlgwow]:px- [&_.css-1jqq78o-placeholder]:text-sm [&_.css-1jqq78o-placeholder]:leading-none [&_.css-1dimb5e-singleValue]:text-sm [&_.css-1dimb5e-singleValue]:leading-none [&_.css-1wy0on6]:h-9 [&_.css-19bb58m]:my-0">
                     <div className=" h-[600px] overflow-y-auto p-2 md:h-[400px] lg:h-[400px] xl:h-[500px] 2xl:h-[480px]">
                       <div className="mb-5 ltr:text-left rtl:text-right">
                         <h2 className="label mb-2 text-secondary">{t("headings.basicInfo")}</h2>
